@@ -1,0 +1,77 @@
+services:
+  # Frontend: Angular
+  # angular:
+  #   build:
+  #     context: ./market-league-front-end  # Path to your Angular project directory
+  #     dockerfile: Dockerfile.dev
+  #   container_name: angular-dev
+  #   ports:
+  #     - "4200:4200"  # Map port 4200 for Angular dev server
+  #   volumes:
+  #     - ./market-league-front-end:/app  # Map local directory to container for live-reload
+  #     - /app/node_modules  # Avoid overwriting node_modules with local one
+  #   command: ng serve --host 0.0.0.0 
+  #   depends_on:
+  #     - gin-backend
+  #   networks:
+  #     - dev-network
+
+  # Backend: Gin (Go)
+  gin-backend:
+    build:
+        context: ./market-league-back-end
+        dockerfile: Dockerfile.dev
+    ports:
+        - "8080:8080"
+    restart: unless-stopped
+    expose:
+        - 8080
+    command: ./main
+    # networks:
+    #     - backend
+    # depends_on: 
+    #     - redis
+  # gin-backend:
+  #   build:
+  #     context: ./market-league-back-end
+  #     dockerfile: Dockerfile.dev
+  #   container_name: gin-dev
+  #   ports:
+  #     - "8080:8080"
+  #   volumes:
+  #     - ./market-league-front-end:/app
+  #   depends_on:
+  #     - postgres
+  #   networks:
+  #     - dev-network
+  #   environment:
+  #     # Replace with actual environment variables if needed
+  #     - DB_HOST=postgres
+  #     - DB_PORT=5432
+  #     - DB_USER=your_user
+  #     - DB_PASSWORD=your_password
+  #     - DB_NAME=your_database_name
+
+  # Database: PostgreSQL
+#   postgres:
+#     image: postgres:13-alpine
+#     container_name: postgres-dev
+#     ports:
+#       - "5432:5432"
+#     environment:
+#       POSTGRES_USER: your_user
+#       POSTGRES_PASSWORD: your_password
+#       POSTGRES_DB: your_database_name
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#     networks:
+#       - dev-network
+
+# # Volumes for PostgreSQL data persistence
+# volumes:
+#   postgres_data:
+
+# # Network for inter-service communication
+# networks:
+#   dev-network:
+#     driver: bridge
