@@ -33,9 +33,9 @@ services:
     restart: always
     user: postgres
     environment:
-      POSTGRES_USER: postgres       # Creates the "postgres" user (default superuser)
-      POSTGRES_PASSWORD: yourpassword   # Sets the password for the "postgres" user
-      POSTGRES_DB: yourdatabase     # Creates a default database named "yourdatabase"
+      POSTGRES_USER: ${POSTGRES_USER}  # Fetch from the .env file
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Fetch from the .env file
+      POSTGRES_DB: ${POSTGRES_DB}  # Fetch from the .env file
     ports:
       - 5432:5432   # Exposes PostgreSQL on port 5432
     healthcheck:
