@@ -1,5 +1,5 @@
-# Use Node.js to build the Angular app
-FROM node:alpine
+# Dockerfile.dev
+FROM node:20-alpine
 
 WORKDIR /usr/src/app
 

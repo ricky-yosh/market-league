@@ -1,6 +1,6 @@
 services:
   # Frontend: Angular
-  angular:
+  frontend:
     build:
       context: ./market-league-front-end  # Path to your Angular project directory
       dockerfile: Dockerfile.dev
@@ -13,7 +13,7 @@ services:
     command: ng serve --host 0.0.0.0 
 
   # Backend: Gin (Go)
-  gin-backend:
+  backend:
     build:
         context: ./market-league-back-end
         dockerfile: Dockerfile.dev
