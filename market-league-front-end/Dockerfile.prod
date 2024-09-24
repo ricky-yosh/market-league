@@ -1,3 +1,4 @@
+# Dockerfile.prod
 FROM node:20-alpine AS build
 
 # Set the working directory inside the container
@@ -17,7 +18,7 @@ RUN npx ng build --configuration production
 FROM nginx:alpine
 
 # Copy the built Angular files from the previous stage to Nginx's web root
-COPY --from=build /app/dist/market-league-front-end /usr/share/nginx/html
+COPY --from=build /app/dist/market-league-front-end/browser /usr/share/nginx/html
 
 # Expose port 80 for the web traffic
 EXPOSE 80
