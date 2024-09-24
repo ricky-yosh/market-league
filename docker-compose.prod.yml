@@ -5,18 +5,20 @@ services:
   frontend:
     build:
       context: ./market-league-front-end  # Path to your Angular project directory
-      dockerfile: Docker.prod  # Production Dockerfile for Angular (Docker.prod)
+      dockerfile: Dockerfile.prod  # Production Dockerfile for Angular (Docker.prod)
     container_name: angular-prod
     ports:
       - "80:80"  # Serve on port 80 (HTTP)
+    volumes:
+      - ./default.conf:/etc/nginx/conf.d/default.conf  # Mount the server block in the correct location
     networks:
       - market-league-network
 
   # Gin Backend Service
   backend:
     build:
-      context: ./market-league-backend  # Path to your Gin project directory
-      dockerfile: Docker.prod  # Production Dockerfile for Gin (Docker.prod)
+      context: ./market-league-back-end  # Path to your Gin project directory
+      dockerfile: Dockerfile.prod  # Production Dockerfile for Gin (Docker.prod)
     container_name: gin-prod
     ports:
       - "5000:5000"  # Expose the Gin API on port 5000
@@ -31,9 +33,9 @@ services:
     container_name: postgres-prod
     restart: always
     environment:
-      POSTGRES_USER: my_prod_user  # Store credentials securely in a .env file
-      POSTGRES_PASSWORD: my_prod_password
-      POSTGRES_DB: my_prod_database
+      POSTGRES_USER: ${POSTGRES_USER}  # Fetch from the .env file
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Fetch from the .env file
+      POSTGRES_DB: ${POSTGRES_DB}  # Fetch from the .env file
     volumes:
       - pgdata:/var/lib/postgresql/data  # Persist PostgreSQL data
     networks:

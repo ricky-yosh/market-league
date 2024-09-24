@@ -1,24 +1,17 @@
-# Step 1: Build the Angular app
-FROM node:16-alpine AS build
+# Use Go base image
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-
-RUN npm install --production
+COPY go.mod go.sum ./
+RUN go mod download
 
 COPY . .
 
-# Build the Angular app
-RUN npm run build --prod
+RUN go build -o main .
 
-# Step 2: Serve the app with Nginx
-FROM nginx:alpine
-
-COPY --from=build /app/dist/market-league-front-end /usr/share/nginx/html
-
-# Expose port 80
-EXPOSE 80
-
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+FROM alpine:latest
+WORKDIR /app
+COPY --from=builder /app/main .
+EXPOSE 5000
+CMD ["./main"]
