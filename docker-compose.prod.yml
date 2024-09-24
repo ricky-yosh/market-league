@@ -1,0 +1,49 @@
+# docker-compose - Production
+
+services:
+  # Angular Frontend Service
+  frontend:
+    build:
+      context: ./market-league-front-end  # Path to your Angular project directory
+      dockerfile: Docker.prod  # Production Dockerfile for Angular (Docker.prod)
+    container_name: angular-prod
+    ports:
+      - "80:80"  # Serve on port 80 (HTTP)
+    networks:
+      - market-league-network
+
+  # Gin Backend Service
+  backend:
+    build:
+      context: ./market-league-backend  # Path to your Gin project directory
+      dockerfile: Docker.prod  # Production Dockerfile for Gin (Docker.prod)
+    container_name: gin-prod
+    ports:
+      - "5000:5000"  # Expose the Gin API on port 5000
+    depends_on:
+      - db
+    networks:
+      - market-league-network
+
+  # PostgreSQL Database Service
+  db:
+    image: postgres:13  # Use a stable version of PostgreSQL
+    container_name: postgres-prod
+    restart: always
+    environment:
+      POSTGRES_USER: my_prod_user  # Store credentials securely in a .env file
+      POSTGRES_PASSWORD: my_prod_password
+      POSTGRES_DB: my_prod_database
+    volumes:
+      - pgdata:/var/lib/postgresql/data  # Persist PostgreSQL data
+    networks:
+      - market-league-network
+
+# Networks
+networks:
+  market-league-network:
+    driver: bridge
+
+# Volumes for PostgreSQL persistence
+volumes:
+  pgdata:
