@@ -13,19 +13,17 @@ services:
     command: ng serve --host 0.0.0.0 
 
   # Backend: Gin (Go)
-  backend:
+  gin-backend:
     build:
-        context: ./market-league-back-end
-        dockerfile: Dockerfile.dev
+      context: ./market-league-back-end  # Path to your Go project directory
+      dockerfile: Dockerfile.dev        # Use your development Dockerfile
+    container_name: gin-dev
     ports:
-        - 9000:9000
-    restart: unless-stopped
-    expose:
-        - 9000
-    command: ./main
-    depends_on:
-      db:
-        condition: service_healthy
+      - 9000:9000  # Expose Gin's port
+    volumes:
+      - ./market-league-back-end:/app    # Bind mount your local directory to the container
+      - /app/tmp                        # Exclude temporary directories
+    command: air                        # Use Air for live-reloading
 
   # Database: PostgreSQL
   db:
