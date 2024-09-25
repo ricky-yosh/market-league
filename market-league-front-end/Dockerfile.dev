@@ -1,12 +1,21 @@
 # Dockerfile.dev
 FROM node:20-alpine
 
-WORKDIR /usr/src/app
+# Set the working directory inside the container
+WORKDIR /app
 
-COPY . /usr/src/app
-
+# Install Angular CLI globally
 RUN npm install -g @angular/cli
 
+# Install dependencies
+COPY package*.json ./
 RUN npm install
 
+# Copy source code into the container
+COPY . .
+
+# Expose port 4200 for Angular dev server
+EXPOSE 4200
+
+# Start the Angular development server
 CMD ["ng", "serve", "--host", "0.0.0.0"]
