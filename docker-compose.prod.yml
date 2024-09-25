@@ -21,7 +21,7 @@ services:
       dockerfile: Dockerfile.prod  # Production Dockerfile for Gin (Docker.prod)
     container_name: gin-prod
     ports:
-      - "5000:5000"  # Expose the Gin API on port 5000
+      - 9000:9000
     depends_on:
       - db
     networks:
@@ -29,13 +29,16 @@ services:
 
   # PostgreSQL Database Service
   db:
-    image: postgres:13  # Use a stable version of PostgreSQL
+    image: postgres:16
     container_name: postgres-prod
     restart: always
+    user: postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}  # Fetch from the .env file
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Fetch from the .env file
       POSTGRES_DB: ${POSTGRES_DB}  # Fetch from the .env file
+    ports:
+      - 5432:5432   # Exposes PostgreSQL on port 5432
     volumes:
       - pgdata:/var/lib/postgresql/data  # Persist PostgreSQL data
     networks:
