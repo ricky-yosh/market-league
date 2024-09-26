@@ -27,7 +27,7 @@ services:
 
   # Database: PostgreSQL
   db:
-    image: postgres
+    image: postgres:16
     restart: always
     user: postgres
     environment:
@@ -43,15 +43,6 @@ services:
       retries: 10
     volumes:
       - postgres_data:/var/lib/postgresql/data   # Persists database data
-
-  # Database Manager
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 8080:8080
-    expose:
-      - 8080
 
 # Volume for Postegres database
 volumes:
