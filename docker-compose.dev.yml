@@ -44,15 +44,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data   # Persists database data
 
-  # Database Manager
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 8080:8080
-    expose:
-      - 8080
-
 # Volume for Postegres database
 volumes:
   postgres_data:
