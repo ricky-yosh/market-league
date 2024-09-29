@@ -4,6 +4,9 @@ FROM golang:1.23-alpine
 # Install necessary tools
 RUN apk add --no-cache git bash
 
+# Install psql client
+RUN apk add --no-cache postgresql-client
+
 # Install Air for live-reloading by specifying a known working commit hash
 RUN go install github.com/cosmtrek/air@v1.40.4
 

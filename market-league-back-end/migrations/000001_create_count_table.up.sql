@@ -1,0 +1,4 @@
+CREATE TABLE count (
+    id SERIAL PRIMARY KEY,
+    value INTEGER NOT NULL DEFAULT 0
+);

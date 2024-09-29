@@ -20,6 +20,13 @@ services:
       context: ./market-league-back-end  # Path to your Gin project directory
       dockerfile: Dockerfile.prod  # Production Dockerfile for Gin (Docker.prod)
     container_name: gin-prod
+    environment:
+      DB_USER: ${POSTGRES_USER}  # Fetch from the .env file
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_SSLMODE: enable
     ports:
       - 9000:9000
     depends_on:
