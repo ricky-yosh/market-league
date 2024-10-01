@@ -24,7 +24,7 @@ services:
       DB_USER: ${POSTGRES_USER}  # Fetch from the .env file
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_NAME: ${POSTGRES_DB}
-      DB_HOST: db
+      DB_HOST: db # needs to be set to the docker container otherwise no connection
       DB_PORT: 5432
       DB_SSLMODE: enable
     ports:
