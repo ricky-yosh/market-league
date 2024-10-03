@@ -3,20 +3,28 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres" // Underscore to prevent unused import error
-	_ "github.com/golang-migrate/migrate/v4/source/file"       // Underscore to prevent unused import error
+
+	// GORM
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-var databaseURL string
-var migrationsPath string
+// Counter model
+type Counter struct {
+	ID    uint `gorm:"primaryKey"`
+	Value int  `gorm:"default:0"`
+}
 
-func init() {
-	databaseURL = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
+var db *gorm.DB
+
+// Initialize GORM with PostgreSQL
+func initDB() {
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_HOST"),
@@ -25,39 +33,62 @@ func init() {
 		os.Getenv("DB_SSLMODE"),
 	)
 
-	migrationsPath = "file://./migrations"
+	var err error
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	// Automatically run migrations
+	err = db.AutoMigrate(&Counter{})
+	if err != nil {
+		log.Fatalf("Failed to migrate database schema: %v", err)
+	}
 }
 
 func main() {
-	// Run migrations when the app starts
-	runMigrations()
+	// Initialize the database
+	initDB()
 	// Initializes Gin router instance with default middleware attached
 	router := gin.Default()
 	// Enable CORS for all origins and methods
 	router.Use(cors.Default())
 
-	router.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "test",
-		})
-	})
+	// Route to increment the counter
+	router.POST("/increment", incrementCounter)
+
+	// Route to get the counter value
+	router.GET("/counter", getCounterValue)
 
 	router.Run(":9000")
 }
 
-func runMigrations() {
-	// Create a new migrate instance
-	m, err := migrate.New(migrationsPath, databaseURL)
-	if err != nil {
-		log.Fatalf("Could not create migrate instance: %v", err)
-	}
+// Handler to increment the counter
+func incrementCounter(c *gin.Context) {
+	// Retrieve the counter (assuming single row)
+	var counter Counter
+	db.First(&counter)
 
-	// Run all "up" migrations
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		log.Fatalf("Migration failed: %v", err)
-	} else if err == migrate.ErrNoChange {
-		log.Println("No migrations to apply")
-	} else {
-		log.Println("Migrations applied successfully")
-	}
+	// Increment the counter value
+	counter.Value++
+
+	// Save updated counter back to the database
+	db.Save(&counter)
+
+	// Return the updated counter value as JSON
+	c.JSON(http.StatusOK, gin.H{
+		"value": counter.Value,
+	})
+}
+
+// Handler to get the counter value
+func getCounterValue(c *gin.Context) {
+	// Retrieve the counter
+	var counter Counter
+	db.First(&counter)
+
+	// Return the counter value as JSON
+	c.JSON(http.StatusOK, gin.H{
+		"value": counter.Value,
+	})
 }
