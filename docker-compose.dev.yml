@@ -1,41 +1,54 @@
 services:
   # Frontend: Angular
-  frontend:
+  angular-dev:
     build:
       context: ./market-league-front-end  # Path to your Angular project directory
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile.dev          # Use your development Dockerfile
     container_name: angular-dev
     ports:
-      - 4200:4200  # Map port 4200 for Angular dev server
+      - 4200:4200  # Expose port 4200 for the Angular dev server
     volumes:
-      - ./market-league-front-end:/app  # Map local directory to container for live-reload
-      - /app/node_modules  # Avoid overwriting node_modules with local one
-    command: ng serve --host 0.0.0.0 
+      - ./market-league-front-end:/app    # Bind mount the local directory to the container
+      - /app/node_modules                 # Avoid overwriting node_modules with the local version
+    networks:
+      - market-league-dev
+    command: ng serve --host 0.0.0.0
 
   # Backend: Gin (Go)
-  backend:
+  gin-backend:
     build:
-        context: ./market-league-back-end
-        dockerfile: Dockerfile.dev
+      context: ./market-league-back-end  # Path to your Go project directory
+      dockerfile: Dockerfile.dev        # Use your development Dockerfile
+    container_name: gin-dev
+    environment:
+      DB_USER: ${POSTGRES_USER}  # Fetch from the .env file
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      DB_HOST: db # needs to be set to the docker container otherwise no connection
+      DB_PORT: 5432
+      DB_SSLMODE: disable
+      # develop env var
+      GIN_MODE: debug
     ports:
-        - 9000:9000
-    restart: unless-stopped
-    expose:
-        - 9000
-    command: ./main
+      - 9000:9000  # Expose Gin's port
+    volumes:
+      - ./market-league-back-end:/app    # Bind mount your local directory to the container
+      - /app/tmp                        # Exclude temporary directories
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+    networks:
+      - market-league-dev
+    command: air                         # Use Air for live-reloading
 
   # Database: PostgreSQL
   db:
-    image: postgres
+    image: postgres:17.0
     restart: always
     user: postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}  # Fetch from the .env file
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Fetch from the .env file
-      POSTGRES_DB: ${POSTGRES_DB}  # Fetch from the .env file
+      POSTGRES_USER: ${POSTGRES_USER} # Fetch from the .env file
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - 5432:5432   # Exposes PostgreSQL on port 5432
     healthcheck:
@@ -45,16 +58,12 @@ services:
       retries: 10
     volumes:
       - postgres_data:/var/lib/postgresql/data   # Persists database data
-
-  # Database Manager
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 8080:8080
-    expose:
-      - 8080
+    networks:
+      - market-league-dev
 
 # Volume for Postegres database
 volumes:
   postgres_data:
+
+networks:
+  market-league-dev:

@@ -13,5 +13,13 @@ RUN go build -o main .
 FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /app/main .
-EXPOSE 5000
-CMD ["./main"]
+
+# Downloads
+RUN apk add --no-cache postgresql-client
+RUN apk add --no-cache bash
+
+COPY wait-for-postgres.sh /app/wait-for-postgres.sh
+RUN chmod +x /app/wait-for-postgres.sh
+EXPOSE 9000
+
+CMD ["./wait-for-postgres.sh", "./main"]

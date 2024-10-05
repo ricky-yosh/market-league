@@ -20,22 +20,35 @@ services:
       context: ./market-league-back-end  # Path to your Gin project directory
       dockerfile: Dockerfile.prod  # Production Dockerfile for Gin (Docker.prod)
     container_name: gin-prod
+    environment:
+      DB_USER: ${POSTGRES_USER}  # Fetch from the .env file
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      DB_HOST: db # needs to be set to the docker container otherwise no connection
+      DB_PORT: 5432
+      DB_SSLMODE: disable # need SSL certificate for this to work
+      # prod env var
+      GIN_MODE: release
     ports:
-      - "5000:5000"  # Expose the Gin API on port 5000
+      - 9000:9000
     depends_on:
       - db
+    command: ["./wait-for-postgres.sh", "./main"] # we need to make sure that the postgres server is up before we try and connect to it
     networks:
       - market-league-network
 
   # PostgreSQL Database Service
   db:
-    image: postgres:13  # Use a stable version of PostgreSQL
+    image: postgres:17.0
     container_name: postgres-prod
     restart: always
+    user: postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}  # Fetch from the .env file
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Fetch from the .env file
       POSTGRES_DB: ${POSTGRES_DB}  # Fetch from the .env file
+    ports:
+      - 5432:5432   # Exposes PostgreSQL on port 5432
     volumes:
       - pgdata:/var/lib/postgresql/data  # Persist PostgreSQL data
     networks:
@@ -44,7 +57,6 @@ services:
 # Networks
 networks:
   market-league-network:
-    driver: bridge
 
 # Volumes for PostgreSQL persistence
 volumes:

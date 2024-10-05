@@ -1,17 +1,28 @@
 # Dockerfile.dev
 FROM golang:1.23-alpine
 
-RUN apk update && apk upgrade && \
-    apk add --no-cache bash git openssh
-        
+# Install necessary tools
+RUN apk add --no-cache git bash
+
+# Install psql client
+RUN apk add --no-cache postgresql-client
+
+# Install Air for live-reloading by specifying a known working commit hash
+RUN go install github.com/cosmtrek/air@v1.40.4
+
+# Set the working directory inside the container
 WORKDIR /app
-        
-COPY go.mod go.sum ./
-        
+
+# Copy Go modules and install dependencies
+COPY go.mod ./
+COPY go.sum ./
 RUN go mod download
-        
+
+# Copy the rest of the application code
 COPY . .
-        
-RUN go build -o main .
-        
-CMD ["./main"]
+
+# Expose the port Gin will run on
+EXPOSE 9000
+
+# Start the Air live-reload
+CMD ["air"]
