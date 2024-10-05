@@ -55,10 +55,10 @@ func main() {
 	router.Use(cors.Default())
 
 	// Route to increment the counter
-	router.GET("/increment", incrementCounter)
+	router.GET("/api/increment", incrementCounter)
 
 	// Route to get the counter value
-	router.GET("/counter", getCounterValue)
+	router.GET("/api/counter", getCounterValue)
 
 	router.Run(":9000")
 }
