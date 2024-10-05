@@ -26,11 +26,14 @@ services:
       DB_NAME: ${POSTGRES_DB}
       DB_HOST: db # needs to be set to the docker container otherwise no connection
       DB_PORT: 5432
-      DB_SSLMODE: enable
+      DB_SSLMODE: disable # need SSL certificate for this to work
+      # prod env var
+      GIN_MODE: release
     ports:
       - 9000:9000
     depends_on:
       - db
+    command: ["./wait-for-postgres.sh", "./main"] # we need to make sure that the postgres server is up before we try and connect to it
     networks:
       - market-league-network
 
@@ -54,7 +57,6 @@ services:
 # Networks
 networks:
   market-league-network:
-    driver: bridge
 
 # Volumes for PostgreSQL persistence
 volumes:

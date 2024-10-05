@@ -27,6 +27,8 @@ services:
       DB_HOST: db # needs to be set to the docker container otherwise no connection
       DB_PORT: 5432
       DB_SSLMODE: disable
+      # develop env var
+      GIN_MODE: debug
     ports:
       - 9000:9000  # Expose Gin's port
     volumes:

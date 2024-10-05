@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ApiService } from '../api.service'; // Adjust the path as necessary
+import { ApiService, CountResponse } from '../api.service'; // Adjust the path as necessary
 
 @Component({
   selector: 'app-test-button',
@@ -14,9 +14,9 @@ export class TestButtonComponent {
 
   // Method to call the Go backend endpoint
   sendRequest() {
-    this.apiService.getPing().subscribe(
-      (response) => {
-        this.responseMessage = response.message || 'Success!';
+    this.apiService.increaseCount().subscribe(
+      (response: CountResponse) => {
+        this.responseMessage = response.value.toString() || 'Success!';
         console.log('Response from Go server:', response);
       },
       (error) => {

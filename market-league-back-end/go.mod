@@ -1,4 +1,4 @@
-module github.com/yourusername/my-gin-project
+module github.com/ricky-yosh/market-league
 
 go 1.23.1
 

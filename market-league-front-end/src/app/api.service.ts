@@ -2,6 +2,10 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+export interface CountResponse {
+  value: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -11,7 +15,7 @@ export class ApiService {
   constructor(private http: HttpClient) {}
 
   // Function to call the /ping endpoint
-  getPing(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/ping`);
+  increaseCount(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/increment`);
   }
 }

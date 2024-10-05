@@ -25,11 +25,11 @@ var db *gorm.DB
 // Initialize GORM with PostgreSQL
 func initDB() {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
+		os.Getenv("DB_HOST"),
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
 		os.Getenv("DB_NAME"),
+		os.Getenv("DB_PORT"),
 		os.Getenv("DB_SSLMODE"),
 	)
 
@@ -55,7 +55,7 @@ func main() {
 	router.Use(cors.Default())
 
 	// Route to increment the counter
-	router.POST("/increment", incrementCounter)
+	router.GET("/increment", incrementCounter)
 
 	// Route to get the counter value
 	router.GET("/counter", getCounterValue)
@@ -65,6 +65,7 @@ func main() {
 
 // Handler to increment the counter
 func incrementCounter(c *gin.Context) {
+	fmt.Println("Increment Counter")
 	// Retrieve the counter (assuming single row)
 	var counter Counter
 	db.First(&counter)
