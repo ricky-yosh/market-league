@@ -16,6 +16,6 @@ export class ApiService {
 
   // Function to call the /ping endpoint
   increaseCount(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/increment`);
+    return this.http.get(`${this.baseUrl}/api/increment`);
   }
 }
