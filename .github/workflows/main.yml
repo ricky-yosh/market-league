@@ -11,17 +11,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # Step 1: Checkout the repository
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    # Step 2: Set up the SSH agent with the private key
     - name: Set up SSH
       uses: webfactory/ssh-agent@v0.5.3
       with:
         ssh-private-key: ${{ secrets.DROPLET_SSH_KEY }}
-
+      
+    # Step 3: Deploy to the server
     - name: Deploy to server
       run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.DROPLET_USERNAME }}@${{ secrets.DROPLET_IP }} << 'EOF'
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 ${{ secrets.DROPLET_USERNAME }}@${{ secrets.DROPLET_IP }} << 'EOF'
           cd /home/market-league
           git pull origin main
           docker compose -f docker-compose.prod.yml up --build -d
