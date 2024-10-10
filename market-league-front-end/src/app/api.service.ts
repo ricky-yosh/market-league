@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, isDevMode } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../environments/environment';
 
 export interface CountResponse {
   value: number;
@@ -10,7 +11,8 @@ export interface CountResponse {
   providedIn: 'root',
 })
 export class ApiService {
-  private baseUrl = 'http://localhost:9000'; // Go server URL
+
+  private baseUrl = environment.api_url
 
   constructor(private http: HttpClient) {}
 

@@ -12,7 +12,7 @@ services:
       - /app/node_modules                 # Avoid overwriting node_modules with the local version
     networks:
       - market-league-dev
-    command: ng serve --host 0.0.0.0
+    command: ng serve --configuration development --host 0.0.0.0
 
   # Backend: Gin (Go)
   gin-backend:
