@@ -24,7 +24,7 @@ jobs:
     # Step 3: Deploy to the server
     - name: Deploy to server
       run: |
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 ${{ secrets.DROPLET_USERNAME }}@${{ secrets.DROPLET_IP }} << 'EOF'
+        ssh -o StrictHostKeyChecking=no -i /root/.ssh/id_ed25519 ${{ secrets.DROPLET_USERNAME }}@${{ secrets.DROPLET_IP }} << 'EOF'
           cd /home/market-league
           git pull origin main
           docker compose -f docker-compose.prod.yml up --build -d
