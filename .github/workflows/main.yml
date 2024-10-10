@@ -12,9 +12,9 @@ jobs:
       - name: Deploy to DigitalOcean Droplet
         uses: appleboy/ssh-action@master
         with:
-          host: ${{secrets.HOST}}
-          username: ${{secrets.USERNAME}}
-          key: ${{secrets.KEY}}
+          host: ${{secrets.DROPLET_IP}}
+          username: ${{secrets.DROPLET_USERNAME}}
+          key: ${{secrets.DROPLET_SSH_KEY}}
           script: |
               cd /home/market-league
               git pull origin main
