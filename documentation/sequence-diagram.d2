@@ -1,0 +1,96 @@
+# Sequence Diagram v1.2
+
+title: "Sequence Diagram v1.2" {
+    shape: text
+    near: top-center
+    style: {
+      font-size: 55
+    }
+  }
+  
+  # ######################
+  # # Boilerplate Setup ##
+  # ######################
+  
+  direction: right
+  shape: sequence_diagram
+  "": {
+    shape: person
+  }
+  Player
+  League
+  Stocks
+  Portfolio
+  Charts
+  Transaction
+  Stock Market API
+  
+  # ######################
+  # #  Boilerplate END  ##
+  # ######################
+  
+  User Opens MarketLeague: {
+    "" -> Player.play_game: login
+    "" -> Player.play_game: sign up
+    Player.play_game -> Player.play_game: create_player()
+  }
+  
+  # Stock Market Loop
+  Stock Market Loop: {
+    Stocks.daily_stock_update -> Stock Market API: update_stocks()
+    Stock Market API -> Stocks.daily_stock_update: stock_info()
+  }
+  
+  # Creating League
+  Creating League: {
+    Player.play_game -> League.league: create_league(player_id, league_id)
+    League -> League: db.create_league()
+    League -> Stocks.display_stocks: display_stocks(stock_id)
+    Stocks.display_stocks -> Charts.stock_chart: display_charts(stock_id)
+    Charts.stock_chart -> Stocks.display_stocks: stock_charts
+    Stocks.display_stocks -> League: stock_info
+  }
+  
+  # Selecting Stocks for League
+  Selecting Stocks: {
+    Player.play_game -> League.league: select_stock(stock_id)
+    League.league -> Stocks.stock_info: get_stock_info(stock_id)
+    Stocks.stock_info -> Portfolio.users_portfolio: update_portfolio
+    Portfolio.users_portfolio -> Stocks.stock_info: update_stock_owner(player_id, stock_id)
+    Stocks.stock_info -> League.league: update league
+    League.league -> Player.play_game: reflect changes
+  }
+  
+  # Trading Stocks
+  Trading Stocks: {
+    # Initial Trade Request
+    Player.player -> League.league: request_trade()
+    League.league -> Player.player: permit_trade()
+    Player.player -> League.league: trade(\[stock_id\], \[stock_id\])
+    League.league -> Stocks.stock: get_stock_info
+    Stocks: {
+      stock_fairness: check_stock_fairness
+    }
+    Stocks.stock -> League.league: confirm fairness
+    League.league -> Player.player: request trade confirmation
+  
+    # Trading Confirmation
+    Player.player -> League.league: confirm_trade(trade_id)
+    League.league -> Portfolio.update_portfolio: make_trade(trade_id)
+    Portfolio.update_portfolio -> Stocks.stock_update: change_ownership(player_id)
+    Stocks.stock_update -> League.league: confirm_change(stock_id)
+  
+    League.league -> Transaction.record_transaction: record_transaction(stock_id, player_id)
+    Transaction.record_transaction -> Transaction.record_transaction: record_transaction
+    Transaction.record_transaction -> League.league: confirm_transaction
+    League.league -> Player.player: display_transactions()
+  }
+  
+  # Close League
+  Close League: {
+    Player.play_game -> League.league: close_league()
+    League.league -> Player.play_game: show closed league
+  }
+  
+  Player.play_game -> "": logout
+  
