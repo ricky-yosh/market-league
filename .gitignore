@@ -2,3 +2,4 @@
 .env
 /.angular
 /tmp
+/venv
