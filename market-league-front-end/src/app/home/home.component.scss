@@ -1,56 +1,26 @@
+@import '../../styles/variables';
+
 body {
-    font-family: Arial, sans-serif;
+    font-family: $market-league-font-family;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-header {
-    background: #333;
-    color: #fff;
-    padding: 10px 0;
-}
-
-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 90%;
-    margin: auto;
-}
-
-.logo {
-    font-size: 24px;
-    font-weight: bold;
-}
-
-.nav-links {
-    list-style: none;
-    display: flex;
-}
-
-.nav-links li {
-    margin: 0 15px;
-}
-
-.nav-links a {
-    color: #fff;
-    text-decoration: none;
-    transition: color 0.3s;
-}
-
-.nav-links a:hover {
-    color: #00bcd4;
-}
-
 .hero {
     height: 80vh;
-    // background: url('hero-image.jpg') no-repeat center center/cover;
+    background: url('/images/stocks.jpg') no-repeat center center/cover;
     color: #fff;
     display: flex;
     justify-content: center;
     align-items: center;
     text-align: center;
+}
+
+.hero-content {
+    border-radius: 20px;
+    background-color: $market-league-purple;
+    padding: 1em 3em 3em 3em;
 }
 
 .hero-content h1 {
@@ -64,8 +34,8 @@ nav {
 }
 
 .btn {
-    background: #00bcd4;
-    color: #fff;
+    background: $market-league-gold;
+    color: darken($market-league-purple, 10%);
     padding: 15px 25px;
     text-decoration: none;
     border-radius: 5px;
@@ -73,13 +43,9 @@ nav {
 }
 
 .btn:hover {
-    background: #0288a3;
+    background: darken($market-league-gold, 10%);
 }
 
-footer {
-    background: #333;
-    color: #fff;
-    text-align: center;
-    padding: 15px;
-    position: relative;
+.padding-right {
+    margin-right: 2em;
 }
