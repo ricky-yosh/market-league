@@ -4,7 +4,7 @@ St. Edward's University Senior Project repository for MarketLeague, a fantasy-fo
 
 ## Running MarketLeague Locally
 Requirements:
-Docker v27.2.0
+[Docker v27.2.0](https://www.docker.com/products/docker-desktop/)
 ```sh
 ./run_docker_dev.sh
 ```
