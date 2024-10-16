@@ -17,6 +17,7 @@ POSTGRES_USER=user
 POSTGRES_PASSWORD=password
 POSTGRES_DB=database
 ```
+Change `user`, `password`, and `database` to appropriate values.
 
 ## MarketLeague Roadmap
 Projected plan for features and presentations.
@@ -35,6 +36,18 @@ Thanks to Liam Molina for creating the logo for MarketLeague!
 - [LinkedIn](https://www.linkedin.com/in/r1chard-yoshioka/)
 - [GitHub](https://github.com/ricky-yosh)
 
+## Resources
+- [unDraw Illustrations](https://undraw.co/illustrations)
+- [Docker](https://www.docker.com/)
+- [Angular](https://angular.dev/)
+- [Go](https://go.dev/)
+- [Digital Ocean Droplet](https://www.digitalocean.com/)
+- [Postman](https://www.postman.com/)
+- [Sourcetree](https://www.sourcetreeapp.com/)
+- [VSCode](https://code.visualstudio.com/)
+- [Slack](https://slack.com/)
+
 ## MarketLeague Version
 v1.2
+
 ![Repeating logo checkered pattern](./readme-images/logo_repeat.jpg)
