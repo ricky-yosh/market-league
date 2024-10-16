@@ -1,51 +1,15 @@
+@import '../../styles/variables';
+
 body {
-    font-family: Arial, sans-serif;
+    font-family: $market-league-font-family;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-header {
-    background: #333;
-    color: #fff;
-    padding: 10px 0;
-}
-
-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 90%;
-    margin: auto;
-}
-
-.logo {
-    font-size: 24px;
-    font-weight: bold;
-}
-
-.nav-links {
-    list-style: none;
-    display: flex;
-}
-
-.nav-links li {
-    margin: 0 15px;
-}
-
-.nav-links a {
-    color: #fff;
-    text-decoration: none;
-    transition: color 0.3s;
-}
-
-.nav-links a:hover {
-    color: #00bcd4;
-}
-
-.hero {
+.main {
     height: 80vh;
-    // background: url('hero-image.jpg') no-repeat center center/cover;
+    background: url('/images/undraw_project_manager.svg') no-repeat center center/cover;
     color: #fff;
     display: flex;
     justify-content: center;
@@ -53,33 +17,68 @@ nav {
     text-align: center;
 }
 
-.hero-content h1 {
+.checkered-background {
+    width: 100%;
+    height: 96vh; // Full height of the viewport or specify the height you need
+    background-image: url('/logos/checkered-pattern-marketleague.svg');
+    background-size: 140px;
+    background-repeat: repeat; // Repeats the pattern across the entire container
+}
+
+.main-content {
+    border-radius: 20px;
+    background-color: $market-league-purple;
+    padding: 1em 3em 4em 3em;
+}
+
+.main-content h1 {
     font-size: 48px;
     margin-bottom: 20px;
 }
 
-.hero-content p {
+.main-content p {
     font-size: 24px;
-    margin-bottom: 30px;
+    margin-bottom: 2em;
+}
+
+.information-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    flex-direction: column;
+}
+
+.information-rect {
+    max-width: 30em;
+}
+
+.content-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 11em;
 }
 
 .btn {
-    background: #00bcd4;
-    color: #fff;
-    padding: 15px 25px;
+    background: darken($market-league-gold, 1%);
+    border-color: $market-league-gold;
+    border-radius: 20px;
+
+    color: darken($market-league-purple, 10%);
+    padding: 1em 5em;
     text-decoration: none;
-    border-radius: 5px;
     transition: background 0.3s;
+    font-weight: bold;
+
+    font-size: 1.4em;
 }
 
 .btn:hover {
-    background: #0288a3;
+    background: lighten($market-league-gold, 20%);
 }
 
-footer {
-    background: #333;
-    color: #fff;
-    text-align: center;
-    padding: 15px;
-    position: relative;
+.margin-right {
+    margin-right: 2em;
 }
