@@ -7,9 +7,9 @@ body {
     box-sizing: border-box;
 }
 
-.hero {
+.main {
     height: 80vh;
-    background: url('/images/stocks.jpg') no-repeat center center/cover;
+    background: url('/images/undraw_project_manager.svg') no-repeat center center/cover;
     color: #fff;
     display: flex;
     justify-content: center;
@@ -17,35 +17,68 @@ body {
     text-align: center;
 }
 
-.hero-content {
-    border-radius: 20px;
-    background-color: $market-league-purple;
-    padding: 1em 3em 3em 3em;
+.checkered-background {
+    width: 100%;
+    height: 96vh; // Full height of the viewport or specify the height you need
+    background-image: url('/logos/checkered-pattern-marketleague.svg');
+    background-size: 140px;
+    background-repeat: repeat; // Repeats the pattern across the entire container
 }
 
-.hero-content h1 {
+.main-content {
+    border-radius: 20px;
+    background-color: $market-league-purple;
+    padding: 1em 3em 4em 3em;
+}
+
+.main-content h1 {
     font-size: 48px;
     margin-bottom: 20px;
 }
 
-.hero-content p {
+.main-content p {
     font-size: 24px;
-    margin-bottom: 30px;
+    margin-bottom: 2em;
+}
+
+.information-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    flex-direction: column;
+}
+
+.information-rect {
+    max-width: 30em;
+}
+
+.content-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 11em;
 }
 
 .btn {
-    background: $market-league-gold;
+    background: darken($market-league-gold, 1%);
+    border-color: $market-league-gold;
+    border-radius: 20px;
+
     color: darken($market-league-purple, 10%);
-    padding: 15px 25px;
+    padding: 1em 5em;
     text-decoration: none;
-    border-radius: 5px;
     transition: background 0.3s;
+    font-weight: bold;
+
+    font-size: 1.4em;
 }
 
 .btn:hover {
-    background: darken($market-league-gold, 10%);
+    background: lighten($market-league-gold, 20%);
 }
 
-.padding-right {
+.margin-right {
     margin-right: 2em;
 }
