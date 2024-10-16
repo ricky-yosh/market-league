@@ -24,16 +24,14 @@ img {
     padding: 0;
 }
 
-.nav-links li {
-    margin: 0 15px;
-}
-
 .nav-links a {
-    color: #fff;
+    color: $market-league-white;
     text-decoration: none;
     transition: color 0.3s;
+    padding: 1.5em 0.9em;
 }
 
 .nav-links a:hover {
-    color: #00bcd4;
+    color: $market-league-gold;
+    border-bottom: solid 4px;
 }
