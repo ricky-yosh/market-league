@@ -1,4 +1,4 @@
-module github.com/ricky-yosh/market-league
+module github.com/market-league
 
 go 1.23.1
 
