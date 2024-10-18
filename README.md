@@ -16,6 +16,7 @@ In order for MarketLeague to run correctly locally you will need to create a `.e
 POSTGRES_USER=user
 POSTGRES_PASSWORD=password
 POSTGRES_DB=database
+JWT_KEY=secretkey
 ```
 Change `user`, `password`, and `database` to appropriate values.
 

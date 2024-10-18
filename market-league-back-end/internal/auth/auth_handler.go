@@ -2,8 +2,11 @@ package auth
 
 import (
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"github.com/market-league/internal/user"
 )
 
@@ -46,6 +49,24 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 	})
 }
 
+var jwtSecretKey = []byte(os.Getenv("JWT_KEY"))
+
+// GenerateJWT generates a JWT for the authenticated user
+func GenerateJWT(userID uint) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		Subject:   string(userID),
+		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(), // Set the expiration time (e.g., 24 hours)
+	})
+
+	// Sign the token with your secret key
+	tokenString, err := token.SignedString(jwtSecretKey)
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
 // Login handles user authentication requests.
 func (h *AuthHandler) Login(c *gin.Context) {
 	var loginDetails struct {
@@ -69,13 +90,20 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		})
 		return
 	}
+	// Generate JWT
+	jwtToken, err := GenerateJWT(user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate JWT"})
+		return
+	}
 
 	// extract username
 	username := user.Name
 
 	// Respond with the authenticated user (for simplicity, you could return a token in a real-world app)
 	c.JSON(http.StatusOK, gin.H{
-		"message":  "Login successful",
+		"token":    jwtToken,
 		"username": username,
+		"message":  "Login successful",
 	})
 }

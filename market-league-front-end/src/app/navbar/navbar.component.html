@@ -4,9 +4,9 @@
             <img src="logos/horizontal-logo.svg" alt="Market League Full Horizontal Logo" />
         </a>
         <ul class="nav-links">
-            <li><a routerLink="../home" routerLinkActive="active" ariaCurrentWhenActive="page">Home</a></li>
-            <li><a routerLink="../about" routerLinkActive="active" ariaCurrentWhenActive="page">About</a></li>
-            <li><a routerLink="../login" routerLinkActive="active" ariaCurrentWhenActive="page">Login</a></li>
+            <li><button (click)="redirectToHome()">Home</button></li>
+            <li><button (click)="redirectToAbout()">About</button></li>
+            <li><button (click)="redirectToLogin()">Login</button></li>
         </ul>
     </nav>
 </header>
