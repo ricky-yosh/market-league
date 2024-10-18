@@ -13,9 +13,6 @@ import { FooterComponent } from '../footer/footer.component';
   styleUrl: './login.component.scss'
 })
 export class LoginComponent {
-  username: string = '';
-  email: string = '';
-  password: string = '';
 
   constructor(private loginService: LoginService, private router: Router) {}
 
@@ -24,12 +21,16 @@ export class LoginComponent {
     this.router.navigate(['/sign-up']);
   }
 
-  // Backend call to  
-  login() {
+  onSubmit(event: Event, username: string, password: string) {
+    event.preventDefault();
+    this.login(username, password);
+  }
+
+  // Backend call to get jwt token
+  login(username: string, password: string) {
     const credentials = {
-      username: 'username',
-      email: 'user@example.com',
-      password: 'password123',
+      username: username,
+      password: password,
     };
 
     this.loginService.login(credentials).subscribe({

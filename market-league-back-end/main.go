@@ -12,6 +12,14 @@ func main() {
 	db.InitDB()
 	// Initializes Gin router instance with default middleware attached
 	router := gin.Default()
+	// CORS configuration
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:4200"}, // Allow your frontend origin
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
 	// Create all api endpoints
 	api.RegisterRoutes(router)
 	// Enable CORS for all origins and methods

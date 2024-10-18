@@ -8,7 +8,7 @@ import (
 // AuthRepository is an interface that defines the methods for interacting with the user data in the database.
 type AuthRepository interface {
 	CreateUser(newUser *user.User) error
-	FindUserByEmail(email string) (*user.User, error)
+	FindUserByUsername(email string) (*user.User, error)
 }
 
 // authRepository is a struct that implements the AuthRepository interface.
@@ -27,9 +27,9 @@ func (r *authRepository) CreateUser(newUser *user.User) error {
 }
 
 // GetUserByEmail retrieves a user by their email.
-func (r *authRepository) FindUserByEmail(email string) (*user.User, error) {
+func (r *authRepository) FindUserByUsername(username string) (*user.User, error) {
 	var foundUser user.User
-	err := r.db.Where("email = ?", email).First(&foundUser).Error
+	err := r.db.Where("username = ?", username).First(&foundUser).Error
 	if err != nil {
 		return nil, err
 	}

@@ -2,9 +2,9 @@
 <section class="login checkered-background">
     <div class="login-content">
         <h1>Login</h1>
-        <form action="/login" method="post">
-            <input type="text" name="username" placeholder="Username" required>
-            <input type="password" name="password" placeholder="Password" required>
+        <form (submit)="onSubmit($event, username.value, password.value)">
+            <input type="text" name="username" placeholder="Username" #username required>
+            <input type="password" name="password" placeholder="Password" #password required>
             <button type="submit" class="btn padding-right">Login</button>
             <p class="small-text">Don't have an account?</p>
             <button (click)="redirectToSignUp()" class="create-account-btn">Create Account</button>

@@ -70,7 +70,7 @@ func GenerateJWT(userID uint) (string, error) {
 // Login handles user authentication requests.
 func (h *AuthHandler) Login(c *gin.Context) {
 	var loginDetails struct {
-		Email    string `json:"email" binding:"required"`
+		Username string `json:"username" binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}
 
@@ -83,10 +83,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// Call the service to authenticate the user
-	user, err := h.service.Login(loginDetails.Email, loginDetails.Password)
+	user, err := h.service.Login(loginDetails.Username, loginDetails.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Invalid email or password",
+			"error": "Invalid username or password",
 		})
 		return
 	}
@@ -98,7 +98,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// extract username
-	username := user.Name
+	username := user.Username
 
 	// Respond with the authenticated user (for simplicity, you could return a token in a real-world app)
 	c.JSON(http.StatusOK, gin.H{

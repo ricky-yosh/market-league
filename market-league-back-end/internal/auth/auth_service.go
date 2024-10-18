@@ -11,7 +11,7 @@ import (
 // AuthService interface defines methods related to authentication services.
 type AuthService interface {
 	Signup(user *user.User) error
-	Login(email, password string) (*user.User, error)
+	Login(username string, password string) (*user.User, error)
 }
 
 // authService struct implements the AuthService interface.
@@ -29,7 +29,7 @@ func NewAuthService(repo AuthRepository) AuthService {
 // Signup handles user registration, encrypting the password, and saving the user in the repository.
 func (s *authService) Signup(newUser *user.User) error {
 	// Check if the user already exists
-	existingUser, err := s.repo.FindUserByEmail(newUser.Email)
+	existingUser, err := s.repo.FindUserByUsername(newUser.Username)
 	if err == nil && existingUser != nil {
 		return errors.New("user with this email already exists")
 	}
@@ -46,9 +46,9 @@ func (s *authService) Signup(newUser *user.User) error {
 }
 
 // Login authenticates the user by verifying the email and password.
-func (s *authService) Login(email, password string) (*user.User, error) {
+func (s *authService) Login(username string, password string) (*user.User, error) {
 	// Find user by email
-	existingUser, err := s.repo.FindUserByEmail(email)
+	existingUser, err := s.repo.FindUserByUsername(username)
 	if err != nil {
 		return nil, errors.New("user not found")
 	}
