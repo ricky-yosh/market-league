@@ -48,7 +48,7 @@ export class LoginComponent {
     console.log('Login successful', response);
     // Session Token Handling
     localStorage.setItem('token', response.token);
-    
+    this.router.navigate(['/dashboard']);
   }
 
   handleError(error: any) {

@@ -1,0 +1,161 @@
+@import '../../../styles/variables';
+
+/* General Layout */
+.layout {
+    height: 100vh;
+}
+
+/* Sidebar (Left) */
+.sidebar {
+    width: 18em;
+    height: 96vh;
+    background-color: $market-league-purple;
+    color: white;
+    box-sizing: border-box;
+}
+
+.icons-list {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.sidebar-header {
+    text-align: center;
+}
+
+.logo {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 10px;
+}
+
+.leagues {
+    list-style-type: none;
+    padding: 0;
+}
+
+.leagues li {
+    font-size: 1.1rem;
+    width: 100%;
+
+    display: inline-block;
+    padding: 0.6em 0.5em 0.6em 0.5em; /* Space around the content */
+    background-color: transparent; /* Initial background */
+    border-radius: 5px; /* Makes the element circular */
+    transition: background-color 0.3s ease; /* Smooth transition for the hover effect */
+}
+
+.leagues li:hover {
+    background-color: rgba($market-league-white, 0.2); /* Grey background on hover */
+}
+
+/* Main Content */
+.under-navbar {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    box-sizing: border-box;
+}
+
+/* Topbar */
+.topbar {
+    background-color: $market-league-purple;
+    color: white;
+    padding: 15px 20px 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 4vh;
+}
+
+.topbar a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.2rem;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+  /* Content Area */
+.content-area {
+    padding: 20px;
+    flex: 1;
+}
+
+.topbar-icon {
+    display: inline-block;
+    padding: 0.3em 0.5em 0em 0.5em; /* Space around the content */
+    margin-bottom: 0.2em;
+    background-color: transparent; /* Initial background */
+    border-radius: 25%; /* Makes the element circular */
+    transition: background-color 0.3s ease; /* Smooth transition for the hover effect */
+}
+
+.topbar-icon:hover {
+    background-color: rgba($market-league-white, 0.2); /* Grey background on hover */
+}
+
+.sidebar-league{
+    display: inline-block;
+    padding: 0.3em 0.5em 0em 0.5em; /* Space around the content */
+    background-color: transparent; /* Initial background */
+    border-radius: 25%; /* Makes the element circular */
+    transition: background-color 0.3s ease; /* Smooth transition for the hover effect */
+}
+
+// Search
+.form-field {
+    display: flex;
+    align-items: center;
+    padding-left: 0.5em;
+    background-color: $market-league-white;
+    border-radius: 40px;
+    margin-top: 0.3em;
+    margin-right: 1em;
+    height: 2.3em;
+}
+
+.search-input {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    padding: 5px;
+    font-size: 1rem;
+}
+
+.search-button {
+    background: none;
+    border: none;
+    padding: 5px 5px 5px 5px;
+}
+
+.search-button:focus {
+    outline: none;
+}
+
+.search-icon {
+    width: 24px;
+    height: 24px;
+    color: $market-league-gold;
+    padding-top: 0.2em;
+}
+
+.middle-icons {
+    display: flex;
+    flex-direction: row;
+}
+
+// Logo
+.logo-image {
+    width: 17em;
+}
+
+@media (max-width: 50em) {
+    .logo-image {
+        content: url("/favicon.png");
+        width: 2.3em;
+    }
+}

@@ -1,0 +1,57 @@
+<div class="layout">
+
+    <!-- Main Content Area -->
+    <!-- Top bar -->
+    <header class="topbar">
+        
+        <div class="icons-list">
+            <div class="sidebar-header">
+                <button (click)="redirectToHome()">
+                    <img src="/logos/horizontal-logo.svg" alt="Market League Full Horizontal Logo" class="logo-image"/>
+                </button>
+            </div>
+
+            <div class="middle-icons">
+                <div class="form-field">
+                    <input type="search" class="search-input" placeholder="Search Stocks..." />
+                    <button class="search-button" aria-label="Search">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </button>
+                </div>     
+    
+                <button (click)="redirectToDashboard()" class="topbar-icon">
+                    <img src="/images/four-squares-icon.svg" alt="Image" width="22px">
+                </button>
+                <button (click)="redirectToPortfolio()" class="topbar-icon">
+                    <img src="/images/briefcase-icon.svg" alt="Image" width="25px">
+                </button>
+                <button (click)="redirectToTrades()" class="topbar-icon">
+                    <img src="/images/handshake-icon.svg" alt="Image" width="37px">
+                </button>
+                <button (click)="redirectToLeaderboard()" class="topbar-icon">
+                    <img src="/images/leaderboard-icon.svg" alt="Image" width="35px">
+                </button>
+            </div>
+
+            <button (click)="redirectToLeaderboard()" class="topbar-icon">
+                <img src="/images/settings-icon.svg" alt="Image" width="30px">
+            </button>
+        </div>
+        
+    </header>
+    
+    <!-- Left Sidebar -->
+    <div class="under-navbar">
+        <nav class="sidebar">
+            <ul class="leagues">
+                <li *ngFor="let league of leagues">{{ league }}</li>
+            </ul>
+        </nav>
+    
+        <!-- Dynamic content based on route -->
+        <div class="content-area">
+            <router-outlet></router-outlet>
+        </div>
+    </div>
+
+</div>
