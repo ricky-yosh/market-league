@@ -32,4 +32,6 @@ func RegisterRoutes(router *gin.Engine) {
 		authRoutes.POST("/signup", authHandler.Signup)
 		authRoutes.POST("/login", authHandler.Login)
 	}
+
+	router.GET("/api/services/stock-api", finnhub.getTestStock)
 }
