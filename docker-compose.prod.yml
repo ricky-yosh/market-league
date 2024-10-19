@@ -27,6 +27,8 @@ services:
       DB_HOST: db # needs to be set to the docker container otherwise no connection
       DB_PORT: 5432
       DB_SSLMODE: disable # need SSL certificate for this to work
+      JWT_KEY: ${JWT_KEY}
+      FINNHUB_API_KEY: ${FINNHUB_API_KEY}
       # prod env var
       GIN_MODE: release
     ports:
@@ -47,7 +49,6 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}  # Fetch from the .env file
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Fetch from the .env file
       POSTGRES_DB: ${POSTGRES_DB}  # Fetch from the .env file
-      JWT_KEY: ${JWT_KEY}
     ports:
       - 5432:5432   # Exposes PostgreSQL on port 5432
     volumes:
