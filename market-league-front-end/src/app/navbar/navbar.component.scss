@@ -3,7 +3,6 @@
 header {
     background: $market-league-purple;
     color: #fff;
-    padding: 10px 0;
 }
 
 nav {
@@ -12,9 +11,11 @@ nav {
     align-items: center;
     width: 90%;
     margin: auto;
+    padding-bottom: 4px; // to adjust for the underline
 }
 
 img {
+    padding-top: .3em;
     width: 290px;
 }
 
@@ -22,16 +23,18 @@ img {
     list-style: none;
     display: flex;
     padding: 0;
+    margin: 0;
 }
 
-.nav-links a {
+.nav-links button {
     color: $market-league-white;
     text-decoration: none;
     transition: color 0.3s;
-    padding: 1.5em 0.9em;
+    padding: 2.3em 0.9em;
 }
 
-.nav-links a:hover {
+.nav-links button:hover {
     color: $market-league-gold;
-    border-bottom: solid 4px;
+    border-bottom: 4px solid;
+    margin-bottom: -4px; // offset the border
 }

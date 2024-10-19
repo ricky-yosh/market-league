@@ -4,7 +4,7 @@ St. Edward's University Senior Project repository for MarketLeague, a fantasy-fo
 
 ## Running MarketLeague Locally
 Requirements:
-Docker v27.2.0
+[Docker v27.2.0](https://www.docker.com/products/docker-desktop/)
 ```sh
 ./run_docker_dev.sh
 ```
@@ -16,6 +16,7 @@ In order for MarketLeague to run correctly locally you will need to create a `.e
 POSTGRES_USER=user
 POSTGRES_PASSWORD=password
 POSTGRES_DB=database
+JWT_KEY=secretkey
 ```
 Change `user`, `password`, and `database` to appropriate values.
 
