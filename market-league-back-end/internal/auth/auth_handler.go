@@ -3,11 +3,12 @@ package auth
 import (
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
-	"github.com/market-league/internal/user"
+	"github.com/market-league/internal/models"
 )
 
 // AuthHandler defines a struct for handling authentication requests.
@@ -24,7 +25,7 @@ func NewAuthHandler(service AuthService) *AuthHandler {
 
 // Signup handles user registration requests.
 func (h *AuthHandler) Signup(c *gin.Context) {
-	var newUser user.User
+	var newUser models.User
 
 	// Bind incoming JSON to the newUser struct
 	if err := c.ShouldBindJSON(&newUser); err != nil {
@@ -53,8 +54,10 @@ var jwtSecretKey = []byte(os.Getenv("JWT_KEY"))
 
 // GenerateJWT generates a JWT for the authenticated user
 func GenerateJWT(userID uint) (string, error) {
+	userIDStr := strconv.FormatUint(uint64(userID), 10)
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
-		Subject:   string(userID),
+		Subject:   userIDStr,
 		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(), // Set the expiration time (e.g., 24 hours)
 	})
 

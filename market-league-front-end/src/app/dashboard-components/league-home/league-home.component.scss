@@ -1,0 +1,67 @@
+@import "../../../styles/variables";
+
+h1 {
+    padding-left: 0.5em;
+    padding-top: 0.2em;
+    padding-bottom: 0.5em;
+    font-size: 1.8em;
+}
+
+h2 {
+    font-size: 1.3em;
+}
+
+.league-home {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    border-radius: 10px;
+    background-color: lighten($market-league-dark-blue, 33%);
+    margin: 0px;
+    padding: 0.5em 0.5em 0.5em 0.5em;
+
+    // scrolling ability
+    overflow-y: auto;
+    scrollbar-color: transparent transparent;
+    scrollbar-width: none;
+    max-height: 91vh;
+}
+
+// Grid Feature
+.flex-container {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 1em;
+
+    scrollbar-color: darken($market-league-white, 15%) transparent;
+}
+
+.flex-item {
+    background-color: $market-league-white;
+    padding: 1em 0.4em 1em 1em;
+    border-radius: 10px;
+}
+
+@media (max-width: 70em) {
+    .flex-container {
+        flex-direction: column;
+    }
+}
+
+.scrollable-section h2 {
+    margin-bottom: 10px;
+}
+
+.scrollable-section ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    max-height: 20em;
+    overflow-y: auto;
+}
+
+.scrollable-section li {
+    padding: 1em 0;
+    font-size: 16px;
+    border-bottom: 1px solid darken($market-league-white, 10%);
+}
