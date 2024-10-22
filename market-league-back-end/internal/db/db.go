@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/market-league/internal/user"
+	"github.com/market-league/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -35,7 +35,11 @@ func InitDB() {
 	// MIGRATIONS
 	err = DB.AutoMigrate(
 		// Add migrations go here
-		&user.User{},
+		&models.League{},
+		&models.Portfolio{},
+		&models.Stock{},
+		&models.Trade{},
+		&models.User{},
 	)
 
 	if err != nil {

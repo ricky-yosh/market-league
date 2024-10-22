@@ -1,17 +1,77 @@
 @import '../../../styles/variables';
 
-/* General Layout */
 .layout {
     height: 100vh;
+    background-color: $market-league-purple;
 }
 
-/* Sidebar (Left) */
 .sidebar {
-    width: 18em;
-    height: 96vh;
+    padding-top: 1em;
+    width: 3em;
+    height: 92.5vh;
     background-color: $market-league-purple;
     color: white;
     box-sizing: border-box;
+    overflow: hidden;
+    transition: width 0.3s ease; /* Smooth transition for expanding */
+}
+
+.sidebar:hover {
+    width: 16em;
+}
+
+.sidebar:hover .leagues {
+    scrollbar-color: rgba($market-league-white, 20%) transparent;
+}
+
+/* Leagues list styling */
+.leagues {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    // scroll feature
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    max-height: 65vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-color: transparent transparent;
+}
+
+.league-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    white-space: nowrap;
+}
+
+.league-item .first-letter {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.league-item .full-name {
+    margin-left: 10px;
+    opacity: 0; /* Initially hidden */
+    transition: opacity 0.3s ease, margin-left 0.3s ease;
+}
+
+/* On hover, show the full name */
+.sidebar:hover .full-name {
+    opacity: 1;
+    margin-left: 20px; /* Push the full name a bit for better effect */
+}
+
+.sidebar:hover .first-letter {
+    margin-left: 0;
+}
+
+.sidebar:hover .leagues-header {
+    color: $market-league-white;
+    width: 100%;
+    text-align: center;
 }
 
 .icons-list {
@@ -40,11 +100,10 @@
 .leagues li {
     font-size: 1.1rem;
     width: 100%;
-
+    box-sizing: border-box;
     display: inline-block;
     padding: 0.6em 0.5em 0.6em 0.5em; /* Space around the content */
     background-color: transparent; /* Initial background */
-    border-radius: 5px; /* Makes the element circular */
     transition: background-color 0.3s ease; /* Smooth transition for the hover effect */
 }
 
@@ -81,7 +140,7 @@
 
   /* Content Area */
 .content-area {
-    padding: 20px;
+    padding: 0px 1em 1em 0em;
     flex: 1;
 }
 
@@ -98,7 +157,7 @@
     background-color: rgba($market-league-white, 0.2); /* Grey background on hover */
 }
 
-.sidebar-league{
+.sidebar-league {
     display: inline-block;
     padding: 0.3em 0.5em 0em 0.5em; /* Space around the content */
     background-color: transparent; /* Initial background */
@@ -152,6 +211,61 @@
 .logo-image {
     width: 17em;
 }
+
+.league-options {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.sidebar:hover .league-options {
+    justify-content: center;
+    gap: 10px;
+}
+
+.add-and-view-leagues {
+    width: 100%;
+}
+
+.separator-from-leagues-and-logout {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.user-text {
+    display: flex;
+    margin-bottom: 1em;
+}
+
+.sidebar:hover .user-text {
+    justify-content: center;
+}
+
+.logout-button {
+    color: transparent;
+}
+
+.sidebar:hover .logout-button {
+    color: $market-league-white;
+    transition: color 0.3s ease; /* Smooth transition for the hover effect */
+}
+
+
+.logout-button {
+    display: inline-block;
+    padding: 0.5em 1.5em; /* Space around the content */
+    margin-bottom: 0.2em;
+    background-color: transparent; /* Initial background */
+    border-radius: 15px; /* Makes the element circular */
+    transition: background-color 0.3s ease; /* Smooth transition for the hover effect */
+}
+
+.logout-button:hover {
+    background-color: rgba($market-league-white, 0.2); /* Grey background on hover */
+}
+
 
 @media (max-width: 50em) {
     .logo-image {

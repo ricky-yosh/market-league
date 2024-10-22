@@ -4,14 +4,14 @@ package auth
 import (
 	"errors"
 
-	"github.com/market-league/internal/user"
+	"github.com/market-league/internal/models"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // AuthService interface defines methods related to authentication services.
 type AuthService interface {
-	Signup(user *user.User) error
-	Login(username string, password string) (*user.User, error)
+	Signup(user *models.User) error
+	Login(username string, password string) (*models.User, error)
 }
 
 // authService struct implements the AuthService interface.
@@ -27,7 +27,7 @@ func NewAuthService(repo AuthRepository) AuthService {
 }
 
 // Signup handles user registration, encrypting the password, and saving the user in the repository.
-func (s *authService) Signup(newUser *user.User) error {
+func (s *authService) Signup(newUser *models.User) error {
 	// Check if the user already exists
 	existingUser, err := s.repo.FindUserByUsername(newUser.Username)
 	if err == nil && existingUser != nil {
@@ -46,7 +46,7 @@ func (s *authService) Signup(newUser *user.User) error {
 }
 
 // Login authenticates the user by verifying the email and password.
-func (s *authService) Login(username string, password string) (*user.User, error) {
+func (s *authService) Login(username string, password string) (*models.User, error) {
 	// Find user by email
 	existingUser, err := s.repo.FindUserByUsername(username)
 	if err != nil {

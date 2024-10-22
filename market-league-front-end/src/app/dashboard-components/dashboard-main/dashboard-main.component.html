@@ -19,21 +19,21 @@
                     </button>
                 </div>     
     
-                <button (click)="redirectToDashboard()" class="topbar-icon">
+                <button (click)="redirectToDashboard()" title="League Dashboard" class="topbar-icon">
                     <img src="/images/four-squares-icon.svg" alt="Image" width="22px">
                 </button>
-                <button (click)="redirectToPortfolio()" class="topbar-icon">
+                <button (click)="redirectToPortfolio()" title="Portfolio" class="topbar-icon">
                     <img src="/images/briefcase-icon.svg" alt="Image" width="25px">
                 </button>
-                <button (click)="redirectToTrades()" class="topbar-icon">
+                <button (click)="redirectToTrades()" title="Trades" class="topbar-icon">
                     <img src="/images/handshake-icon.svg" alt="Image" width="37px">
                 </button>
-                <button (click)="redirectToLeaderboard()" class="topbar-icon">
+                <button (click)="redirectToLeaderboard()" title="Leaderboard" class="topbar-icon">
                     <img src="/images/leaderboard-icon.svg" alt="Image" width="35px">
                 </button>
             </div>
 
-            <button (click)="redirectToLeaderboard()" class="topbar-icon">
+            <button (click)="redirectToLeaderboard()" title="Settings" class="topbar-icon">
                 <img src="/images/settings-icon.svg" alt="Image" width="30px">
             </button>
         </div>
@@ -43,9 +43,31 @@
     <!-- Left Sidebar -->
     <div class="under-navbar">
         <nav class="sidebar">
-            <ul class="leagues">
-                <li *ngFor="let league of leagues">{{ league }}</li>
-            </ul>
+            <div class="separator-from-leagues-and-logout">
+                <div class="add-and-view-leagues">
+                    <h2 class="leagues-header">Leagues</h2>
+                    <hr style="width: 2em;">
+                    <div class="league-options">
+                        <button (click)="redirectToLeaderboard()" title="Add League" class="topbar-icon">
+                            <img src="/images/plus-icon.svg" alt="Image" width="25px">
+                        </button>
+                        <button (click)="redirectToLeaderboard()" title="Remove League" class="topbar-icon">
+                            <img src="/images/minus-round-icon.svg" alt="Image" width="25px">
+                        </button>
+                    </div>
+                    <ul class="leagues">
+                        <li *ngFor="let league of leagues" class="league-item">
+                            <span class="first-letter">{{ league[0] }}</span>
+                            <span class="full-name">{{ league }}</span>
+                        </li>
+                    </ul>
+                </div>
+                <div *ngIf="user" class="user-text">
+                    <button (click)="redirectToLeaderboard()" title="Remove League" class="logout-button">
+                        <p>Logout {{user}}</p>
+                    </button>
+                </div>
+            </div>
         </nav>
     
         <!-- Dynamic content based on route -->
