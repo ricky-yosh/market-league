@@ -35,6 +35,10 @@ func InitDB() {
 	// MIGRATIONS
 	err = DB.AutoMigrate(
 		// Add migrations go here
+		&models.League{},
+		&models.Portfolio{},
+		&models.Stock{},
+		&models.Trade{},
 		&models.User{},
 	)
 
