@@ -10,6 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/market-league/internal/auth"
 	"github.com/market-league/internal/db"
+	"github.com/market-league/internal/services"
+    "fmt"
+	"log"
 )
 
 func RegisterRoutes(router *gin.Engine) {
@@ -32,6 +35,15 @@ func RegisterRoutes(router *gin.Engine) {
 		authRoutes.POST("/signup", authHandler.Signup)
 		authRoutes.POST("/login", authHandler.Login)
 	}
-
-	router.GET("/api/services/stock-api", finnhub.getTestStock)
+	
+	router.GET("/api/services/stock-api", func(c *gin.Context) {
+		quote, err := services.GetTestStock()
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(200, quote)
+	})
+	
+	
 }
