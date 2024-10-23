@@ -55,21 +55,30 @@ func (h *LeagueHandler) AddUserToLeague(c *gin.Context) {
 		LeagueID uint `json:"league_id" binding:"required"`
 	}
 
+	// Bind JSON input to the request struct
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
-	if err := h.service.AddUserToLeague(request.UserID, request.LeagueID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add user to league"})
+	// Call the service to add the user to the league
+	err := h.service.AddUserToLeague(request.UserID, request.LeagueID)
+	if err != nil {
+		if err.Error() == "user already in league" {
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User added to league successfully"})
+	// Return success response
+	c.JSON(http.StatusOK, gin.H{"message": "User successfully added to league"})
 }
 
 // GetLeagueDetails handles fetching the details of a specific league.
 func (h *LeagueHandler) GetLeagueDetails(c *gin.Context) {
+
 	var request struct {
 		LeagueID uint `json:"league_id" binding:"required"`
 	}
@@ -79,13 +88,22 @@ func (h *LeagueHandler) GetLeagueDetails(c *gin.Context) {
 		return
 	}
 
-	league, err := h.service.GetLeagueDetails(request.LeagueID)
+	league, users, err := h.service.GetLeagueDetails(request.LeagueID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch league details"})
 		return
 	}
 
-	c.JSON(http.StatusOK, league)
+	// Construct response with sanitized user details
+	response := gin.H{
+		"id":          league.ID,
+		"league_name": league.LeagueName,
+		"start_date":  league.StartDate,
+		"end_date":    league.EndDate,
+		"users":       users,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // GetLeaderboard handles fetching the leaderboard for a specific league.

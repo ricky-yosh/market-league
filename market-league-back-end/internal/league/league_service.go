@@ -66,19 +66,43 @@ func (s *LeagueService) AddUserToLeague(userID, leagueID uint) error {
 	// Delegate the logic to the repository
 	err := s.repo.AddUserToLeague(userID, leagueID)
 	if err != nil {
-		return fmt.Errorf("failed to add user to league: %v", err)
+		return fmt.Errorf("%v", err)
 	}
 
 	return nil
 }
 
 // GetLeagueDetails retrieves details for a specific league by ID.
-func (s *LeagueService) GetLeagueDetails(leagueID uint) (*models.League, error) {
+func (s *LeagueService) GetLeagueDetails(leagueID uint) (*models.League, []models.SanitizedUser, error) {
+	// Fetch the league details from the repository
 	league, err := s.repo.GetLeagueDetails(leagueID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch league details: %v", err)
+		return nil, nil, fmt.Errorf("failed to fetch league details: %v", err)
 	}
-	return league, nil
+
+	// Convert the league's users to sanitized DTOs
+	sanitized_users := SanitizeUsers(league.Users)
+
+	return league, sanitized_users, nil
+}
+
+// Helper Functions
+func SanitizeUser(user models.User) models.SanitizedUser {
+	return models.SanitizedUser{
+		ID:        user.ID,
+		Username:  user.Username,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+	}
+}
+
+// Sanitize User Object to make object more secure
+func SanitizeUsers(users []models.User) []models.SanitizedUser {
+	sanitized_users := make([]models.SanitizedUser, len(users))
+	for i, user := range users {
+		sanitized_users[i] = SanitizeUser(user)
+	}
+	return sanitized_users
 }
 
 // GetLeaderboard retrieves the leaderboard for a specific league.

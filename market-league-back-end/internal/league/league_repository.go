@@ -2,6 +2,7 @@ package league
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/market-league/internal/models"
 	"github.com/market-league/internal/portfolio"
@@ -35,6 +36,13 @@ func (r *LeagueRepository) AddUserToLeague(userID, leagueID uint) error {
 	var user models.User
 	if err := r.db.First(&user, userID).Error; err != nil {
 		return fmt.Errorf("failed to find user: %w", err)
+	}
+
+	// Check if the user is already in the league
+	// The Association("Users") will check the "Users" association on the League model.
+	if r.db.Model(&league).Association("Users").Find(&user); user.ID != 0 {
+		log.Println("User already in league")
+		return fmt.Errorf("user already in league")
 	}
 
 	// Append the user to the league's Users association
