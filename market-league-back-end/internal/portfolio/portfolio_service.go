@@ -91,3 +91,15 @@ func (s *PortfolioService) RemoveStockFromPortfolio(portfolioID, stockID uint) e
 	// Update the portfolio in the repository
 	return s.repo.UpdatePortfolio(portfolio)
 }
+
+// CalculateTotalValue calculates the total value of the portfolio based on its stocks.
+func (s *PortfolioService) CalculateTotalValue(portfolio *models.Portfolio) float64 {
+	total := 0.0
+
+	// Iterate over each stock in the portfolio and sum up their current prices.
+	for _, stock := range portfolio.Stocks {
+		total += stock.CurrentPrice
+	}
+
+	return total
+}

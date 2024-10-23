@@ -86,14 +86,14 @@ func RegisterRoutes(router *gin.Engine) {
 	// League routes
 	leagueRepo := league.NewLeagueRepository(database)
 	leagueService := league.NewLeagueService(leagueRepo, userRepo, portfolioRepo)
-	leagueHandler := league.NewLeagueHandler(leagueService)
+	leagueHandler := league.NewLeagueHandler(leagueService, portfolioService)
 
 	leagueRoutes := router.Group("/api/leagues")
 	{
-		leagueRoutes.POST("/create-league", leagueHandler.CreateLeague)
-		leagueRoutes.POST("/add-user-to-league", leagueHandler.AddUserToLeague)
-		leagueRoutes.POST("/details", leagueHandler.GetLeagueDetails)
-		leagueRoutes.POST("/leaderboard", leagueHandler.GetLeaderboard)
+		leagueRoutes.POST("/create-league", leagueHandler.CreateLeague)         // Create League
+		leagueRoutes.POST("/add-user-to-league", leagueHandler.AddUserToLeague) // Add Users to League
+		leagueRoutes.POST("/details", leagueHandler.GetLeagueDetails)           // Get League Details
+		leagueRoutes.POST("/leaderboard", leagueHandler.GetLeaderboard)         // Get League Leaderboard
 	}
 
 }

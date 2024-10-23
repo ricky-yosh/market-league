@@ -2,25 +2,31 @@ package league
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/market-league/internal/portfolio"
 )
 
 // LeagueHandler defines the HTTP handler for league-related operations.
 type LeagueHandler struct {
-	service *LeagueService
+	service          *LeagueService
+	portfolioService *portfolio.PortfolioService
 }
 
 // NewLeagueHandler creates a new instance of LeagueHandler.
-func NewLeagueHandler(service *LeagueService) *LeagueHandler {
-	return &LeagueHandler{service: service}
+func NewLeagueHandler(service *LeagueService, portfolioService *portfolio.PortfolioService) *LeagueHandler {
+	return &LeagueHandler{
+		service:          service,
+		portfolioService: portfolioService,
+	}
 }
 
 // CreateLeague handles the creation of a new league.
 func (h *LeagueHandler) CreateLeague(c *gin.Context) {
 	var leagueRequest struct {
 		LeagueName string `json:"league_name" binding:"required"`
-		StartDate  string `json:"start_date" binding:"required"`
+		OwnerUser  string `json:"owner_user" binding:"required"`
 		EndDate    string `json:"end_date" binding:"required"`
 	}
 
@@ -29,7 +35,11 @@ func (h *LeagueHandler) CreateLeague(c *gin.Context) {
 		return
 	}
 
-	league, err := h.service.CreateLeague(leagueRequest.LeagueName, leagueRequest.StartDate, leagueRequest.EndDate)
+	// Set the start date to the current date and time
+	startDate := time.Now().Format(time.RFC3339)
+
+	// Pass the values to the service to create the league
+	league, err := h.service.CreateLeague(leagueRequest.LeagueName, leagueRequest.OwnerUser, startDate, leagueRequest.EndDate)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create league"})
 		return
@@ -89,7 +99,8 @@ func (h *LeagueHandler) GetLeaderboard(c *gin.Context) {
 		return
 	}
 
-	leaderboard, err := h.service.GetLeaderboard(request.LeagueID)
+	// Pass the LeagueID and the PortfolioService to the service method
+	leaderboard, err := h.service.GetLeaderboard(request.LeagueID, h.portfolioService)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch leaderboard"})
 		return
