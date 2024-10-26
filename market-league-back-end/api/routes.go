@@ -79,6 +79,7 @@ func RegisterRoutes(router *gin.Engine) {
 	userRoutes := router.Group("/api/users")
 	{
 		userRoutes.POST("/user-info", userHandler.GetUserByID)
+		// userRoutes.POST("/update-user", userHandler.GetUserByID)
 	}
 
 	// League routes
