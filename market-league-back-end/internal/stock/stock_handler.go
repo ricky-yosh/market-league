@@ -2,7 +2,6 @@ package stock
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/market-league/internal/models"
@@ -18,42 +17,71 @@ func NewStockHandler(service *StockService) *StockHandler {
 	return &StockHandler{service: service}
 }
 
-// GetPrice handles fetching the current price of a stock by its ID.
+// GetPrice fetches the current price of a stock by its ID.
 func (h *StockHandler) GetPrice(c *gin.Context) {
-	// Parse the stock ID from the URL parameter
-	stockID, err := strconv.ParseUint(c.Param("stockID"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid stock ID"})
+	var request struct {
+		StockID uint `json:"stock_id" binding:"required"`
+	}
+
+	// Bind the request data to the struct
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Get the stock price using the service
-	price, err := h.service.GetPrice(uint(stockID))
+	// Call the service to get the stock price
+	price, err := h.service.GetPrice(request.StockID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Stock not found"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"stock_id": stockID, "price": price})
+	c.JSON(http.StatusOK, gin.H{"price": price})
 }
 
-// GetPriceHistory handles fetching the price history of a stock by its ID.
+// GetPriceHistory fetches the price history of a stock by its ID.
 func (h *StockHandler) GetPriceHistory(c *gin.Context) {
-	// Parse the stock ID from the URL parameter
-	stockID, err := strconv.ParseUint(c.Param("stockID"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid stock ID"})
+	var request struct {
+		StockID uint `json:"stock_id" binding:"required"`
+	}
+
+	// Bind the request data to the struct
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Get the stock's price history using the service
-	history, err := h.service.GetPriceHistory(uint(stockID))
+	// Call the service to get the stock price history
+	priceHistory, err := h.service.GetPriceHistory(request.StockID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Stock not found or failed to retrieve price history"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"stock_id": stockID, "price_history": history})
+	c.JSON(http.StatusOK, gin.H{"price_history": priceHistory})
+}
+
+// UpdatePriceHistory updates the price history of a stock.
+func (h *StockHandler) UpdatePriceHistory(c *gin.Context) {
+	var request struct {
+		StockID      uint      `json:"stock_id" binding:"required"`
+		PriceHistory []float64 `json:"price_history" binding:"required"`
+	}
+
+	// Bind the request data to the struct
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Call the service to update the price history
+	err := h.service.UpdatePriceHistory(request.StockID, request.PriceHistory)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Price history updated successfully"})
 }
 
 // CreateStock handles creating a new stock (if needed for administrative purposes).
@@ -75,28 +103,23 @@ func (h *StockHandler) CreateStock(c *gin.Context) {
 	c.JSON(http.StatusCreated, stock)
 }
 
-// UpdateStockPrice handles updating the current price of a stock.
+// UpdateStockPrice updates the current price of a stock by its ID.
 func (h *StockHandler) UpdateStockPrice(c *gin.Context) {
-	// Parse the stock ID from the URL parameter
-	stockID, err := strconv.ParseUint(c.Param("stockID"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid stock ID"})
-		return
-	}
-
-	// Bind JSON data to get the new price
 	var request struct {
+		StockID  uint    `json:"stock_id" binding:"required"`
 		NewPrice float64 `json:"new_price" binding:"required"`
 	}
+
+	// Bind the request data to the struct
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Update the stock price using the service
-	err = h.service.UpdateCurrentPrice(uint(stockID), request.NewPrice)
+	// Call the service to update the stock price
+	err := h.service.UpdateStockPrice(request.StockID, request.NewPrice)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update stock price"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

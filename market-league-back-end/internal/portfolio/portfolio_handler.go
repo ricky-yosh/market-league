@@ -2,7 +2,6 @@ package portfolio
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,34 +17,43 @@ func NewPortfolioHandler(service *PortfolioService) *PortfolioHandler {
 }
 
 // GetPortfolio handles fetching a portfolio by its ID.
-func (h *PortfolioHandler) GetPortfolio(c *gin.Context) {
-	portfolioID, err := strconv.ParseUint(c.Param("portfolioID"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid portfolio ID"})
+func (h *PortfolioHandler) GetPortfolioWithID(c *gin.Context) {
+	var request struct {
+		PortfolioID uint `json:"portfolio_id" binding:"required"`
+	}
+
+	// Bind the JSON input to the request struct
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
-	portfolio, err := h.service.GetPortfolio(uint(portfolioID))
+	// Fetch the portfolio with the given ID from the service
+	portfolio, err := h.service.GetPortfolioWithID(request.PortfolioID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Portfolio not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
+	// Return the portfolio details
 	c.JSON(http.StatusOK, portfolio)
 }
 
 // GetUserPortfolio handles fetching a user's portfolio in a specific league.
-func (h *PortfolioHandler) GetUserPortfolio(c *gin.Context) {
-	userID, err := strconv.ParseUint(c.Query("userID"), 10, 64)
-	leagueID, err := strconv.ParseUint(c.Query("leagueID"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID or league ID"})
+func (h *PortfolioHandler) GetLeaguePortfolio(c *gin.Context) {
+	var request struct {
+		UserID   uint `json:"user_id" binding:"required"`
+		LeagueID uint `json:"league_id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
-	portfolio, err := h.service.GetUserPortfolio(uint(userID), uint(leagueID))
+	portfolio, err := h.service.GetLeaguePortfolio(request.UserID, request.LeagueID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Portfolio not found"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

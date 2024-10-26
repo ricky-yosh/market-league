@@ -5,16 +5,16 @@ import (
 )
 
 type Trade struct {
-	ID          uint      `gorm:"primaryKey;autoIncrement"`
-	StockID     uint      `json:"stock_id"`               // Foreign key to Stock
-	Stock       Stock     `gorm:"foreignKey:StockID"`     // Association with Stock
-	UserID      uint      `json:"user_id"`                // Foreign key to User
-	User        User      `gorm:"foreignKey:UserID"`      // Association with User
-	PortfolioID uint      `json:"portfolio_id"`           // Foreign key to Portfolio
-	Portfolio   Portfolio `gorm:"foreignKey:PortfolioID"` // Association with Portfolio
-	LeagueID    uint      `json:"league_id"`              // Foreign key to League
-	League      League    `gorm:"foreignKey:LeagueID"`    // Association with League
-	TradeType   string    `json:"trade_type"`             // Buy or Sell
-	TradePrice  float64   `json:"trade_price"`            // Price per stock during trade
-	TradeDate   time.Time `json:"trade_date" gorm:"autoCreateTime"`
+	ID                 uint       `gorm:"primaryKey;autoIncrement"`
+	LeagueID           uint       `json:"league_id"`                                             // ID of the league in which the trade is taking place
+	Player1ID          uint       `json:"player1_id"`                                            // ID of the first player (initiator)
+	Player2ID          uint       `json:"player2_id"`                                            // ID of the second player (recipient)
+	Player1PortfolioID uint       `json:"player1_portfolio_id"`                                  // ID of the first player's portfolio
+	Player2PortfolioID uint       `json:"player2_portfolio_id"`                                  // ID of the second player's portfolio
+	Player1Stocks      []Stock    `json:"player1_stocks" gorm:"many2many:trade_player1_stocks;"` // Stocks offered by player 1
+	Player2Stocks      []Stock    `json:"player2_stocks" gorm:"many2many:trade_player2_stocks;"` // Stocks offered by player 2
+	Player1Confirmed   bool       `json:"player1_confirmed"`                                     // Whether Player 1 has confirmed the trade
+	Player2Confirmed   bool       `json:"player2_confirmed"`                                     // Whether Player 2 has confirmed the trade
+	CreatedAt          time.Time  `json:"created_at" gorm:"autoCreateTime"`                      // Timestamp of when the trade was created
+	ConfirmedAt        *time.Time `json:"confirmed_at"`                                          // Timestamp of when the trade was confirmed (nullable)
 }

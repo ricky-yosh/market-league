@@ -39,9 +39,9 @@ func RegisterRoutes(router *gin.Engine) {
 
 	portfolioRoutes := router.Group("/api/portfolio")
 	{
-		portfolioRoutes.POST("/:portfolioID", portfolioHandler.GetPortfolio)             // Fetch a portfolio by ID
-		portfolioRoutes.POST("/user-portfolio", portfolioHandler.GetUserPortfolio)       // Fetch user's portfolio in a league
-		portfolioRoutes.POST("/create", portfolioHandler.CreatePortfolio)                // Create a portfolio
+		portfolioRoutes.POST("/create-portfolio", portfolioHandler.CreatePortfolio)      // Create a portfolio
+		portfolioRoutes.POST("/portfolio-with-id", portfolioHandler.GetPortfolioWithID)  // Fetch a portfolio by ID
+		portfolioRoutes.POST("/league-portfolio", portfolioHandler.GetLeaguePortfolio)   // Fetch user's portfolio in a league
 		portfolioRoutes.POST("/add-stock", portfolioHandler.AddStockToPortfolio)         // Add a stock to a portfolio
 		portfolioRoutes.POST("/remove-stock", portfolioHandler.RemoveStockFromPortfolio) // Remove a stock from a portfolio
 	}
@@ -53,22 +53,23 @@ func RegisterRoutes(router *gin.Engine) {
 
 	stockRoutes := router.Group("/api/stocks")
 	{
-		stockRoutes.GET("/:stockID/price", stockHandler.GetPrice)                // Fetch stock price by ID
-		stockRoutes.GET("/:stockID/price-history", stockHandler.GetPriceHistory) // Fetch price history by ID
-		stockRoutes.POST("/", stockHandler.CreateStock)                          // Create a new stock
-		stockRoutes.PUT("/:stockID/update-price", stockHandler.UpdateStockPrice) // Update stock price by ID
+		stockRoutes.POST("/create-stock", stockHandler.CreateStock)                // Create a new stock
+		stockRoutes.POST("/stock-price", stockHandler.GetPrice)                    // Fetch stock price by ID
+		stockRoutes.POST("/update-stock-price", stockHandler.UpdateStockPrice)     // Update stock price by ID
+		stockRoutes.POST("/price-history", stockHandler.GetPriceHistory)           // Fetch price history by ID
+		stockRoutes.POST("/update-price-history", stockHandler.UpdatePriceHistory) // Update price history by ID
 	}
 
 	// Trades routes
 	tradeRepo := trade.NewTradeRepository(database)
-	tradeService := trade.NewTradeService(tradeRepo)
+	tradeService := trade.NewTradeService(tradeRepo, stockRepo)
 	tradeHandler := trade.NewTradeHandler(tradeService)
 
 	tradeRoutes := router.Group("/api/trades")
 	{
-		tradeRoutes.POST("/create", tradeHandler.CreateTrade)                         // Create a new trade
-		tradeRoutes.GET("/user/:userID", tradeHandler.GetTradesByUser)                // Get all trades by a specific user
-		tradeRoutes.GET("/portfolio/:portfolioID", tradeHandler.GetTradesByPortfolio) // Get all trades by a specific portfolio
+		tradeRoutes.POST("/create-trade", tradeHandler.CreateTrade) // Create a new trade
+		tradeRoutes.POST("/confirm-trade", tradeHandler.ConfirmTrade)
+		tradeRoutes.POST("/get-trades", tradeHandler.GetTrades)
 	}
 
 	userRepo := user.NewUserRepository(database)

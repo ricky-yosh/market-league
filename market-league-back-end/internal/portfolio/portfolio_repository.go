@@ -1,6 +1,8 @@
 package portfolio
 
 import (
+	"fmt"
+
 	"github.com/market-league/internal/models"
 	"gorm.io/gorm"
 )
@@ -16,23 +18,36 @@ func NewPortfolioRepository(db *gorm.DB) *PortfolioRepository {
 }
 
 // GetPortfolioByID fetches a portfolio by its ID.
-func (r *PortfolioRepository) GetPortfolioByID(portfolioID uint) (*models.Portfolio, error) {
+func (r *PortfolioRepository) GetPortfolioWithID(portfolioID uint) (*models.Portfolio, error) {
 	var portfolio models.Portfolio
-	err := r.db.Preload("Stocks").First(&portfolio, portfolioID).Error
+	// Preload the User, League, and Stocks associations
+	err := r.db.
+		Preload("User").
+		Preload("League").
+		Preload("Stocks").
+		First(&portfolio, portfolioID).Error
+
 	if err != nil {
-		return nil, err
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("portfolio with ID %d not found", portfolioID)
+		}
+		return nil, fmt.Errorf("failed to fetch portfolio: %w", err)
 	}
+
 	return &portfolio, nil
 }
 
-// GetUserPortfolioInLeague fetches a user's portfolio in a specific league.
-func (r *PortfolioRepository) GetUserPortfolioInLeague(userID, leagueID uint) (*models.Portfolio, error) {
+// GetPortfolioIDByUserAndLeague retrieves the portfolio ID for a given user and league.
+func (r *PortfolioRepository) GetPortfolioIDByUserAndLeague(userID, leagueID uint) (uint, error) {
 	var portfolio models.Portfolio
-	err := r.db.Preload("Stocks").Where("user_id = ? AND league_id = ?", userID, leagueID).First(&portfolio).Error
+	err := r.db.Select("id").Where("user_id = ? AND league_id = ?", userID, leagueID).First(&portfolio).Error
 	if err != nil {
-		return nil, err
+		if err == gorm.ErrRecordNotFound {
+			return 0, fmt.Errorf("portfolio not found for user ID %d in league ID %d", userID, leagueID)
+		}
+		return 0, fmt.Errorf("failed to fetch portfolio ID: %w", err)
 	}
-	return &portfolio, nil
+	return portfolio.ID, nil
 }
 
 // CreatePortfolio creates a new portfolio for a user in a league.

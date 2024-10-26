@@ -7,5 +7,4 @@ type Stock struct {
 	CurrentPrice float64     `json:"current_price"`
 	PriceHistory string      `json:"price_history" gorm:"type:jsonb"`
 	Portfolios   []Portfolio `gorm:"many2many:portfolio_stocks;"` // Many-to-many with portfolios
-	Trades       []Trade     `gorm:"foreignKey:StockID"`          // One-to-many with trades (use StockID as foreign key)
 }

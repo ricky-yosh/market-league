@@ -2,10 +2,8 @@ package trade
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/market-league/internal/models"
 )
 
 // TradeHandler defines the HTTP handler for trade-related operations.
@@ -18,57 +16,84 @@ func NewTradeHandler(service *TradeService) *TradeHandler {
 	return &TradeHandler{service: service}
 }
 
-// CreateTrade handles creating a new trade.
+// CreateTrade creates a new trade between two players within a league.
 func (h *TradeHandler) CreateTrade(c *gin.Context) {
-	var trade models.Trade
+	var request struct {
+		LeagueID           uint   `json:"league_id" binding:"required"`
+		Player1ID          uint   `json:"player1_id" binding:"required"`
+		Player2ID          uint   `json:"player2_id" binding:"required"`
+		Player1PortfolioID uint   `json:"player1_portfolio_id" binding:"required"`
+		Player2PortfolioID uint   `json:"player2_portfolio_id" binding:"required"`
+		Player1Stocks      []uint `json:"player1_stocks" binding:"required"` // List of stock IDs offered by Player 1
+		Player2Stocks      []uint `json:"player2_stocks" binding:"required"` // List of stock IDs offered by Player 2
+	}
 
-	// Bind JSON data to the trade model
-	if err := c.ShouldBindJSON(&trade); err != nil {
+	// Bind the request data to the struct
+	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Create the trade using the service
-	if err := h.service.CreateTrade(&trade); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create trade"})
+	// Call the service to create the trade
+	err := h.service.CreateTrade(
+		request.LeagueID,
+		request.Player1ID,
+		request.Player2ID,
+		request.Player1PortfolioID,
+		request.Player2PortfolioID,
+		request.Player1Stocks,
+		request.Player2Stocks,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, trade)
+	c.JSON(http.StatusCreated, gin.H{"message": "Trade created successfully"})
 }
 
-// GetTradesByUser handles fetching all trades made by a specific user.
-func (h *TradeHandler) GetTradesByUser(c *gin.Context) {
-	// Parse the user ID from the URL parameter
-	userID, err := strconv.ParseUint(c.Param("userID"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+// ConfirmTrade confirms a trade for a player.
+func (h *TradeHandler) ConfirmTrade(c *gin.Context) {
+	var request struct {
+		TradeID  uint `json:"trade_id" binding:"required"`
+		PlayerID uint `json:"player_id" binding:"required"`
+	}
+
+	// Bind the request data to the struct
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Fetch trades by the user using the service
-	trades, err := h.service.GetTradesByUser(uint(userID))
+	// Call the service to confirm the trade
+	err := h.service.ConfirmTrade(request.TradeID, request.PlayerID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch trades for user"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, trades)
+	c.JSON(http.StatusOK, gin.H{"message": "Trade confirmed successfully"})
 }
 
-// GetTradesByPortfolio handles fetching all trades related to a specific portfolio.
-func (h *TradeHandler) GetTradesByPortfolio(c *gin.Context) {
-	// Parse the portfolio ID from the URL parameter
-	portfolioID, err := strconv.ParseUint(c.Param("portfolioID"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid portfolio ID"})
+// GetTrades fetches trades based on filter criteria.
+func (h *TradeHandler) GetTrades(c *gin.Context) {
+	var request struct {
+		PortfolioID       uint `json:"portfolio_id"`        // Portfolio ID to filter by, if applicable
+		LeagueID          uint `json:"league_id"`           // League ID to filter by, if applicable
+		FilterByPortfolio bool `json:"filter_by_portfolio"` // Whether to filter by portfolio
+		FilterByLeague    bool `json:"filter_by_league"`    // Whether to filter by league
+	}
+
+	// Bind the JSON request data to the struct
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Fetch trades by portfolio using the service
-	trades, err := h.service.GetTradesByPortfolio(uint(portfolioID))
+	// Call the service to get the trades based on the filter criteria
+	trades, err := h.service.GetTrades(request.PortfolioID, request.LeagueID, request.FilterByPortfolio, request.FilterByLeague)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch trades for portfolio"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch trades"})
 		return
 	}
 
