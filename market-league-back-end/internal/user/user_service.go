@@ -1,42 +1,72 @@
 package user
 
 import (
+	"fmt"
+
 	"github.com/market-league/internal/models"
-	"gorm.io/gorm"
 )
 
 // UserService handles business logic related to users.
 type UserService struct {
-	db *gorm.DB
+	repo *UserRepository // Use the repository to access the database
 }
 
 // NewUserService creates a new instance of UserService.
 func NewUserService(repo *UserRepository) *UserService {
-	return &UserService{db: repo.db}
+	return &UserService{repo: repo}
 }
 
-// GetUserByID fetches a user by their ID.
-func (s *UserService) GetUserByID(userID uint) (*models.User, error) {
-	var user models.User
-	err := s.db.Preload("Leagues").First(&user, userID).Error
-	return &user, err
+// GetUserInfo represents the aggregated information for a user.
+type GetUserInfo struct {
+	UserID     uint               `json:"user_id"`
+	Username   string             `json:"username"`
+	Email      string             `json:"email"`
+	Portfolios []models.Portfolio `json:"portfolios,omitempty"`
+	Leagues    []models.League    `json:"leagues,omitempty"`
+	Trades     []models.Trade     `json:"trades,omitempty"`
 }
 
-// UpdateUser updates user details in the database.
-func (s *UserService) UpdateUser(userID uint, user *models.User) error {
-	return s.db.Model(&models.User{}).Where("id = ?", userID).Updates(user).Error
-}
+// GetUserByID fetches user information based on filter criteria.
+func (s *UserService) GetUserByID(userID uint, includePortfolios, includeLeagues, includeTrades bool) (*GetUserInfo, error) {
+	// Fetch the user details (username, email, etc.)
+	user, err := s.repo.GetUserByID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch user details: %v", err)
+	}
 
-// GetUserLeagues fetches all leagues that a user is in.
-func (s *UserService) GetUserLeagues(userID uint) ([]models.League, error) {
-	var user models.User
-	err := s.db.Preload("Leagues").First(&user, userID).Error
-	return user.Leagues, err
-}
+	// Prepare the GetUserInfo response
+	userInfo := &GetUserInfo{
+		UserID:   user.ID,
+		Username: user.Username,
+		Email:    user.Email,
+	}
 
-// GetUserPortfolios fetches all portfolios that belong to a user.
-func (s *UserService) GetUserPortfolios(userID uint) ([]models.Portfolio, error) {
-	var portfolios []models.Portfolio
-	err := s.db.Where("user_id = ?", userID).Find(&portfolios).Error
-	return portfolios, err
+	// Fetch the user's portfolios if requested
+	if includePortfolios {
+		portfolios, err := s.repo.GetUserPortfolios(userID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch user's portfolios: %v", err)
+		}
+		userInfo.Portfolios = portfolios
+	}
+
+	// Fetch the user's leagues if requested
+	if includeLeagues {
+		leagues, err := s.repo.GetUserLeagues(userID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch user's leagues: %v", err)
+		}
+		userInfo.Leagues = leagues
+	}
+
+	// Fetch the user's trades if requested
+	if includeTrades {
+		trades, err := s.repo.GetUserTrades(userID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch user's trades: %v", err)
+		}
+		userInfo.Trades = trades
+	}
+
+	return userInfo, nil
 }

@@ -78,10 +78,7 @@ func RegisterRoutes(router *gin.Engine) {
 
 	userRoutes := router.Group("/api/users")
 	{
-		userRoutes.GET("/:userID", userHandler.GetUserByID)                  // Fetch a user by their ID
-		userRoutes.PUT("/:userID/update", userHandler.UpdateUser)            // Update user details
-		userRoutes.GET("/:userID/leagues", userHandler.GetUserLeagues)       // Fetch all leagues a user is in
-		userRoutes.GET("/:userID/portfolios", userHandler.GetUserPortfolios) // Fetch all portfolios a user has
+		userRoutes.POST("/user-info", userHandler.GetUserByID)
 	}
 
 	// League routes

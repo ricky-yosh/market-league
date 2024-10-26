@@ -2,10 +2,8 @@ package user
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/market-league/internal/models"
 )
 
 // UserHandler defines the HTTP handler for user-related operations.
@@ -18,85 +16,27 @@ func NewUserHandler(service *UserService) *UserHandler {
 	return &UserHandler{service: service}
 }
 
-// GetUserByID handles fetching a user by their ID.
+// GetUserByID fetches user information based on filter criteria.
 func (h *UserHandler) GetUserByID(c *gin.Context) {
-	// Parse the user ID from the URL parameter
-	userID, err := strconv.ParseUint(c.Param("userID"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-		return
+	var request struct {
+		UserID     uint `json:"user_id" binding:"required"` // User ID to fetch information for
+		Portfolios bool `json:"portfolios"`                 // Whether to include user's portfolios
+		Leagues    bool `json:"leagues"`                    // Whether to include user's leagues
+		Trades     bool `json:"trades"`                     // Whether to include user's trades
 	}
 
-	// Get the user by ID using the service
-	user, err := h.service.GetUserByID(uint(userID))
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, user)
-}
-
-// UpdateUser handles updating user details.
-func (h *UserHandler) UpdateUser(c *gin.Context) {
-	// Parse the user ID from the URL parameter
-	userID, err := strconv.ParseUint(c.Param("userID"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-		return
-	}
-
-	// Bind the JSON data to the user model
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	// Bind the JSON request data to the struct
+	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Update the user using the service
-	err = h.service.UpdateUser(uint(userID), &user)
+	// Call the service to get the user info based on the filter criteria
+	userInfo, err := h.service.GetUserByID(request.UserID, request.Portfolios, request.Leagues, request.Trades)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user information"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully"})
-}
-
-// GetUserLeagues handles fetching all leagues a user is in.
-func (h *UserHandler) GetUserLeagues(c *gin.Context) {
-	// Parse the user ID from the URL parameter
-	userID, err := strconv.ParseUint(c.Param("userID"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-		return
-	}
-
-	// Get the user's leagues using the service
-	leagues, err := h.service.GetUserLeagues(uint(userID))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch leagues"})
-		return
-	}
-
-	c.JSON(http.StatusOK, leagues)
-}
-
-// GetUserPortfolios handles fetching all portfolios a user has.
-func (h *UserHandler) GetUserPortfolios(c *gin.Context) {
-	// Parse the user ID from the URL parameter
-	userID, err := strconv.ParseUint(c.Param("userID"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-		return
-	}
-
-	// Get the user's portfolios using the service
-	portfolios, err := h.service.GetUserPortfolios(uint(userID))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch portfolios"})
-		return
-	}
-
-	c.JSON(http.StatusOK, portfolios)
+	c.JSON(http.StatusOK, userInfo)
 }
