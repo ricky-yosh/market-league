@@ -101,5 +101,5 @@ func RegisterRoutes(router *gin.Engine) {
 		leagueRoutes.POST("/leaderboard", leagueHandler.GetLeaderboard)         // Get League Leaderboard
 	}
 
-	router.GET("/api/services/stock-api", finnhub.getTestStock)
+	router.GET("/api/services/stock-api", services.getTestStock)
 }
