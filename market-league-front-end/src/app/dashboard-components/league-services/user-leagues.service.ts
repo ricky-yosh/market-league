@@ -10,13 +10,18 @@ export class UserLeaguesService {
 
   private baseUrl = environment.api_url
   private findUserLeagues = `${this.baseUrl}/api/users/user-leagues`
-  private selectedLeagueSubject = new BehaviorSubject<string | null>(null);
-  selectedLeague$ = this.selectedLeagueSubject.asObservable();
+  private selectedLeagueSource = new BehaviorSubject<string | null>(localStorage.getItem('selectedLeague'));
+  selectedLeague$ = this.selectedLeagueSource.asObservable();
 
   constructor(private http: HttpClient) {
     const storedLeague = localStorage.getItem('selectedLeague');
     console.log('Service Constructor: Stored League:', storedLeague);
-    this.selectedLeagueSubject = new BehaviorSubject<string | null>(storedLeague ? storedLeague : null);
+    this.selectedLeagueSource = new BehaviorSubject<string | null>(storedLeague ? storedLeague : null);
+
+    this.selectedLeagueSource.subscribe(value => {
+      console.log(`Service: selectedLeagueSource emitted value: ${value}`);
+    });
+
   }
 
   // Method to get the user's leagues using their user ID
@@ -25,14 +30,15 @@ export class UserLeaguesService {
   }
 
   // Method to set the selected league
-  setSelectedLeague(league: string) {
-    this.selectedLeagueSubject.next(league);
-    localStorage.setItem('selectedLeague', league); // Optionally persist to local storage
-  }
-
-  // Method to get the current selected league (synchronously)
-  getSelectedLeague(): string | null {
-    return this.selectedLeagueSubject.value;
+  setSelectedLeague(league: string | null): void {
+    console.log(`Setting selected league to: ${league}`);
+    this.selectedLeagueSource.next(league ? `${league}` : null); // Use a shallow copy or different reference
+    console.log(`Emitted new league: ${this.selectedLeagueSource.value}`);
+    if (league) {
+      localStorage.setItem('selectedLeague', league);
+    } else {
+      localStorage.removeItem('selectedLeague');
+    }
   }
 
 }

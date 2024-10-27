@@ -72,9 +72,7 @@ export class DashboardMainComponent {
 
   // Method to handle league selection
   selectLeague(league: string) {
-    this.selectedLeague = league;
-    localStorage.setItem('selectedLeague', league); // Persist selection to local storage
-    console.log(`Selected league: ${league}`);
+    this.leagueService.setSelectedLeague(league)
   }
     
 }

@@ -1,5 +1,6 @@
 import { NgFor } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
+import { UserLeaguesService } from '../league-services/user-leagues.service';
 
 @Component({
   selector: 'app-league-home',
@@ -24,10 +25,18 @@ export class LeagueHomeComponent {
   ];
 
   selectedLeague: string | null = null;
+  constructor(
+    private leagueService: UserLeaguesService,
+    private cd: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-    // Retrieve the selected league from local storage when the component initializes
-    this.selectedLeague = localStorage.getItem('selectedLeague');
+    // Subscribe to the league changes
+    this.leagueService['selectedLeagueSource'].subscribe(league => {
+      console.log(`ActiveLeagueComponent Subscription: Received league value: ${league}`);
+      this.selectedLeague = league;
+      this.cd.detectChanges();
+    });
   }
   
 }
