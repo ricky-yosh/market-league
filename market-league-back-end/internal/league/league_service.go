@@ -25,8 +25,17 @@ func NewLeagueService(repo *LeagueRepository, userRepo *user.UserRepository, por
 	}
 }
 
+// LeagueResponse represents the response with sanitized users.
+type LeagueResponse struct {
+	ID         uint                   `json:"id"`
+	LeagueName string                 `json:"league_name"`
+	StartDate  time.Time              `json:"start_date"`
+	EndDate    time.Time              `json:"end_date"`
+	Users      []models.SanitizedUser `json:"users"`
+}
+
 // CreateLeague creates a new league with the given details.
-func (s *LeagueService) CreateLeague(leagueName, ownerUser, startDate, endDate string) (*models.League, error) {
+func (s *LeagueService) CreateLeague(leagueName, ownerUser, startDate, endDate string) (*LeagueResponse, error) {
 	// Parse start and end dates into time.Time
 	start, err := time.Parse(time.RFC3339, startDate)
 	if err != nil {
@@ -58,7 +67,17 @@ func (s *LeagueService) CreateLeague(leagueName, ownerUser, startDate, endDate s
 		return nil, fmt.Errorf("failed to create league: %v", err)
 	}
 
-	return league, nil
+	// Use the existing SanitizeUsers function to sanitize the user data
+	sanitizedUsers := SanitizeUsers(league.Users)
+
+	// Return the league response with sanitized users
+	return &LeagueResponse{
+		ID:         league.ID,
+		LeagueName: league.LeagueName,
+		StartDate:  league.StartDate,
+		EndDate:    league.EndDate,
+		Users:      sanitizedUsers,
+	}, nil
 }
 
 // AddUserToLeague associates a user with a specific league.

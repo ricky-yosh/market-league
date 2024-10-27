@@ -2,25 +2,20 @@ package auth
 
 import (
 	"net/http"
-	"os"
-	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt"
+	"github.com/market-league/internal/league"
 	"github.com/market-league/internal/models"
 )
 
 // AuthHandler defines a struct for handling authentication requests.
 type AuthHandler struct {
-	service AuthService
+	service *AuthService
 }
 
-// NewAuthHandler initializes and returns an AuthHandler instance.
-func NewAuthHandler(service AuthService) *AuthHandler {
-	return &AuthHandler{
-		service: service,
-	}
+// NewAuthHandler creates a new instance of AuthHandler.
+func NewAuthHandler(service *AuthService) *AuthHandler {
+	return &AuthHandler{service: service}
 }
 
 // Signup handles user registration requests.
@@ -50,26 +45,6 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 	})
 }
 
-var jwtSecretKey = []byte(os.Getenv("JWT_KEY"))
-
-// GenerateJWT generates a JWT for the authenticated user
-func GenerateJWT(userID uint) (string, error) {
-	userIDStr := strconv.FormatUint(uint64(userID), 10)
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
-		Subject:   userIDStr,
-		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(), // Set the expiration time (e.g., 24 hours)
-	})
-
-	// Sign the token with your secret key
-	tokenString, err := token.SignedString(jwtSecretKey)
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
-}
-
 // Login handles user authentication requests.
 func (h *AuthHandler) Login(c *gin.Context) {
 	var loginDetails struct {
@@ -93,20 +68,47 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		})
 		return
 	}
-	// Generate JWT
-	jwtToken, err := GenerateJWT(user.ID)
+
+	// Generate JWT using the service
+	jwtToken, err := h.service.GenerateJWT(user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate JWT"})
 		return
 	}
 
-	// extract username
-	username := user.Username
-
-	// Respond with the authenticated user (for simplicity, you could return a token in a real-world app)
+	// Respond with the authenticated user and token
 	c.JSON(http.StatusOK, gin.H{
 		"token":    jwtToken,
-		"username": username,
+		"username": user.Username,
 		"message":  "Login successful",
 	})
+}
+
+// GetUserFromToken extracts user information based on the provided JWT token.
+func (h *AuthHandler) GetUserFromToken(c *gin.Context) {
+	// Extract the token from the Authorization header
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Authorization header is missing"})
+		return
+	}
+
+	// Parse the token
+	tokenString := authHeader[len("Bearer "):] // Remove "Bearer " from the header
+	userID, err := h.service.ParseJWT(tokenString)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+		return
+	}
+
+	// Fetch the user based on the userID
+	user, err := h.service.GetUserByID(userID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Sanitize and respond with user data
+	sanitizedUser := league.SanitizeUser(*user)
+	c.JSON(http.StatusOK, sanitizedUser)
 }

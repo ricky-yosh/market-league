@@ -1,6 +1,8 @@
 package api
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/market-league/internal/auth"
 	"github.com/market-league/internal/db"
@@ -22,7 +24,7 @@ func RegisterRoutes(router *gin.Engine) {
 
 	// Set up the authentication flow by initializing the repository, service, and handler layers
 	authRepo := auth.NewAuthRepository(database)
-	authService := auth.NewAuthService(authRepo)
+	authService := auth.NewAuthService(authRepo, os.Getenv("JWT_KEY"))
 	authHandler := auth.NewAuthHandler(authService)
 
 	// Auth routes
@@ -30,6 +32,7 @@ func RegisterRoutes(router *gin.Engine) {
 	{
 		authRoutes.POST("/signup", authHandler.Signup)
 		authRoutes.POST("/login", authHandler.Login)
+		authRoutes.GET("/user-from-token", authHandler.GetUserFromToken) // New endpoint to get user from JWT
 	}
 
 	// Portfolio routes
