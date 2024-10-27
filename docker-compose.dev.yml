@@ -44,7 +44,7 @@ services:
 
   # Database: PostgreSQL, changing image from 17 to 16
   db:
-    image: postgres:16.0
+    image: postgres:17.0
     restart: always
     user: postgres
     environment:
