@@ -7,7 +7,7 @@ import (
 // User struct with auto-incrementing ID, many-to-many relationship, and timestamps
 type User struct {
 	ID        uint      `gorm:"primaryKey;autoIncrement"`               // Auto-incrementing primary key
-	Username  string    `json:"name"`                                   // Username
+	Username  string    `json:"username"`                               // Username
 	Email     string    `json:"email"`                                  // User email
 	Password  string    `gorm:"not null"`                               // Store hashed password (not plaintext)
 	Leagues   []League  `json:"leagues" gorm:"many2many:user_leagues;"` // Many-to-many relation with Leagues

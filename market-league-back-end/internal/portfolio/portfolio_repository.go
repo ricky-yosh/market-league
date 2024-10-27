@@ -1,1 +1,66 @@
 package portfolio
+
+import (
+	"fmt"
+
+	"github.com/market-league/internal/models"
+	"gorm.io/gorm"
+)
+
+// PortfolioRepository provides access to portfolio-related operations in the database.
+type PortfolioRepository struct {
+	db *gorm.DB
+}
+
+// NewPortfolioRepository creates a new instance of PortfolioRepository.
+func NewPortfolioRepository(db *gorm.DB) *PortfolioRepository {
+	return &PortfolioRepository{db: db}
+}
+
+// GetPortfolioByID fetches a portfolio by its ID.
+func (r *PortfolioRepository) GetPortfolioWithID(portfolioID uint) (*models.Portfolio, error) {
+	var portfolio models.Portfolio
+	// Preload the User, League, and Stocks associations
+	err := r.db.
+		Preload("User").
+		Preload("League").
+		Preload("Stocks").
+		First(&portfolio, portfolioID).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("portfolio with ID %d not found", portfolioID)
+		}
+		return nil, fmt.Errorf("failed to fetch portfolio: %w", err)
+	}
+
+	return &portfolio, nil
+}
+
+// GetPortfolioIDByUserAndLeague retrieves the portfolio ID for a given user and league.
+func (r *PortfolioRepository) GetPortfolioIDByUserAndLeague(userID, leagueID uint) (uint, error) {
+	var portfolio models.Portfolio
+	err := r.db.Select("id").Where("user_id = ? AND league_id = ?", userID, leagueID).First(&portfolio).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return 0, fmt.Errorf("portfolio not found for user ID %d in league ID %d", userID, leagueID)
+		}
+		return 0, fmt.Errorf("failed to fetch portfolio ID: %w", err)
+	}
+	return portfolio.ID, nil
+}
+
+// CreatePortfolio creates a new portfolio for a user in a league.
+func (r *PortfolioRepository) CreatePortfolio(portfolio *models.Portfolio) error {
+	return r.db.Create(portfolio).Error
+}
+
+// UpdatePortfolio updates an existing portfolio in the database.
+func (r *PortfolioRepository) UpdatePortfolio(portfolio *models.Portfolio) error {
+	return r.db.Save(portfolio).Error
+}
+
+// DeletePortfolio deletes a portfolio by its ID.
+func (r *PortfolioRepository) DeletePortfolio(portfolioID uint) error {
+	return r.db.Delete(&models.Portfolio{}, portfolioID).Error
+}
