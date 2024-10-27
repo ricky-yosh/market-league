@@ -3,7 +3,6 @@ package services
 
 import (
     "context"
-    "fmt"
     "log"
     "os"
     finnhub "github.com/Finnhub-Stock-API/finnhub-go/v2"
@@ -20,7 +19,7 @@ func GetTestStock() (finnhub.Quote, error) {
     symbol := "AAPL"
 
     // Call the stock candle endpoint
-    quote, _, err := client.Quote(context.Background()).Symbol("AAPL").Execute()
+    quote, _, err := client.Quote(context.Background()).Symbol(symbol).Execute()
     if err != nil {
         log.Fatalf("Error fetching stock lastBidAsk: %v", err)
     }
