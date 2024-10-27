@@ -35,15 +35,69 @@ func RegisterRoutes(router *gin.Engine) {
 		authRoutes.POST("/signup", authHandler.Signup)
 		authRoutes.POST("/login", authHandler.Login)
 	}
-	
-	router.GET("/api/services/stock-api", func(c *gin.Context) {
-		quote, err := services.GetTestStock()
-		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(200, quote)
-	})
-	
-	
+
+	// Portfolio routes
+	portfolioRepo := portfolio.NewPortfolioRepository(database)
+	portfolioService := portfolio.NewPortfolioService(portfolioRepo)
+	portfolioHandler := portfolio.NewPortfolioHandler(portfolioService)
+
+	portfolioRoutes := router.Group("/api/portfolio")
+	{
+		portfolioRoutes.POST("/create-portfolio", portfolioHandler.CreatePortfolio)      // Create a portfolio
+		portfolioRoutes.POST("/portfolio-with-id", portfolioHandler.GetPortfolioWithID)  // Fetch a portfolio by ID
+		portfolioRoutes.POST("/league-portfolio", portfolioHandler.GetLeaguePortfolio)   // Fetch user's portfolio in a league
+		portfolioRoutes.POST("/add-stock", portfolioHandler.AddStockToPortfolio)         // Add a stock to a portfolio
+		portfolioRoutes.POST("/remove-stock", portfolioHandler.RemoveStockFromPortfolio) // Remove a stock from a portfolio
+	}
+
+	// Stocks routes
+	stockRepo := stock.NewStockRepository(database)
+	stockService := stock.NewStockService(stockRepo)
+	stockHandler := stock.NewStockHandler(stockService)
+
+	stockRoutes := router.Group("/api/stocks")
+	{
+		stockRoutes.POST("/create-stock", stockHandler.CreateStock)                // Create a new stock
+		stockRoutes.POST("/stock-price", stockHandler.GetPrice)                    // Fetch stock price by ID
+		stockRoutes.POST("/update-stock-price", stockHandler.UpdateStockPrice)     // Update stock price by ID
+		stockRoutes.POST("/price-history", stockHandler.GetPriceHistory)           // Fetch price history by ID
+		stockRoutes.POST("/update-price-history", stockHandler.UpdatePriceHistory) // Update price history by ID
+	}
+
+	// Trades routes
+	tradeRepo := trade.NewTradeRepository(database)
+	tradeService := trade.NewTradeService(tradeRepo, stockRepo)
+	tradeHandler := trade.NewTradeHandler(tradeService)
+
+	tradeRoutes := router.Group("/api/trades")
+	{
+		tradeRoutes.POST("/create-trade", tradeHandler.CreateTrade) // Create a new trade
+		tradeRoutes.POST("/confirm-trade", tradeHandler.ConfirmTrade)
+		tradeRoutes.POST("/get-trades", tradeHandler.GetTrades)
+	}
+
+	userRepo := user.NewUserRepository(database)
+	userService := user.NewUserService(userRepo)
+	userHandler := user.NewUserHandler(userService)
+
+	userRoutes := router.Group("/api/users")
+	{
+		userRoutes.POST("/user-info", userHandler.GetUserByID)
+		// userRoutes.POST("/update-user", userHandler.GetUserByID)
+	}
+
+	// League routes
+	leagueRepo := league.NewLeagueRepository(database)
+	leagueService := league.NewLeagueService(leagueRepo, userRepo, portfolioRepo)
+	leagueHandler := league.NewLeagueHandler(leagueService, portfolioService)
+
+	leagueRoutes := router.Group("/api/leagues")
+	{
+		leagueRoutes.POST("/create-league", leagueHandler.CreateLeague)         // Create League
+		leagueRoutes.POST("/add-user-to-league", leagueHandler.AddUserToLeague) // Add Users to League
+		leagueRoutes.POST("/details", leagueHandler.GetLeagueDetails)           // Get League Details
+		leagueRoutes.POST("/leaderboard", leagueHandler.GetLeaderboard)         // Get League Leaderboard
+	}
+
+	router.GET("/api/services/stock-api", finnhub.getTestStock)
 }
