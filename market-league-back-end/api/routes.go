@@ -82,6 +82,9 @@ func RegisterRoutes(router *gin.Engine) {
 	userRoutes := router.Group("/api/users")
 	{
 		userRoutes.POST("/user-info", userHandler.GetUserByID)
+		userRoutes.POST("/user-leagues", userHandler.GetUserLeagues)
+		userRoutes.POST("/user-trades", userHandler.GetUserTrades)
+		userRoutes.POST("/user-portfolios", userHandler.GetUserPortfolios)
 		// userRoutes.POST("/update-user", userHandler.GetUserByID)
 	}
 
@@ -98,5 +101,5 @@ func RegisterRoutes(router *gin.Engine) {
 		leagueRoutes.POST("/leaderboard", leagueHandler.GetLeaderboard)         // Get League Leaderboard
 	}
 
-	router.GET("/api/services/stock-api", finnhub.getTestStock)
+	router.GET("/api/services/stock-api", services.getTestStock)
 }

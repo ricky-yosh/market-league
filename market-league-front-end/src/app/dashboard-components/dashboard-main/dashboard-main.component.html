@@ -56,14 +56,19 @@
                         </button>
                     </div>
                     <ul class="leagues">
-                        <li *ngFor="let league of leagues" class="league-item">
+                        <li 
+                            *ngFor="let league of leagues" 
+                            class="league-item"
+                            (click)="selectLeague(league)"
+                            [class.selected]="league === selectedLeague"
+                        >
                             <span class="first-letter">{{ league[0] }}</span>
                             <span class="full-name">{{ league }}</span>
                         </li>
                     </ul>
                 </div>
                 <div *ngIf="user" class="user-text">
-                    <button (click)="redirectToLeaderboard()" title="Remove League" class="logout-button">
+                    <button (click)="redirectToLeaderboard()" title="Logout" class="logout-button">
                         <p>Logout {{user}}</p>
                     </button>
                 </div>

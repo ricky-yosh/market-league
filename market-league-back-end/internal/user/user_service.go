@@ -27,7 +27,7 @@ type GetUserInfo struct {
 }
 
 // GetUserByID fetches user information based on filter criteria.
-func (s *UserService) GetUserByID(userID uint, includePortfolios, includeLeagues, includeTrades bool) (*GetUserInfo, error) {
+func (s *UserService) GetUserByID(userID uint) (*GetUserInfo, error) {
 	// Fetch the user details (username, email, etc.)
 	user, err := s.repo.GetUserByID(userID)
 	if err != nil {
@@ -41,32 +41,35 @@ func (s *UserService) GetUserByID(userID uint, includePortfolios, includeLeagues
 		Email:    user.Email,
 	}
 
-	// Fetch the user's portfolios if requested
-	if includePortfolios {
-		portfolios, err := s.repo.GetUserPortfolios(userID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to fetch user's portfolios: %v", err)
-		}
-		userInfo.Portfolios = portfolios
-	}
-
-	// Fetch the user's leagues if requested
-	if includeLeagues {
-		leagues, err := s.repo.GetUserLeagues(userID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to fetch user's leagues: %v", err)
-		}
-		userInfo.Leagues = leagues
-	}
-
-	// Fetch the user's trades if requested
-	if includeTrades {
-		trades, err := s.repo.GetUserTrades(userID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to fetch user's trades: %v", err)
-		}
-		userInfo.Trades = trades
-	}
-
 	return userInfo, nil
+}
+
+// GetUserLeagues retrieves all leagues for a given user.
+func (s *UserService) GetUserLeagues(userID uint) ([]models.League, error) {
+	leagues, err := s.repo.GetUserLeagues(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get leagues for user: %v", err)
+	}
+
+	return leagues, nil
+}
+
+// GetUserTrades retrieves all trades involving a given user.
+func (s *UserService) GetUserTrades(userID uint) ([]models.Trade, error) {
+	trades, err := s.repo.GetUserTrades(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get trades for user: %v", err)
+	}
+
+	return trades, nil
+}
+
+// GetUserPortfolios retrieves all portfolios for a given user.
+func (s *UserService) GetUserPortfolios(userID uint) ([]models.Portfolio, error) {
+	portfolios, err := s.repo.GetUserPortfolios(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get portfolios for user: %v", err)
+	}
+
+	return portfolios, nil
 }

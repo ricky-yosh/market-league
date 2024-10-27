@@ -35,29 +35,33 @@ func (r *UserRepository) GetUserByUsername(username string) (*models.User, error
 	return &user, nil
 }
 
-// GetUserPortfolios fetches all portfolios for a given user.
-func (r *UserRepository) GetUserPortfolios(userID uint) ([]models.Portfolio, error) {
-	var portfolios []models.Portfolio
-	if err := r.db.Where("user_id = ?", userID).Find(&portfolios).Error; err != nil {
-		return nil, fmt.Errorf("failed to find portfolios for user with ID %d: %w", userID, err)
-	}
-	return portfolios, nil
-}
-
-// GetUserLeagues fetches all leagues that the user is part of.
+// GetUserLeagues retrieves all leagues that the user is a member of.
 func (r *UserRepository) GetUserLeagues(userID uint) ([]models.League, error) {
-	var leagues []models.League
-	if err := r.db.Model(&models.User{}).Where("id = ?", userID).Association("Leagues").Find(&leagues); err != nil {
-		return nil, fmt.Errorf("failed to find leagues for user with ID %d: %w", userID, err)
+	var user models.User
+	err := r.db.Preload("Leagues").First(&user, userID).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to find user: %w", err)
 	}
-	return leagues, nil
+
+	return user.Leagues, nil
 }
 
-// GetUserTrades fetches all trades involving a given user.
+// GetUserTrades retrieves all trades involving a specific user.
 func (r *UserRepository) GetUserTrades(userID uint) ([]models.Trade, error) {
 	var trades []models.Trade
-	if err := r.db.Where("player1_id = ? OR player2_id = ?", userID, userID).Find(&trades).Error; err != nil {
-		return nil, fmt.Errorf("failed to find trades for user with ID %d: %w", userID, err)
+	err := r.db.Where("player1_id = ? OR player2_id = ?", userID, userID).Find(&trades).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve trades: %w", err)
 	}
 	return trades, nil
+}
+
+// GetUserPortfolios retrieves all portfolios for a specific user.
+func (r *UserRepository) GetUserPortfolios(userID uint) ([]models.Portfolio, error) {
+	var portfolios []models.Portfolio
+	err := r.db.Where("user_id = ?", userID).Find(&portfolios).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve portfolios: %w", err)
+	}
+	return portfolios, nil
 }

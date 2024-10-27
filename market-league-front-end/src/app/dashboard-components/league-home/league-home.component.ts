@@ -22,5 +22,12 @@ export class LeagueHomeComponent {
     'Serena Williams', 'Michael Jordan', 'Usain Bolt', 
     'Marie Curie', 'Isaac Newton', 'Albert Einstein'
   ];
+
+  selectedLeague: string | null = null;
+
+  ngOnInit(): void {
+    // Retrieve the selected league from local storage when the component initializes
+    this.selectedLeague = localStorage.getItem('selectedLeague');
+  }
   
 }
