@@ -10,12 +10,13 @@ import { LoginResponse } from './login-response.interface';
 
 export class LoginService {
 
-  // Setup
   private baseUrl = environment.api_url
+  private loginURL = `${this.baseUrl}/api/auth/login`
+
   constructor(private http: HttpClient) {}
 
   // Login call
   login(credentials: { username: string; password: string }): Observable<any> {
-    return this.http.post<LoginResponse>(`${this.baseUrl}/api/auth/login`, credentials);
+    return this.http.post<LoginResponse>(this.loginURL, credentials);
   }
 }

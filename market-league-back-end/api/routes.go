@@ -82,6 +82,9 @@ func RegisterRoutes(router *gin.Engine) {
 	userRoutes := router.Group("/api/users")
 	{
 		userRoutes.POST("/user-info", userHandler.GetUserByID)
+		userRoutes.POST("/user-leagues", userHandler.GetUserLeagues)
+		userRoutes.POST("/user-trades", userHandler.GetUserTrades)
+		userRoutes.POST("/user-portfolios", userHandler.GetUserPortfolios)
 		// userRoutes.POST("/update-user", userHandler.GetUserByID)
 	}
 
