@@ -1,0 +1,44 @@
+<section class="league-home">
+    <h1>
+        {{ selectedLeague?.league_name ? selectedLeague?.league_name : 'Select a League' }}
+    </h1>
+    <div class="flex-container top">
+        <div class="flex-item scrollable-section" style="flex: 1;">
+            <h2>League Members</h2>
+            <ul>
+                <li *ngFor="let member of leagueMembers">{{ member }}</li>
+            </ul>
+        </div>
+        <div class="flex-item scrollable-section" style="flex: 1;">
+            <h2>Leaderboard</h2>
+            <ul>
+                <li *ngFor="let member of leagueMembers">{{ member }}</li>
+            </ul>
+        </div>
+    </div>
+    <div class="flex-container middle">
+        <div class="flex-item scrollable-section" style="flex: 2;">
+            <h2>Portfolio</h2>
+            <ul>
+                <li *ngFor="let stock of userPortfolio">{{ stock.ticker_symbol }}</li>
+            </ul>
+        </div>
+        <div class="flex-item scrollable-section" style="flex: 1;">
+            <h2>Trades</h2>
+            <ul>
+                <li *ngFor="let trade of userTrades">
+                    <p>{{trade.ID}}</p>
+                    <p>{{ trade.created_at | date: 'MMMM d, yyyy, h:mm:ss a' }}</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <!-- <div class="flex-container bottom">
+        <div class="flex-item" style="flex: 3;">
+            <h2>Price</h2>
+            <ul>
+                <li *ngFor="let member of leagueMembers">{{ member }}</li>
+            </ul>
+        </div>
+    </div> -->
+</section>

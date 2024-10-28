@@ -27,6 +27,8 @@ services:
       DB_HOST: db # needs to be set to the docker container otherwise no connection
       DB_PORT: 5432
       DB_SSLMODE: disable
+      JWT_KEY: ${JWT_KEY}
+      FINNHUB_API_KEY: ${FINNHUB_API_KEY}
       # develop env var
       GIN_MODE: debug
     ports:
@@ -40,7 +42,7 @@ services:
       - market-league-dev
     command: air                         # Use Air for live-reloading
 
-  # Database: PostgreSQL
+  # Database: PostgreSQL, changing image from 17 to 16
   db:
     image: postgres:17.0
     restart: always
