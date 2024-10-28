@@ -57,7 +57,7 @@ export class DashboardMainComponent {
         // Step 2: Fetch leagues based on the user's ID
         this.leagueService.getUserLeagues(userId).subscribe({
           next: (response) => {
-            this.leagues = response.leagues.map((league: any) => league.league_name);
+            this.leagues = response.map((league: any) => league.league_name);
           },
           error: (error) => {
             console.error('Failed to fetch user leagues:', error);

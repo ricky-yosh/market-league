@@ -26,15 +26,23 @@ export class UserLeaguesService {
   }
 
   // Method to get the user's leagues using their user ID
-  getUserLeagues(userId: number): Observable<any> {
-    return this.http.post<{ leagues: League[] }>(this.findUserLeagues, { user_id: userId }).pipe(
-      map(response => response.leagues || []), // Extract the leagues array from the response
+  getUserLeagues(userId: number): Observable<League[]> {
+    return this.http.post<{ leagues: League[] | undefined }>(this.findUserLeagues, { user_id: userId }).pipe(
+      map(response => {
+        // Add a check to ensure that `response` and `response.leagues` are not undefined
+        if (response && response.leagues) {
+          return response.leagues; // Return the leagues array if it exists
+        } else {
+          console.warn('Leagues property is missing or undefined in the response', response);
+          return []; // Return an empty array as a fallback
+        }
+      }),
       catchError(error => {
         console.error('Error fetching user leagues:', error);
         return throwError(() => error);
       })
     );
-  }
+  }  
 
   // Method to set the selected league
   setSelectedLeague(league: string | null): void {
