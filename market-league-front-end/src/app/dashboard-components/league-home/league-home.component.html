@@ -1,6 +1,6 @@
 <section class="league-home">
     <h1>
-        Leagues {{ selectedLeague ? selectedLeague : 'Select a League' }}
+        {{ selectedLeague?.league_name ? selectedLeague?.league_name : 'Select a League' }}
     </h1>
     <div class="flex-container top">
         <div class="flex-item scrollable-section" style="flex: 1;">
@@ -20,13 +20,16 @@
         <div class="flex-item scrollable-section" style="flex: 2;">
             <h2>Portfolio</h2>
             <ul>
-                <li *ngFor="let member of leagueMembers">{{ member }}</li>
+                <li *ngFor="let stock of userPortfolio">{{ stock.ticker_symbol }}</li>
             </ul>
         </div>
         <div class="flex-item scrollable-section" style="flex: 1;">
             <h2>Trades</h2>
             <ul>
-                <li *ngFor="let stock of userPortfolio">{{ stock }}</li>
+                <li *ngFor="let trade of userTrades">
+                    <p>{{trade.ID}}</p>
+                    <p>{{ trade.created_at | date: 'MMMM d, yyyy, h:mm:ss a' }}</p>
+                </li>
             </ul>
         </div>
     </div>

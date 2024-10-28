@@ -2,7 +2,11 @@ import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { Component, EventEmitter, Output } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
-import { UserLeaguesService } from '../league-services/user-leagues.service';
+import { UserLeaguesService } from '../league-services/user-leagues/user-leagues.service';
+import { firstValueFrom } from 'rxjs';
+import { User } from '../../models/user.model';
+import { League } from '../../models/league.model';
+import { Leagues } from '../../models/leagues.model';
 
 @Component({
   selector: 'app-dashboard-main',
@@ -12,17 +16,20 @@ import { UserLeaguesService } from '../league-services/user-leagues.service';
   styleUrl: './dashboard-main.component.scss'
 })
 export class DashboardMainComponent {
-  constructor(private router: Router,
+
+  constructor(
+    private router: Router,
     private userService: VerifyUserService,
     private leagueService: UserLeaguesService
   ) {}
 
-  leagues: string[] = [];
-  selectedLeague: string | null = null;
-  user = "Ricky"
+  leagues: Leagues = { leagues: []};
+  selectedLeague: League | null = null;
+  user: string = "User"
 
   ngOnInit(): void {
     this.loadUserLeagues();
+    this.loadUser();
   }
 
   // Routing
@@ -57,7 +64,8 @@ export class DashboardMainComponent {
         // Step 2: Fetch leagues based on the user's ID
         this.leagueService.getUserLeagues(userId).subscribe({
           next: (response) => {
-            this.leagues = response.leagues.map((league: any) => league.league_name);
+            // Assuming 'response' has a 'leagues' property that is an array of 'League' objects
+            this.leagues = response;
           },
           error: (error) => {
             console.error('Failed to fetch user leagues:', error);
@@ -70,11 +78,23 @@ export class DashboardMainComponent {
     });
   }
 
+
   // Method to handle league selection
-  selectLeague(league: string) {
-    this.selectedLeague = league;
-    localStorage.setItem('selectedLeague', league); // Persist selection to local storage
-    console.log(`Selected league: ${league}`);
+  selectLeague(league: League) {
+    this.leagueService.setSelectedLeague(league)
   }
-    
+
+  // Method to load the user data asynchronously
+  private loadUser(): void {
+    this.userService.getUserFromToken().subscribe({
+      next: (user: User) => {
+        console.log('User fetched successfully:', user);
+        this.user = user.username;
+      },
+      error: (error) => {
+        console.error('Failed to fetch user from token:', error);
+      }
+    });
+  }
+
 }

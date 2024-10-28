@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { User } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +15,7 @@ export class VerifyUserService {
   constructor(private http: HttpClient) {}
 
   // Method to get the user information based on JWT token
-  getUserFromToken(): Observable<any> {
+  getUserFromToken(): Observable<User> {
     const token = localStorage.getItem('token');
     if (!token) {
       throw new Error('No token found');
@@ -24,7 +25,7 @@ export class VerifyUserService {
       'Authorization': `Bearer ${token}`
     });
 
-    return this.http.get(this.verifyUserURL, { headers });
+    return this.http.get<User>(this.verifyUserURL, { headers });
   }
 
 }
