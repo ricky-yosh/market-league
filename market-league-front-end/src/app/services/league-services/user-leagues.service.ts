@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, map, throwError } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { League } from '../../models/league.model';
 
 @Injectable({
   providedIn: 'root'
@@ -26,7 +27,13 @@ export class UserLeaguesService {
 
   // Method to get the user's leagues using their user ID
   getUserLeagues(userId: number): Observable<any> {
-    return this.http.post(this.findUserLeagues, { user_id: userId });
+    return this.http.post<{ leagues: League[] }>(this.findUserLeagues, { user_id: userId }).pipe(
+      map(response => response.leagues || []), // Extract the leagues array from the response
+      catchError(error => {
+        console.error('Error fetching user leagues:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   // Method to set the selected league
