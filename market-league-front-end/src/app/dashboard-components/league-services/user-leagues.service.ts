@@ -31,9 +31,7 @@ export class UserLeaguesService {
 
   // Method to set the selected league
   setSelectedLeague(league: string | null): void {
-    console.log(`Setting selected league to: ${league}`);
     this.selectedLeagueSource.next(league ? `${league}` : null); // Use a shallow copy or different reference
-    console.log(`Emitted new league: ${this.selectedLeagueSource.value}`);
     if (league) {
       localStorage.setItem('selectedLeague', league);
     } else {

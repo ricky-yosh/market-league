@@ -3,6 +3,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
 import { UserLeaguesService } from '../league-services/user-leagues.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard-main',
@@ -12,17 +13,20 @@ import { UserLeaguesService } from '../league-services/user-leagues.service';
   styleUrl: './dashboard-main.component.scss'
 })
 export class DashboardMainComponent {
-  constructor(private router: Router,
+
+  constructor(
+    private router: Router,
     private userService: VerifyUserService,
     private leagueService: UserLeaguesService
   ) {}
 
   leagues: string[] = [];
   selectedLeague: string | null = null;
-  user = "Ricky"
+  user: string = "User"
 
   ngOnInit(): void {
     this.loadUserLeagues();
+    this.loadUser();
   }
 
   // Routing
@@ -74,5 +78,23 @@ export class DashboardMainComponent {
   selectLeague(league: string) {
     this.leagueService.setSelectedLeague(league)
   }
-    
+
+  // Method to fetch the user using async/await
+  private async getUser(): Promise<any> {
+    return firstValueFrom(this.userService.getUserFromToken());
+  }
+
+  // Method to load the user data asynchronously
+  private loadUser(): void {
+    this.userService.getUserFromToken().subscribe({
+      next: (user) => {
+        console.log('User fetched successfully:', user);
+        this.user = user.username;
+      },
+      error: (error) => {
+        console.error('Failed to fetch user from token:', error);
+      }
+    });
+  }
+
 }
