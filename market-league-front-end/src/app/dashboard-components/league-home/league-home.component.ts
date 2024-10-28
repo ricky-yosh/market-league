@@ -1,6 +1,6 @@
 import { NgFor } from '@angular/common';
 import { ChangeDetectorRef, Component } from '@angular/core';
-import { UserLeaguesService } from '../league-services/user-leagues.service';
+import { UserLeaguesService } from '../../services/league-services/user-leagues.service';
 
 @Component({
   selector: 'app-league-home',
@@ -33,7 +33,6 @@ export class LeagueHomeComponent {
   ngOnInit(): void {
     // Subscribe to the league changes
     this.leagueService['selectedLeagueSource'].subscribe(league => {
-      console.log(`ActiveLeagueComponent Subscription: Received league value: ${league}`);
       this.selectedLeague = league;
       this.cd.detectChanges();
     });

@@ -1,8 +1,8 @@
 import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { Component, EventEmitter, Output } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
-import { VerifyUserService } from '../../user-verification/verify-user.service';
-import { UserLeaguesService } from '../league-services/user-leagues.service';
+import { VerifyUserService } from '../../services/verify-user/verify-user.service';
+import { UserLeaguesService } from '../../services/league-services/user-leagues.service';
 
 @Component({
   selector: 'app-dashboard-main',
