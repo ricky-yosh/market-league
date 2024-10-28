@@ -6,6 +6,7 @@ import { UserLeaguesService } from '../league-services/user-leagues/user-leagues
 import { firstValueFrom } from 'rxjs';
 import { User } from '../../models/user.model';
 import { League } from '../../models/league.model';
+import { Leagues } from '../../models/leagues.model';
 
 @Component({
   selector: 'app-dashboard-main',
@@ -22,8 +23,8 @@ export class DashboardMainComponent {
     private leagueService: UserLeaguesService
   ) {}
 
-  leagues: string[] = [];
-  selectedLeague: string | null = null;
+  leagues: Leagues = { leagues: []};
+  selectedLeague: League | null = null;
   user: string = "User"
 
   ngOnInit(): void {
@@ -63,7 +64,8 @@ export class DashboardMainComponent {
         // Step 2: Fetch leagues based on the user's ID
         this.leagueService.getUserLeagues(userId).subscribe({
           next: (response) => {
-            this.leagues = response.leagues.map((league: League) => league.league_name);
+            // Assuming 'response' has a 'leagues' property that is an array of 'League' objects
+            this.leagues = response;
           },
           error: (error) => {
             console.error('Failed to fetch user leagues:', error);
@@ -76,8 +78,9 @@ export class DashboardMainComponent {
     });
   }
 
+
   // Method to handle league selection
-  selectLeague(league: string) {
+  selectLeague(league: League) {
     this.leagueService.setSelectedLeague(league)
   }
 

@@ -25,22 +25,27 @@ func (r *LeagueRepository) CreateLeague(league *models.League) error {
 }
 
 // AddUserToLeague adds a user to a specific league by creating a record in the User_Leagues table.
+// AddUserToLeague adds a user to a specific league by creating a record in the User_Leagues table.
 func (r *LeagueRepository) AddUserToLeague(userID, leagueID uint) error {
-	// Fetch the league
+	// Fetch the league to ensure it exists
 	var league models.League
 	if err := r.db.First(&league, leagueID).Error; err != nil {
 		return fmt.Errorf("failed to find league: %w", err)
 	}
 
-	// Fetch the user
+	// Fetch the user to ensure it exists
 	var user models.User
 	if err := r.db.First(&user, userID).Error; err != nil {
 		return fmt.Errorf("failed to find user: %w", err)
 	}
 
-	// Check if the user is already in the league
-	// The Association("Users") will check the "Users" association on the League model.
-	if r.db.Model(&league).Association("Users").Find(&user); user.ID != 0 {
+	// Check if the user is already in the league by querying the join table
+	var count int64
+	if err := r.db.Table("user_leagues").Where("user_id = ? AND league_id = ?", userID, leagueID).Count(&count).Error; err != nil {
+		return fmt.Errorf("failed to check if user is already in league: %w", err)
+	}
+
+	if count > 0 {
 		log.Println("User already in league")
 		return fmt.Errorf("user already in league")
 	}
