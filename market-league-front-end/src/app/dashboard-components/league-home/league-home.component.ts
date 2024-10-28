@@ -6,6 +6,7 @@ import { League } from '../../models/league.model';
 import { Stock } from '../../models/stock.model';
 import { Portfolio } from '../../models/portfolio.model';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
+import { EMPTY, Observable, catchError, map, of, switchMap, tap } from 'rxjs';
 
 @Component({
   selector: 'app-league-home',
@@ -29,66 +30,78 @@ export class LeagueHomeComponent implements OnInit {
 
   ngOnInit(): void {
     // Subscribe to the league changes
-    this.leagueService.selectedLeague$.subscribe({
-      next: (league) => {
-        console.log('Selected league updated:', league);
+    this.leagueService.selectedLeague$.pipe(
+      switchMap((league) => {
         this.selectedLeague = league;
-        console.log("Selected League: " + this.selectedLeague?.league_name)
         this.cd.detectChanges(); // Detect changes after updating selectedLeague
-
-        // Load league members once the selected league has been updated
+  
         if (this.selectedLeague?.id) {
-          this.loadLeagueMembers(this.selectedLeague.id);
-          this.loadUser();
-          console.log("User ID: " + this.user?.id)
-          if (this.user?.id) {
-            this.loadUserPortfolio(this.user.id, this.selectedLeague.id)
-          }
+          // Load league members and wait for the user to be loaded
+          return this.loadLeagueMembers(this.selectedLeague.id).pipe(
+            switchMap((members) => {
+              this.leagueMembers = members;
+              return this.loadUser(); // Load user after league members are loaded
+            }),
+            switchMap((user) => {
+              // Now that we have the user, load the portfolio
+              if (user?.id && this.selectedLeague?.id) {
+                return this.loadUserPortfolio(user.id, this.selectedLeague.id);
+              }
+              return of([]); // Return an empty array if user or league ID is not available
+            })
+          );
         }
+        return EMPTY; // If no league selected, return an empty observable
+      })
+    ).subscribe({
+      next: (portfolio) => {
+        this.userPortfolio = portfolio;
+        console.log('Portfolio loaded successfully');
       },
-      error: (error) => {
-        console.error('Failed to fetch selected league:', error);
-      }
+      error: (error) => console.error('Failed to load data:', error)
     });
-  }
+  }  
 
   // Method to load members of a selected league
-  private loadLeagueMembers(leagueId: number): void {
-    this.leagueService.getLeagueMembers(leagueId).subscribe({
-      next: (members) => {
+  private loadLeagueMembers(leagueId: number): Observable<string[]> {
+    return this.leagueService.getLeagueMembers(leagueId).pipe(
+      map((members) => {
         console.log('League members fetched successfully:', members);
-        this.leagueMembers = members.map((member: User) => member.username);
-      },
-      error: (error) => {
+        return members.map((member: User) => member.username);
+      }),
+      catchError((error) => {
         console.error('Failed to fetch league members:', error);
-      }
-    });
+        return of([]); // Return an empty array on error
+      })
+    );
   }
 
   // Load the user's portfolio for a specific league
-  private loadUserPortfolio(userId: number, leagueId: number) {
-    this.leagueService.getUserPortfolio(userId, leagueId).subscribe({
-      next: (response: Portfolio) => {
-        // Extract the stocks array from the response
-        this.userPortfolio = response.stocks;
-        console.log('User portfolio fetched successfully:', this.userPortfolio);
-      },
-      error: (error) => {
+  private loadUserPortfolio(userId: number, leagueId: number): Observable<Stock[]> {
+    return this.leagueService.getUserPortfolio(userId, leagueId).pipe(
+      map((response: Portfolio) => {
+        console.log('User portfolio fetched successfully:', response.stocks);
+        return response.stocks;
+      }),
+      catchError((error) => {
         console.error('Failed to fetch user portfolio:', error);
-      }
-    });
+        return of([]); // Return an empty array on error
+      })
+    );
   }
 
-  private loadUser(): void {
-    this.userService.getUserFromToken().subscribe({
-      next: (user: User) => {
+  // Method to load the user from a token
+  private loadUser(): Observable<User> {
+    return this.userService.getUserFromToken().pipe(
+      tap((user: User) => {
         console.log('User fetched successfully:', user);
         this.user = user;
-      },
-      error: (error) => {
+      }),
+      catchError((error) => {
         console.error('Failed to fetch user from token:', error);
-      }
-    });
+        return EMPTY; // Return an empty observable on error
+      })
+    );
   }
 
 }

@@ -54,11 +54,11 @@ func (s *UserService) GetUserLeagues(userID uint) ([]models.League, error) {
 	return leagues, nil
 }
 
-// GetUserTrades retrieves all trades involving a given user.
-func (s *UserService) GetUserTrades(userID uint) ([]models.Trade, error) {
-	trades, err := s.repo.GetUserTrades(userID)
+// GetUserTrades retrieves all trades involving a given user within a specific league.
+func (s *UserService) GetUserTrades(userID uint, leagueID uint) ([]models.Trade, error) {
+	trades, err := s.repo.GetUserTrades(userID, leagueID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get trades for user: %v", err)
+		return nil, fmt.Errorf("failed to get trades for user in league %d: %v", leagueID, err)
 	}
 
 	return trades, nil
