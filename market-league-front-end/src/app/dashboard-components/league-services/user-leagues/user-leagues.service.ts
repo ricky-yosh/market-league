@@ -7,6 +7,7 @@ import { User } from '../../../models/user.model';
 import { Leagues } from '../../../models/leagues.model';
 import { Stock } from '../../../models/stock.model';
 import { Portfolio } from '../../../models/portfolio.model';
+import { Trade } from '../../../models/trade.model';
 
 @Injectable({
   providedIn: 'root'
@@ -16,6 +17,7 @@ export class UserLeaguesService {
   private findUserLeagues = `${this.baseUrl}/api/users/user-leagues`;
   private findLeagueMembers = `${this.baseUrl}/api/leagues/details`;
   private findUserPortfolio = `${this.baseUrl}/api/portfolio/league-portfolio`;
+  private findUserTrades = `${this.baseUrl}/api/users/user-trades`;
 
   // BehaviorSubject for managing the selected league
   private selectedLeagueSource = new BehaviorSubject<League | null>(this.getStoredLeague());
@@ -54,23 +56,26 @@ setSelectedLeague(league: League | null): void {
 }
 
   // Retrieve the stored league from localStorage (if it exists)
-// Retrieve the stored league from localStorage (if it exists)
-private getStoredLeague(): League | null {
-  const storedLeague = localStorage.getItem('selectedLeague');
-  
-  // Check if storedLeague is a valid JSON
-  if (storedLeague) {
-    try {
-      return JSON.parse(storedLeague) as League;
-    } catch (e) {
-      console.error("Error parsing stored league JSON:", e);
-      localStorage.removeItem('selectedLeague'); // Clean up invalid entry
-      return null;
+  private getStoredLeague(): League | null {
+    const storedLeague = localStorage.getItem('selectedLeague');
+    
+    // Check if storedLeague is a valid JSON
+    if (storedLeague) {
+      try {
+        return JSON.parse(storedLeague) as League;
+      } catch (e) {
+        console.error("Error parsing stored league JSON:", e);
+        localStorage.removeItem('selectedLeague'); // Clean up invalid entry
+        return null;
+      }
     }
+
+    return null;
   }
 
-  return null;
-}
-
+  // Fetch user trades based on userId and leagueId
+  getUserTrades(userId: number, leagueId: number): Observable<{ trades: Trade[] }> {
+    return this.http.post<{ trades: Trade[] }>(this.findUserTrades, { user_id: userId, league_id: leagueId });
+  }
 
 }

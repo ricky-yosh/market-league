@@ -26,7 +26,10 @@
         <div class="flex-item scrollable-section" style="flex: 1;">
             <h2>Trades</h2>
             <ul>
-                <li *ngFor="let stock of userPortfolio">{{ stock }}</li>
+                <li *ngFor="let trade of userTrades">
+                    <p>{{trade.ID}}</p>
+                    <p>{{ trade.created_at | date: 'MMMM d, yyyy, h:mm:ss a' }}</p>
+                </li>
             </ul>
         </div>
     </div>

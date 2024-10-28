@@ -1,4 +1,5 @@
 import { NgFor } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UserLeaguesService } from '../league-services/user-leagues/user-leagues.service';
 import { User } from '../../models/user.model';
@@ -7,20 +8,22 @@ import { Stock } from '../../models/stock.model';
 import { Portfolio } from '../../models/portfolio.model';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
 import { EMPTY, Observable, catchError, map, of, switchMap, tap } from 'rxjs';
+import { Trade } from '../../models/trade.model';
 
 @Component({
   selector: 'app-league-home',
   standalone: true,
-  imports: [NgFor],
+  imports: [NgFor, CommonModule],
   templateUrl: './league-home.component.html',
   styleUrl: './league-home.component.scss'
 })
 export class LeagueHomeComponent implements OnInit {
   
-  userPortfolio: Stock[] = [];
-  leagueMembers: string[] = [];
   selectedLeague: League | null = null;
   user: User | null = null;
+  userPortfolio: Stock[] = [];
+  userTrades: Trade[] = []
+  leagueMembers: string[] = [];
 
   constructor(
     private leagueService: UserLeaguesService,
@@ -43,9 +46,23 @@ export class LeagueHomeComponent implements OnInit {
               return this.loadUser(); // Load user after league members are loaded
             }),
             switchMap((user) => {
-              // Now that we have the user, load the portfolio
+              // Store the user information
+              this.user = user;
+  
+              // Check if both user and selectedLeague are defined
               if (user?.id && this.selectedLeague?.id) {
-                return this.loadUserPortfolio(user.id, this.selectedLeague.id);
+                return this.loadUserPortfolio(user.id, this.selectedLeague.id).pipe(
+                  switchMap((portfolio) => {
+                    this.userPortfolio = portfolio;
+                    console.log('Portfolio loaded successfully');
+  
+                    // Check again if both user and selectedLeague are defined before loading trades
+                    if (user.id && this.selectedLeague?.id) {
+                      return this.loadUserTrades(user.id, this.selectedLeague.id);
+                    }
+                    return of([]); // Return an empty array if conditions are not met
+                  })
+                );
               }
               return of([]); // Return an empty array if user or league ID is not available
             })
@@ -54,9 +71,9 @@ export class LeagueHomeComponent implements OnInit {
         return EMPTY; // If no league selected, return an empty observable
       })
     ).subscribe({
-      next: (portfolio) => {
-        this.userPortfolio = portfolio;
-        console.log('Portfolio loaded successfully');
+      next: (trades) => {
+        this.userTrades = trades;
+        console.log('Trades loaded successfully:', this.userTrades);
       },
       error: (error) => console.error('Failed to load data:', error)
     });
@@ -100,6 +117,20 @@ export class LeagueHomeComponent implements OnInit {
       catchError((error) => {
         console.error('Failed to fetch user from token:', error);
         return EMPTY; // Return an empty observable on error
+      })
+    );
+  }
+
+  // Load the user's trades for a specific league
+  private loadUserTrades(userId: number, leagueId: number): Observable<Trade[]> {
+    return this.leagueService.getUserTrades(userId, leagueId).pipe(
+      map((response) => {
+        console.log('User trades fetched successfully:', response.trades);
+        return response.trades;
+      }),
+      catchError((error) => {
+        console.error('Failed to fetch user trades:', error);
+        return of([]); // Return an empty array on error
       })
     );
   }
