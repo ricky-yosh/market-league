@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { Leagues } from '../../../models/leagues.model';
 
 @Injectable({
   providedIn: 'root'
@@ -25,8 +26,8 @@ export class UserLeaguesService {
   }
 
   // Method to get the user's leagues using their user ID
-  getUserLeagues(userId: number): Observable<any> {
-    return this.http.post(this.findUserLeagues, { user_id: userId });
+  getUserLeagues(userId: number): Observable<Leagues> {
+    return this.http.post<Leagues>(this.findUserLeagues, { user_id: userId });
   }
 
   // Method to set the selected league

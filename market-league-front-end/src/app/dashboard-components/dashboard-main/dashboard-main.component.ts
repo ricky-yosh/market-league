@@ -2,8 +2,10 @@ import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { Component, EventEmitter, Output } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
-import { UserLeaguesService } from '../league-services/user-leagues.service';
+import { UserLeaguesService } from '../league-services/user-leagues/user-leagues.service';
 import { firstValueFrom } from 'rxjs';
+import { User } from '../../models/user.model';
+import { League } from '../../models/league.model';
 
 @Component({
   selector: 'app-dashboard-main',
@@ -61,7 +63,7 @@ export class DashboardMainComponent {
         // Step 2: Fetch leagues based on the user's ID
         this.leagueService.getUserLeagues(userId).subscribe({
           next: (response) => {
-            this.leagues = response.leagues.map((league: any) => league.league_name);
+            this.leagues = response.leagues.map((league: League) => league.league_name);
           },
           error: (error) => {
             console.error('Failed to fetch user leagues:', error);
@@ -79,15 +81,10 @@ export class DashboardMainComponent {
     this.leagueService.setSelectedLeague(league)
   }
 
-  // Method to fetch the user using async/await
-  private async getUser(): Promise<any> {
-    return firstValueFrom(this.userService.getUserFromToken());
-  }
-
   // Method to load the user data asynchronously
   private loadUser(): void {
     this.userService.getUserFromToken().subscribe({
-      next: (user) => {
+      next: (user: User) => {
         console.log('User fetched successfully:', user);
         this.user = user.username;
       },

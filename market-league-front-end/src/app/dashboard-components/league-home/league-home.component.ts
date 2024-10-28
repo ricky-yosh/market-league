@@ -1,6 +1,6 @@
 import { NgFor } from '@angular/common';
 import { ChangeDetectorRef, Component } from '@angular/core';
-import { UserLeaguesService } from '../league-services/user-leagues.service';
+import { UserLeaguesService } from '../league-services/user-leagues/user-leagues.service';
 
 @Component({
   selector: 'app-league-home',
