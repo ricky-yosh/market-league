@@ -103,6 +103,27 @@ func (h *StockHandler) CreateStock(c *gin.Context) {
 	c.JSON(http.StatusCreated, stock)
 }
 
+func (h *StockHandler) CreateMultipleStocks(c *gin.Context) {
+	var stocks []models.Stock
+
+	// Bind JSON input to the array of stock structs
+	if err := c.ShouldBindJSON(&stocks); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	// Iterate over the stocks and create each one
+	for _, stock := range stocks {
+		if err := h.service.CreateStock(&stock); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create stock"})
+			return
+		}
+	}
+
+	// Return success response
+	c.JSON(http.StatusOK, gin.H{"message": "All stocks successfully created"})
+}
+
 // UpdateStockPrice updates the current price of a stock by its ID.
 func (h *StockHandler) UpdateStockPrice(c *gin.Context) {
 	var request struct {
