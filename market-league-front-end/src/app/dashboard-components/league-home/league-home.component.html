@@ -5,32 +5,46 @@
     <div class="flex-container top">
         <div class="flex-item scrollable-section" style="flex: 1;">
             <h2>League Members</h2>
-            <ul>
+            <ul *ngIf="leagueMembers && leagueMembers.length > 0; else noTrades">
                 <li *ngFor="let member of leagueMembers">{{ member }}</li>
             </ul>
+            <ng-template #noLeagueMembers>
+                <p>No League Members Found</p>
+            </ng-template>
         </div>
         <div class="flex-item scrollable-section" style="flex: 1;">
             <h2>Leaderboard</h2>
-            <ul>
+            <ul *ngIf="leagueMembers && leagueMembers.length > 0; else noTrades">
                 <li *ngFor="let member of leagueMembers">{{ member }}</li>
             </ul>
+            <ng-template #noLeaderboard>
+                <p>No Leaderboard Found</p>
+            </ng-template>
         </div>
     </div>
     <div class="flex-container middle">
         <div class="flex-item scrollable-section" style="flex: 2;">
             <h2>Portfolio</h2>
-            <ul>
+            <ul *ngIf="userPortfolio && userPortfolio.length > 0; else noTrades">
                 <li *ngFor="let stock of userPortfolio">{{ stock.ticker_symbol }}</li>
             </ul>
+            <ng-template #noPortfolio>
+                <p>No Stocks Found</p>
+            </ng-template>
+
         </div>
         <div class="flex-item scrollable-section" style="flex: 1;">
             <h2>Trades</h2>
-            <ul>
+            <ul *ngIf="userTrades && userTrades.length > 0; else noTrades">
                 <li *ngFor="let trade of userTrades">
-                    <p>{{trade.ID}}</p>
+                    <p>{{ trade.ID }}</p>
                     <p>{{ trade.created_at | date: 'MMMM d, yyyy, h:mm:ss a' }}</p>
                 </li>
             </ul>
+            
+            <ng-template #noTrades>
+                <p>No Trades Found</p>
+            </ng-template>
         </div>
     </div>
     <!-- <div class="flex-container bottom">
