@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { LoginService } from './services/login.service';
-import { LoginResponse } from './services/login-response.interface';
+import { LoginService } from './login-service/login.service';
+import { LoginResponse } from './login-service/login-response.interface';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { FooterComponent } from '../footer/footer.component';
 

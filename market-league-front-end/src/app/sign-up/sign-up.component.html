@@ -2,11 +2,11 @@
 <section class="login checkered-background">
     <div class="login-content">
         <h1>Sign Up</h1>
-        <form action="/sing-up" method="post">
-            <input type="text" name="username" placeholder="Username" required>
+        <form (submit)="onSubmit($event, username.value, password.value, confirm_password.value)">
+            <input type="text" name="username" placeholder="Username" #username required>
             <input type="text" name="email" placeholder="example@domain.com" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <input type="password" name="confirm-password" placeholder=" Confirm Password" required>
+            <input type="password" name="password" placeholder="Password" #password required>
+            <input type="password" name="confirm-password" placeholder=" Confirm Password" #confirm_password required>
             <button type="submit" class="btn padding-right">Create Account</button>
             <p class="small-text">Already have an account?</p>
             <button (click)="redirectToLogin()" class="create-account-btn">Login</button>
