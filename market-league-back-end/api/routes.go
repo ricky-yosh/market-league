@@ -11,6 +11,8 @@ import (
 	"github.com/market-league/internal/stock"
 	"github.com/market-league/internal/trade"
 	"github.com/market-league/internal/user"
+    // "github.com/market-league/internal/scheduler"
+    "github.com/market-league/internal/services"
 )
 
 func RegisterRoutes(router *gin.Engine) {
@@ -57,6 +59,7 @@ func RegisterRoutes(router *gin.Engine) {
 	stockRoutes := router.Group("/api/stocks")
 	{
 		stockRoutes.POST("/create-stock", stockHandler.CreateStock)                // Create a new stock
+		stockRoutes.POST("/create-stocks", stockHandler.CreateMultipleStocks)      // Create multiple stocks
 		stockRoutes.POST("/stock-price", stockHandler.GetPrice)                    // Fetch stock price by ID
 		stockRoutes.POST("/update-stock-price", stockHandler.UpdateStockPrice)     // Update stock price by ID
 		stockRoutes.POST("/price-history", stockHandler.GetPriceHistory)           // Fetch price history by ID
@@ -101,5 +104,14 @@ func RegisterRoutes(router *gin.Engine) {
 		leagueRoutes.POST("/leaderboard", leagueHandler.GetLeaderboard)         // Get League Leaderboard
 	}
 
-	// router.GET("/api/services/stock-api", services.getTestStock)
+	// go scheduler.StartDailyTask()
+	router.GET("/api/services/stock-api", func(c *gin.Context) {
+		quote, err := services.GetTestStock()
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(200, quote)
+	})
+	
 }

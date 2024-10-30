@@ -21,9 +21,9 @@ export class LeagueHomeComponent implements OnInit {
   
   selectedLeague: League | null = null;
   user: User | null = null;
-  userPortfolio: Stock[] = [];
-  userTrades: Trade[] = []
-  leagueMembers: string[] = [];
+  userPortfolio: Stock[] | null = null
+  userTrades: Trade[] | null = null
+  leagueMembers: string[] | null = null;
 
   constructor(
     private leagueService: UserLeaguesService,

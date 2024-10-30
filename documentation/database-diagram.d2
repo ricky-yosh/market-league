@@ -1,110 +1,131 @@
-# Database Diagram v1.0
+# Database Diagram v2.0
 
-title: "Database Diagram v1.0" {
-    shape: text
-    near: top-center
-    style: {
-      font-size: 55
-    }
+title: "Database Diagram v2.0" {
+  shape: text
+  near: top-center
+  style: {
+    font-size: 55
   }
-  
-  # ####################
-  # #    Entities     ##
-  # ####################
-  
-  # Organize Entities
-  Stocks
-  Users
-  Leagues
-  Trades
-  Portfolios
-  User_Leagues
-  Leaderboards
-  
-  Users: {
-    shape: sql_table
-  
-    id: int {constraint: primary_key}
-    username: varchar
-    password: varchar
-    email: varchar
-    balance: numeric
-  }
-  
-  Stocks: {
-    shape: sql_table
-  
-    id: int {constraint: primary_key}
-    ticker_symbol: varchar
-    company_name: varchar
-    current_price: numeric
-    price_history: jsonb
-  }
-  
-  Portfolios: {
-    shape: sql_table
-  
-    id: int {constraint: primary_key}
-    user_id: int {constraint: foreign_key}
-    total_value: numeric
-  }
-  
-  Portfolio_Stocks: {
-    shape: sql_table
-  
-    portfolio_id: int {constraint: foreign_key}
-    stock_id: int {constraint: foreign_key}
-    quantity: int
-  }
-  
-  Trades: {
-    shape: sql_table
-  
-    id: int {constraint: primary_key}
-    user_id: int {constraint: foreign_key}
-    stock_id: int {constraint: foreign_key}
-    trade_type: varchar
-    quantity: int
-    trade_price: numeric
-    trade_date: timestamp
-  }
-  
-  Leagues: {
-    shape: sql_table
-  
-    id: int {constraint: primary_key}
-    league_name: varchar
-    start_date: date
-    end_date: date
-  }
-  
-  User_Leagues: {
-    shape: sql_table
-  
-    user_id: int {constraint: foreign_key}
-    league_id: int {constraint: foreign_key}
-  }
-  
-  Leaderboards: {
-    shape: sql_table
-  
-    id: int {constraint: primary_key}
-    league_id: int {constraint: foreign_key}
-    rankings: jsonb
-    last_updated: timestamp
-  }
-  
-  # ####################
-  # #  Entities  END  ##
-  # ####################
-  
-  # Define relationships between tables
-  Stocks -> Portfolio_Stocks: "One-to-Many"
-  Stocks -> Trades: "One-to-Many"
-  Users -> Trades: "One-to-Many"
-  Users -> Portfolios: "One-to-Many"
-  Users -> User_Leagues: "Many-to-Many"
-  Leagues -> User_Leagues: "Many-to-Many"
-  Leagues -> Leaderboards: "One-to-One"
-  Portfolios -> Portfolio_Stocks: "One-to-Many"
-  
+}
+
+# ####################
+# #    Entities     ##
+# ####################
+
+# Organize Entities
+Stocks
+Users
+Leagues
+Trades
+Portfolios
+User_Leagues
+Leaderboards
+Trade_Player_1_Stocks
+Trade_Player_2_Stocks
+
+Users: {
+  shape: sql_table
+
+  id: int {constraint: primary_key}
+  username: varchar
+  password: varchar
+  email: varchar
+  balance: numeric
+}
+
+Stocks: {
+  shape: sql_table
+
+  id: int {constraint: primary_key}
+  ticker_symbol: text
+  company_name: text
+  current_price: numeric
+  price_history: jsonb
+}
+
+Portfolios: {
+  shape: sql_table
+
+  id: int {constraint: primary_key}
+  user_id: int {constraint: foreign_key}
+  league_id: int {constraint: foreign_key}
+  created_at: timestamp
+  total_value: numeric
+}
+
+Portfolio_Stocks: {
+  shape: sql_table
+
+  portfolio_id: int {constraint: foreign_key}
+  stock_id: int {constraint: foreign_key}
+}
+
+Trades: {
+  shape: sql_table
+
+  id: int {constraint: primary_key}
+  league_id: int {constraint: foreign_key}
+  player1_id: int {constraint: foreign_key}
+  player2_id: int {constraint: foreign_key}
+  player1_portfolio_id: int {constraint: foreign_key}
+  player2_portfolio_id: int {constraint: foreign_key}
+  player1_confirmed: int {constraint: foreign_key}
+  player2_confirmed: int {constraint: foreign_key}
+  created_at: timestamp
+  confirmed_at: timestamp
+}
+
+Trade_Player_1_Stocks: {
+  shape: sql_table
+
+  trade_id: int {constraint: foreign_key}
+  stock_id: int {constraint: foreign_key}
+}
+
+Trade_Player_2_Stocks: {
+  shape: sql_table
+
+  trade_id: int {constraint: foreign_key}
+  stock_id: int {constraint: foreign_key}
+}
+
+Leagues: {
+  shape: sql_table
+
+  id: int {constraint: primary_key}
+  league_name: varchar
+  start_date: date
+  end_date: date
+}
+
+User_Leagues: {
+  shape: sql_table
+
+  user_id: int {constraint: foreign_key}
+  league_id: int {constraint: foreign_key}
+}
+
+Leaderboards: {
+  shape: sql_table
+
+  id: int {constraint: primary_key}
+  league_id: int {constraint: foreign_key}
+  rankings: jsonb
+  last_updated: timestamp
+}
+
+# ####################
+# #  Entities  END  ##
+# ####################
+
+# Define relationships between tables
+Stocks -> Portfolio_Stocks: "One-to-Many"
+Stocks -> Trades: "One-to-Many"
+Users -> Trades: "One-to-Many"
+Trades -> Trade_Player_1_Stocks: ""
+Trades -> Trade_Player_2_Stocks: ""
+Users -> Portfolios: "One-to-Many"
+Users -> User_Leagues: "Many-to-Many"
+Leagues -> User_Leagues: "Many-to-Many"
+Leagues -> Leaderboards: "One-to-One"
+Portfolios -> Portfolio_Stocks: "One-to-Many"
