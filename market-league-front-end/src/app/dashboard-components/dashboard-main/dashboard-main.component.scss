@@ -245,6 +245,9 @@
 
 .logout-button {
     color: transparent;
+    white-space: nowrap;         /* Prevents text from wrapping to the next line */
+    overflow: hidden;            /* Hides any text that overflows */
+    text-overflow: ellipsis;     /* Adds an ellipsis (...) at the end of truncated text */
 }
 
 .sidebar:hover .logout-button {
