@@ -17,15 +17,15 @@ import { Leagues } from '../../models/leagues.model';
 })
 export class DashboardMainComponent {
 
+    leagues: Leagues = { leagues: [] };
+    selectedLeague: League | null = null;
+    user: string = "User"
+
   constructor(
     private router: Router,
     private userService: VerifyUserService,
     private leagueService: UserLeaguesService
   ) {}
-
-  leagues: Leagues = { leagues: []};
-  selectedLeague: League | null = null;
-  user: string = "User"
 
   ngOnInit(): void {
     this.loadUserLeagues();

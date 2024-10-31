@@ -37,6 +37,17 @@ button {
     margin: 0;
 }
 
+ul {
+    list-style-type: none; /* Removes bullet points */
+    margin: 0;             /* Removes default margin */
+    padding: 0;            /* Removes default padding */
+}
+
+li {
+    margin: 0;             /* Removes any extra spacing */
+    padding: 0;            /* Removes any extra padding */
+}
+
 ::-webkit-scrollbar {
     width: 0.75em;
 }

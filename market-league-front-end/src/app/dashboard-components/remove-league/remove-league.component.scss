@@ -22,3 +22,16 @@ h1 {
     padding-bottom: 0.5em;
     font-size: 1.8em;
 }
+
+.league-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    white-space: nowrap;
+}
+
+.container {
+    background-color: $market-league-white;
+    padding: 1em 0.4em 1em 1em;
+    border-radius: 10px;
+}

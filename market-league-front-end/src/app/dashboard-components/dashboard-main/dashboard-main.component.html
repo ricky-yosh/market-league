@@ -60,7 +60,6 @@
                             *ngFor="let league of leagues.leagues" 
                             class="league-item"
                             (click)="selectLeague(league)"
-                            [class.selected]="league === selectedLeague"
                         >
                             <span class="first-letter">{{ league.league_name[0] }}</span>
                             <span class="full-name">{{ league.league_name }}</span>

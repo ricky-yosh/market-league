@@ -2,7 +2,15 @@
     <h1>
         Remove League
     </h1>
-    <div class="flex-container">
-
+    <div class="container">
+        <ul class="leagues">
+            <li 
+                *ngFor="let league of leagues.leagues" 
+                class="league-item"
+                (click)="selectLeague(league)"
+            >
+                <span class="full-name">{{ league.league_name }}</span>
+            </li>
+        </ul>
     </div>
 </section>
