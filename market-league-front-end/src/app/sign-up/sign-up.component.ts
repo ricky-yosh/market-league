@@ -3,15 +3,19 @@ import { Router } from '@angular/router';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { FooterComponent } from '../footer/footer.component';
 import { SignUpService } from './sign-up-service/sign-up.service';
+import { devLog } from '../../environments/development/devlog';
+import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-sign-up',
   standalone: true,
-  imports: [NavbarComponent, FooterComponent],
+  imports: [NavbarComponent, FooterComponent, NgIf],
   templateUrl: './sign-up.component.html',
   styleUrl: './sign-up.component.scss'
 })
 export class SignUpComponent {
+  errorMessage: string | null = null;
+
   constructor(private signUpService: SignUpService, private router: Router) {}
 
   redirectToLogin() {
@@ -26,8 +30,14 @@ export class SignUpComponent {
   // Backend call to get jwt token
   signUp(username: string, password: string, confirm_password: string) {
 
-    // Check that passwords match
+    // If passwords don't match stop
+    if (password !== confirm_password) {
+      devLog("Passwords do not match!");
+      this.errorMessage = "Passwords do not match!";
+      return;
+    }
 
+    // If passwords match create an account
     const credentials = {
       username: username,
       password: password,
@@ -35,7 +45,7 @@ export class SignUpComponent {
 
     this.signUpService.signUp(credentials).subscribe({
       next: (response) => {
-        this.handleUpdateResponse(response);
+        this.handleNext(response);
       },
       error: (error) => {
         this.handleError(error);
@@ -43,16 +53,17 @@ export class SignUpComponent {
     });
   }
 
-  handleUpdateResponse(response: LoginResponse) {
-    // Success
-    console.log('Login successful', response);
-    // Session Token Handling
-    localStorage.setItem('token', response.token);
-    this.router.navigate(['/dashboard']);
+  handleNext(response: any) {
+    devLog("Sign Up Response", response.message);
   }
 
   handleError(error: any) {
-    console.error('Login failed', error);
+    devLog("Sign Up Error", error);
+    if (error.status === 409) {
+      this.errorMessage = "Username already in use!";
+    } else {
+      this.errorMessage = "Failed to register. Please try again.";
+    }
   }
 
 }

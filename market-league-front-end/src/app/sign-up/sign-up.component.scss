@@ -98,3 +98,10 @@ a {
     color: inherit;
     cursor: pointer;
 }
+
+.error-message {
+    color: $market-league-red;
+    background-color: $market-league-black;
+    padding: 0.2em 0.5em;
+    border-radius: 0.5em;
+}

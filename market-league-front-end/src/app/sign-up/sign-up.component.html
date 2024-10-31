@@ -7,6 +7,9 @@
             <input type="text" name="email" placeholder="example@domain.com" required>
             <input type="password" name="password" placeholder="Password" #password required>
             <input type="password" name="confirm-password" placeholder=" Confirm Password" #confirm_password required>
+            <div *ngIf="errorMessage" class="error-message">
+                {{ errorMessage }}
+            </div>
             <button type="submit" class="btn padding-right">Create Account</button>
             <p class="small-text">Already have an account?</p>
             <button (click)="redirectToLogin()" class="create-account-btn">Login</button>
