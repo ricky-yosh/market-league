@@ -43,7 +43,6 @@ export class DashboardMainComponent {
   
   redirectToLeaderboard() {
     this.router.navigate(['dashboard/leaderboard']);
-    // current_league = id_of_league
   }
 
   redirectToPortfolio() {
@@ -52,6 +51,14 @@ export class DashboardMainComponent {
 
   redirectToTrades() {
     this.router.navigate(['dashboard/trades']);
+  }
+
+  redirectToCreateLeague() {
+    this.router.navigate(['dashboard/create-league']);
+  }
+
+  redirectToRemoveLeague() {
+    this.router.navigate(['dashboard/remove-league']);
   }
 
   // Method to load the leagues for the user
@@ -82,6 +89,7 @@ export class DashboardMainComponent {
   // Method to handle league selection
   selectLeague(league: League) {
     this.leagueService.setSelectedLeague(league)
+    this.redirectToDashboard();
   }
 
   // Method to load the user data asynchronously

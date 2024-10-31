@@ -24,7 +24,7 @@ export const routes: Routes = [
             { path: 'leaderboard', component: LeagueLeaderboardComponent },
             { path: 'portfolio', component: LeaguePortfolioComponent },
             { path: 'trades', component: LeagueTradesComponent },
-            { path: 'add-league', component: CreateLeagueComponent },
+            { path: 'create-league', component: CreateLeagueComponent },
             { path: 'remove-league', component: RemoveLeagueComponent },
         ]
     },
