@@ -7,7 +7,7 @@
     border-radius: 10px;
     background-color: lighten($market-league-dark-blue, 33%);
     margin: 0px;
-    padding: 0.5em 0.5em 0.5em 0.5em;
+    padding: 0.5em 1.2em 0.5em 1.2em;
 
     // scrolling ability
     overflow-y: auto;
@@ -28,22 +28,33 @@ h1 {
     align-items: center;
     padding: 10px;
     white-space: nowrap;
+    justify-content: space-between;
+    border-bottom: 0.1em solid lighten($market-league-black, 85%);
 }
 
 .container {
     background-color: $market-league-white;
     padding: 1em 0.4em 1em 1em;
     border-radius: 10px;
-    max-width: 40em;
+    margin: 0em 2em;
+
     width: 100%;
+    max-width: 40em;
 }
 
 .centering-container {
     display: flex;
-    justify-content: center;
+    align-items: center;
     flex-direction: column;
 }
 
 .minus-round-icon {
-    fill: $market-league-white;
+    filter: $market-league-white;
+    display: flex;
+    justify-content: center;
+}
+
+.h1-container {
+    width: 100%;
+    max-width: 40em;
 }

@@ -172,8 +172,7 @@
     padding-left: 0.5em;
     background-color: $market-league-white;
     border-radius: 40px;
-    margin-top: 0.3em;
-    margin-right: 1em;
+    margin-bottom: 0.3em;
     height: 2.3em;
 }
 
@@ -279,4 +278,122 @@
 
 .selected {
     background-color: red
+}
+
+/* Styling the menu button */
+.menu-btn {
+    z-index: 3;
+    right: 35px;
+    top: 35px;
+    cursor: pointer;
+    transition: all 0.5s ease-out;
+}
+
+/* Styling the hamburger lines */
+.menu-btn .btn-line {
+    width: 28px;
+    height: 3px;
+    margin: 0 0 5px 0;
+    background: $market-league-white;
+    transition: all 0.5s ease-out;
+}
+
+/* Adding transform to the X */
+.menu-btn.close {
+    transform: rotate(180deg) translate(0, 6px);
+}
+
+/* Styling the three lines to make it an X */
+.menu-btn.close .btn-line:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+
+.menu-btn.close .btn-line:nth-child(2) {
+    opacity: 0;
+}
+
+.menu-btn.close .btn-line:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -6px);
+}
+
+/* Styling the position of the menu icon */
+.menu {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    opacity: 0.9;
+    visibility: hidden;
+}
+
+.menu.show {
+    visibility: visible;
+}
+
+/* Styles for menu branding and nav items */
+.menu-nav {
+    display: none;
+}
+
+.menu-nav.show {
+    display: block;
+}
+
+.menu-branding {
+    display: none;
+    padding: 20px;
+}
+
+.menu-branding.show {
+    display: block;
+}
+
+/* Style for individual items */
+.nav-item {
+    color: white;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+/* Hover effect */
+.nav-item:hover {
+    background-color: rgba($market-league-white, 0.2);
+}
+
+/* Show the menu when the 'show' class is added */
+.dropdown-menu-items.show {
+    display: block;
+}
+
+.dropdown-menu-items {
+    display: none; /* Hidden by default */
+    position: absolute; /* Absolute positioning to position under the button */
+    top: 50px; /* Adjust this based on the height of your menu button */
+    right: 5px; /* Adjust based on your layout */
+    background-color: $market-league-purple;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    z-index: 1000; /* Keeps the menu above other elements */
+}
+
+.dropdown-menu-items ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.hide-on-big-screen {
+    display: none;
+}
+
+@media(max-width: 60em) {
+    .hide-on-small-screen {
+        display: none;
+    }
+    
+    .hide-on-big-screen {
+        display: block;
+    }
 }

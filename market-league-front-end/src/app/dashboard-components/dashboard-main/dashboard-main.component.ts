@@ -20,6 +20,7 @@ export class DashboardMainComponent {
     leagues: Leagues = { leagues: [] };
     selectedLeague: League | null = null;
     user: string = "User"
+    showMenu = false
 
   constructor(
     private router: Router,
@@ -103,6 +104,10 @@ export class DashboardMainComponent {
         console.error('Failed to fetch user from token:', error);
       }
     });
+  }
+
+  toggleMenu() {
+    this.showMenu = !this.showMenu;
   }
 
 }
