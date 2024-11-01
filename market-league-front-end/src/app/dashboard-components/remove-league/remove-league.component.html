@@ -1,16 +1,22 @@
 <section class="remove-league">
+    <div class="centering-container flex-column">
     <h1>
         Remove League
     </h1>
-    <div class="container">
-        <ul class="leagues">
-            <li 
-                *ngFor="let league of leagues.leagues" 
-                class="league-item"
-                (click)="selectLeague(league)"
-            >
-                <span class="full-name">{{ league.league_name }}</span>
-            </li>
-        </ul>
+
+        <div class="container">
+            <ul class="leagues">
+                <li 
+                    *ngFor="let league of leagues.leagues" 
+                    class="league-item"
+                    (click)="selectLeague(league)"
+                >
+                    <span class="full-name">{{ league.league_name }}</span>
+                    <button (click)="removeLeague(league)" title="Remove League" class="minus-round-icon">
+                        <img src="/images/minus-round-icon-purple.svg" alt="Image" width="25px">
+                    </button>
+                </li>
+            </ul>
+        </div>
     </div>
 </section>

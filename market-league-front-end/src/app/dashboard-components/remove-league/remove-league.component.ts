@@ -67,4 +67,8 @@ export class RemoveLeagueComponent {
     });
   }
 
+  removeLeague(leagueToRemove: League) {
+
+  }
+
 }

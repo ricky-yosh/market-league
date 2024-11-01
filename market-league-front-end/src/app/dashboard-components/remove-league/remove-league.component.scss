@@ -34,4 +34,16 @@ h1 {
     background-color: $market-league-white;
     padding: 1em 0.4em 1em 1em;
     border-radius: 10px;
+    max-width: 40em;
+    width: 100%;
+}
+
+.centering-container {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.minus-round-icon {
+    fill: $market-league-white;
 }
