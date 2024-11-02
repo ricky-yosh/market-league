@@ -11,8 +11,9 @@ import (
 	"github.com/market-league/internal/stock"
 	"github.com/market-league/internal/trade"
 	"github.com/market-league/internal/user"
-    // "github.com/market-league/internal/scheduler"
-    "github.com/market-league/internal/services"
+
+	// "github.com/market-league/internal/scheduler"
+	"github.com/market-league/internal/services"
 )
 
 func RegisterRoutes(router *gin.Engine) {
@@ -99,6 +100,7 @@ func RegisterRoutes(router *gin.Engine) {
 	leagueRoutes := router.Group("/api/leagues")
 	{
 		leagueRoutes.POST("/create-league", leagueHandler.CreateLeague)         // Create League
+		leagueRoutes.POST("/remove-league", leagueHandler.RemoveLeague)         // Remove League
 		leagueRoutes.POST("/add-user-to-league", leagueHandler.AddUserToLeague) // Add Users to League
 		leagueRoutes.POST("/details", leagueHandler.GetLeagueDetails)           // Get League Details
 		leagueRoutes.POST("/leaderboard", leagueHandler.GetLeaderboard)         // Get League Leaderboard
@@ -113,5 +115,5 @@ func RegisterRoutes(router *gin.Engine) {
 		}
 		c.JSON(200, quote)
 	})
-	
+
 }
