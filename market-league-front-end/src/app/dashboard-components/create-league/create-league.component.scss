@@ -40,7 +40,6 @@ h1 {
     background-color: $market-league-white;
     padding: 1em 0.4em 1em 1em;
     border-radius: 10px;
-    margin: 0em 2em;
 
     width: 100%;
     max-width: 40em;
@@ -94,4 +93,9 @@ form {
 
 .submit-button:hover {
     background: lighten($market-league-gold, 20%);
+}
+
+.align-center {
+    display: flex;
+    align-items: center;
 }
