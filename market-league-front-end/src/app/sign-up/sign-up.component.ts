@@ -22,13 +22,13 @@ export class SignUpComponent {
     this.router.navigate(['/login']);
   }
 
-  onSubmit(event: Event, username: string, password: string, confirm_password: string) {
+  onSubmit(event: Event, username: string, email: string, password: string, confirm_password: string) {
     event.preventDefault();
-    this.signUp(username, password, confirm_password);
+    this.signUp(username, email, password, confirm_password);
   }
 
   // Backend call to get jwt token
-  signUp(username: string, password: string, confirm_password: string) {
+  signUp(username: string, email: string, password: string, confirm_password: string) {
 
     // If passwords don't match stop
     if (password !== confirm_password) {
@@ -40,6 +40,7 @@ export class SignUpComponent {
     // If passwords match create an account
     const credentials = {
       username: username,
+      email: email,
       password: password,
     };
 
@@ -55,6 +56,7 @@ export class SignUpComponent {
 
   handleNext(response: any) {
     devLog("Sign Up Response", response.message);
+    this.redirectToLogin();
   }
 
   handleError(error: any) {

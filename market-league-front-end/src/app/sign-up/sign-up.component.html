@@ -2,9 +2,9 @@
 <section class="login checkered-background">
     <div class="login-content">
         <h1>Sign Up</h1>
-        <form (submit)="onSubmit($event, username.value, password.value, confirm_password.value)">
+        <form (submit)="onSubmit($event, username.value, email.value, password.value, confirm_password.value)">
             <input type="text" name="username" placeholder="Username" class="signup-input" #username required>
-            <input type="text" name="email" placeholder="example@domain.com" class="signup-input" required>
+            <input type="text" name="email" placeholder="example@domain.com" class="signup-input" #email required>
             <input type="password" name="password" placeholder="Password" class="signup-input" #password required>
             <input type="password" name="confirm-password" placeholder="Confirm Password" class="signup-input" #confirm_password required>
             <div *ngIf="errorMessage" class="error-message">

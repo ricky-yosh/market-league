@@ -14,7 +14,7 @@ export class SignUpService {
   constructor(private http: HttpClient) {}
 
   // Login call
-  signUp(credentials: { username: string; password: string }): Observable<any> {
+  signUp(credentials: { username: string; email: string, password: string }): Observable<any> {
     return this.http.post<any>(this.loginURL, credentials);
   }
 
