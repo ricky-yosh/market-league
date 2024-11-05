@@ -3,8 +3,8 @@
     <div class="login-content">
         <h1>Login</h1>
         <form (submit)="onSubmit($event, username.value, password.value)">
-            <input type="text" name="username" placeholder="Username" #username required>
-            <input type="password" name="password" placeholder="Password" #password required>
+            <input type="text" name="username" placeholder="Username" class="login-input" #username required>
+            <input type="password" name="password" placeholder="Password" class="login-input" #password required>
             <div *ngIf="errorMessage" class="error-message">
                 {{ errorMessage }}
             </div>

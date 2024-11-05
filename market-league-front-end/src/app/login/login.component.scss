@@ -22,6 +22,7 @@
     border-radius: 20px;
     background-color: $market-league-purple;
     padding: 1em 3em 3em 3em;
+    max-width: 30em;
 }
 
 .login-content h1 {
@@ -78,4 +79,18 @@ a {
     background-color: $market-league-black;
     padding: 0.2em 0.5em;
     border-radius: 0.5em;
+}
+
+@media (max-width: 50em) {
+    .login-input {
+        max-width: 15em;
+    }
+
+    .btn {
+        padding: 1em 6em;
+    }
+
+    .login-content {
+        padding: 2em 0em;
+    }
 }
