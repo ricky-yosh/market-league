@@ -1,0 +1,97 @@
+@import "../../../styles/variables";
+
+.create-league {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    border-radius: 10px;
+    background-color: lighten($market-league-dark-blue, 33%);
+    margin: 0px;
+    padding: 0.5em 1.2em 0.5em 1.2em;
+
+    // scrolling ability
+    overflow-y: auto;
+    scrollbar-color: transparent transparent;
+    scrollbar-width: none;
+    max-height: 91vh;
+}
+
+h1 {
+    padding-left: 0.5em;
+    padding-top: 0.2em;
+    padding-bottom: 0.5em;
+    font-size: 1.8em;
+}
+
+.league-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    white-space: nowrap;
+    justify-content: space-between;
+    border-bottom: 0.1em solid lighten($market-league-black, 85%);
+}
+
+.league-name-form-field {
+    margin-right: 2em;
+}
+
+.container {
+    background-color: $market-league-white;
+    padding: 1em 0.4em 1em 1em;
+    border-radius: 10px;
+    margin: 0em 2em;
+
+    width: 100%;
+    max-width: 40em;
+}
+
+.centering-container {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.minus-round-icon {
+    filter: $market-league-white;
+    display: flex;
+    justify-content: center;
+}
+
+.h1-container {
+    width: 100%;
+    max-width: 40em;
+}
+
+form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    flex-direction: column;
+}
+
+.end-date-label {
+    white-space: nowrap;
+    margin-right: 1em;
+}
+
+.submit-button {
+    background: darken($market-league-gold, 1%);
+    border-color: $market-league-gold;
+    border-radius: 20px;
+
+    color: darken($market-league-purple, 10%);
+    padding: 1em 4em;
+    text-decoration: none;
+    transition: background 0.3s;
+    font-weight: bold;
+    border-style: none;
+    margin-top: 1em;
+    margin-bottom: 2em;
+    font-size: 1.05em;
+}
+
+.submit-button:hover {
+    background: lighten($market-league-gold, 20%);
+}

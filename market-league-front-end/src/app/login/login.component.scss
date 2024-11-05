@@ -22,6 +22,7 @@
     border-radius: 20px;
     background-color: $market-league-purple;
     padding: 1em 3em 3em 3em;
+    max-width: 30em;
 }
 
 .login-content h1 {
@@ -49,32 +50,6 @@
     background: lighten($market-league-gold, 20%);
 }
 
-form {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    flex-direction: column;
-}
-
-input {
-    width: 100%;
-    padding: 12px;
-    margin: 1em 0;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: border-color 0.3s, box-shadow 0.3s;
-
-    font-size: 1em;
-}
-
-input:focus {
-    border-color: $market-league-gold;
-    box-shadow: 0 0 8px rgba(76, 175, 80, 0.2);
-    outline: none;
-}
-
 .small-text {
     font-size: 0.9em;
     margin: 0em;
@@ -97,4 +72,25 @@ a {
     margin: 0;
     color: inherit;
     cursor: pointer;
+}
+
+.error-message {
+    color: $market-league-red;
+    background-color: $market-league-black;
+    padding: 0.2em 0.5em;
+    border-radius: 0.5em;
+}
+
+@media (max-width: 50em) {
+    .login-input {
+        max-width: 15em;
+    }
+
+    .btn {
+        padding: 1em 6em;
+    }
+
+    .login-content {
+        padding: 2em 0em;
+    }
 }

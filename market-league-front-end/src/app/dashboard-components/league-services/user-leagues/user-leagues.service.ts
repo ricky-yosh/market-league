@@ -14,10 +14,12 @@ import { Trade } from '../../../models/trade.model';
 })
 export class UserLeaguesService {
   private baseUrl = environment.api_url;
-  private findUserLeagues = `${this.baseUrl}/api/users/user-leagues`;
-  private findLeagueMembers = `${this.baseUrl}/api/leagues/details`;
-  private findUserPortfolio = `${this.baseUrl}/api/portfolio/league-portfolio`;
-  private findUserTrades = `${this.baseUrl}/api/users/user-trades`;
+  private findUserLeaguesUrl = `${this.baseUrl}/api/users/user-leagues`;
+  private findLeagueMembersUrl = `${this.baseUrl}/api/leagues/details`;
+  private findUserPortfolioUrl = `${this.baseUrl}/api/portfolio/league-portfolio`;
+  private findUserTradesUrl = `${this.baseUrl}/api/users/user-trades`;
+  private createLeagueUrl = `${this.baseUrl}/api/leagues/remove-league`;
+  private removeLeagueUrl = `${this.baseUrl}/api/leagues/remove-league`;
 
   // BehaviorSubject for managing the selected league
   private selectedLeagueSource = new BehaviorSubject<League | null>(this.getStoredLeague());
@@ -27,12 +29,12 @@ export class UserLeaguesService {
 
   // Method to get the user's leagues using their user ID
   getUserLeagues(userId: number): Observable<Leagues> {
-    return this.http.post<Leagues>(this.findUserLeagues, { user_id: userId });
+    return this.http.post<Leagues>(this.findUserLeaguesUrl, { user_id: userId });
   }
 
   // Method to get members of a league using the league ID
   getLeagueMembers(leagueId: number): Observable<User[]> {
-    return this.http.post<League>(this.findLeagueMembers, { league_id: leagueId }).pipe(
+    return this.http.post<League>(this.findLeagueMembersUrl, { league_id: leagueId }).pipe(
       map((league: League) => league.users || []) // Ensure 'users' is not null or undefined, return empty array if it is
     );
   }
@@ -40,7 +42,7 @@ export class UserLeaguesService {
   // Method to fetch the user's portfolio for a specific league
   getUserPortfolio(userId: number, leagueId: number): Observable<Portfolio> {
     // Send a POST request with the user ID and league ID as the request payload
-    return this.http.post<Portfolio>(this.findUserPortfolio, { user_id: userId, league_id: leagueId });
+    return this.http.post<Portfolio>(this.findUserPortfolioUrl, { user_id: userId, league_id: leagueId });
   }
 
   // Method to set the selected league
@@ -75,7 +77,23 @@ setSelectedLeague(league: League | null): void {
 
   // Fetch user trades based on userId and leagueId
   getUserTrades(userId: number, leagueId: number): Observable<{ trades: Trade[] }> {
-    return this.http.post<{ trades: Trade[] }>(this.findUserTrades, { user_id: userId, league_id: leagueId });
+    return this.http.post<{ trades: Trade[] }>(this.findUserTradesUrl, { user_id: userId, league_id: leagueId });
+  }
+
+  // Create League
+  createLeague(leagueName: string, ownerUser: string, endDate: Date): Observable<any> {
+    const payload = {
+      league_name: leagueName,
+      owner_user: ownerUser,
+      end_date: endDate
+    };
+    return this.http.post<any>(this.createLeagueUrl, payload); // Send POST request
+  }
+
+  // Remove League
+  removeLeague(leagueId: number): Observable<any> {
+    const payload = { league_id: leagueId }; // Payload with league_id
+    return this.http.post<any>(this.removeLeagueUrl, payload); // Send POST request
   }
 
 }

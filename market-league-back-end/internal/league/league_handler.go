@@ -126,3 +126,25 @@ func (h *LeagueHandler) GetLeaderboard(c *gin.Context) {
 
 	c.JSON(http.StatusOK, leaderboard)
 }
+
+// RemoveLeague handles the removal of a league and all associated records
+func (h *LeagueHandler) RemoveLeague(c *gin.Context) {
+	var request struct {
+		LeagueID uint `json:"league_id" binding:"required"`
+	}
+
+	// Bind JSON input to the request struct
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	// Call the service to remove the league
+	if err := h.service.RemoveLeague(request.LeagueID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Return success response
+	c.JSON(http.StatusOK, gin.H{"message": "League and associated data removed successfully"})
+}

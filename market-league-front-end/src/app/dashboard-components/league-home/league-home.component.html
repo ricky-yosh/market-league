@@ -5,16 +5,17 @@
     <div class="flex-container top">
         <div class="flex-item scrollable-section" style="flex: 1;">
             <h2>League Members</h2>
-            <ul *ngIf="leagueMembers && leagueMembers.length > 0; else noTrades">
+            <ul *ngIf="leagueMembers && leagueMembers.length > 0; else noLeagueMembers">
                 <li *ngFor="let member of leagueMembers">{{ member }}</li>
             </ul>
             <ng-template #noLeagueMembers>
                 <p>No League Members Found</p>
             </ng-template>
         </div>
+        
         <div class="flex-item scrollable-section" style="flex: 1;">
             <h2>Leaderboard</h2>
-            <ul *ngIf="leagueMembers && leagueMembers.length > 0; else noTrades">
+            <ul *ngIf="leagueMembers && leagueMembers.length > 0; else noLeaderboard">
                 <li *ngFor="let member of leagueMembers">{{ member }}</li>
             </ul>
             <ng-template #noLeaderboard>
@@ -22,10 +23,11 @@
             </ng-template>
         </div>
     </div>
+
     <div class="flex-container middle">
         <div class="flex-item scrollable-section" style="flex: 2;">
             <h2>Portfolio</h2>
-            <ul *ngIf="userPortfolio && userPortfolio.length > 0; else noTrades">
+            <ul *ngIf="userPortfolio && userPortfolio.length > 0; else noPortfolio">
                 <li *ngFor="let stock of userPortfolio">{{ stock.ticker_symbol }}</li>
             </ul>
             <ng-template #noPortfolio>
@@ -33,6 +35,7 @@
             </ng-template>
 
         </div>
+
         <div class="flex-item scrollable-section" style="flex: 1;">
             <h2>Trades</h2>
             <ul *ngIf="userTrades && userTrades.length > 0; else noTrades">
@@ -41,18 +44,10 @@
                     <p>{{ trade.created_at | date: 'MMMM d, yyyy, h:mm:ss a' }}</p>
                 </li>
             </ul>
-            
             <ng-template #noTrades>
                 <p>No Trades Found</p>
             </ng-template>
         </div>
+
     </div>
-    <!-- <div class="flex-container bottom">
-        <div class="flex-item" style="flex: 3;">
-            <h2>Price</h2>
-            <ul>
-                <li *ngFor="let member of leagueMembers">{{ member }}</li>
-            </ul>
-        </div>
-    </div> -->
 </section>

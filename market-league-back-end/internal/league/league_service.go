@@ -129,3 +129,41 @@ func (s *LeagueService) GetLeaderboard(leagueID uint, portfolioService *portfoli
 	// Delegate the leaderboard retrieval to the repository and pass the portfolio service for calculations
 	return s.repo.GetLeaderboard(leagueID, portfolioService)
 }
+
+// RemoveLeague removes a league and all associated data in a transaction
+func (s *LeagueService) RemoveLeague(leagueID uint) error {
+	// Start a transaction
+	tx := s.repo.db.Begin()
+	if err := tx.Error; err != nil {
+		return err
+	}
+
+	// Execute deletions in the correct order
+	if err := s.repo.RemovePortfolioStocksByLeagueID(tx, leagueID); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := s.repo.RemovePortfoliosByLeagueID(tx, leagueID); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := s.repo.RemoveTradesByLeagueID(tx, leagueID); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := s.repo.RemoveUserLeaguesByLeagueID(tx, leagueID); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := s.repo.RemoveLeague(tx, leagueID); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Commit the transaction
+	return tx.Commit().Error
+}
