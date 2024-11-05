@@ -5,6 +5,7 @@ import { League } from '../../models/league.model';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
 import { UserLeaguesService } from '../league-services/user-leagues/user-leagues.service';
 import { User } from '../../models/user.model';
+import { devLog } from '../../../environments/development/devlog';
 
 @Component({
   selector: 'app-remove-league',
@@ -68,7 +69,14 @@ export class RemoveLeagueComponent {
   }
 
   removeLeague(leagueToRemove: League) {
-
+    this.leagueService.removeLeague(leagueToRemove.id).subscribe({
+      next: (response) => {
+        devLog('League removed successfully:', response);
+      },
+      error: (error) => {
+        devLog('Error removing league:', error);
+      }
+    });
   }
 
 }
