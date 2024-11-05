@@ -105,3 +105,22 @@ a {
     padding: 0.2em 0.5em;
     border-radius: 0.5em;
 }
+
+@media (max-width: 50em) {
+    .signup-input {
+        max-width: 15em;
+    }
+
+    .btn {
+        padding: 1em 6em;
+    }
+
+    .login-content {
+        padding: 2em 0em;
+        width: 100%;
+    }
+
+    .checkered-background {
+        height: 110vh;
+    }
+}
