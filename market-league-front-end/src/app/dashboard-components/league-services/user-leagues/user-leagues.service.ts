@@ -18,7 +18,7 @@ export class UserLeaguesService {
   private findLeagueMembersUrl = `${this.baseUrl}/api/leagues/details`;
   private findUserPortfolioUrl = `${this.baseUrl}/api/portfolio/league-portfolio`;
   private findUserTradesUrl = `${this.baseUrl}/api/users/user-trades`;
-  private createLeagueUrl = `${this.baseUrl}/api/leagues/remove-league`;
+  private createLeagueUrl = `${this.baseUrl}/api/leagues/create-league`;
   private removeLeagueUrl = `${this.baseUrl}/api/leagues/remove-league`;
 
   // BehaviorSubject for managing the selected league
@@ -81,7 +81,7 @@ setSelectedLeague(league: League | null): void {
   }
 
   // Create League
-  createLeague(leagueName: string, ownerUser: string, endDate: Date): Observable<any> {
+  createLeague(leagueName: string, ownerUser: string, endDate: string): Observable<any> {
     const payload = {
       league_name: leagueName,
       owner_user: ownerUser,
