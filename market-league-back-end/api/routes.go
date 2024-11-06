@@ -75,8 +75,8 @@ func RegisterRoutes(router *gin.Engine) {
 	tradeRoutes := router.Group("/api/trades")
 	{
 		tradeRoutes.POST("/create-trade", tradeHandler.CreateTrade) // Create a new trade
-		tradeRoutes.POST("/confirm-trade", tradeHandler.ConfirmTrade)
-		tradeRoutes.POST("/get-trades", tradeHandler.GetTrades)
+		// tradeRoutes.POST("/confirm-trade", tradeHandler.ConfirmTrade)
+		// tradeRoutes.POST("/get-trades", tradeHandler.GetTrades)
 	}
 
 	userRepo := user.NewUserRepository(database)
