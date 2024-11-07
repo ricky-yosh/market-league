@@ -62,6 +62,10 @@ export class DashboardMainComponent {
     this.router.navigate(['dashboard/remove-league']);
   }
 
+  redirectToSettings() {
+    this.router.navigate(['dashboard/settings']);
+  }
+
   // Method to load the leagues for the user
   private loadUserLeagues(): void {
     // Step 1: Get the user from the token
