@@ -46,16 +46,16 @@ export class UserLeaguesService {
   }
 
   // Method to set the selected league
-setSelectedLeague(league: League | null): void {
-  console.log(league);
-  this.selectedLeagueSource.next(league); // Set the selected league as the full League object
-  if (league) {
-    // Store the entire league object as a JSON string in localStorage
-    localStorage.setItem('selectedLeague', JSON.stringify(league)); 
-  } else {
-    localStorage.removeItem('selectedLeague');
+  setSelectedLeague(league: League | null): void {
+    console.log(league);
+    this.selectedLeagueSource.next(league); // Set the selected league as the full League object
+    if (league) {
+      // Store the entire league object as a JSON string in localStorage
+      localStorage.setItem('selectedLeague', JSON.stringify(league)); 
+    } else {
+      localStorage.removeItem('selectedLeague');
+    }
   }
-}
 
   // Retrieve the stored league from localStorage (if it exists)
   private getStoredLeague(): League | null {
