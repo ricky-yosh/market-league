@@ -13,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 export class LeagueTradesComponent {
   availableStocks: string[] = ['AAPL', 'TSLA', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'NFLX', 'META'];
   leagueUsers: string[] = ['User1', 'User2', 'User3', 'User4'];
+  selectedUserStocks: string[] = [];
 
   trade: { user2: string; stocks1: string[]; stocks2: string[] } = {
     user2: '',
@@ -39,6 +40,7 @@ export class LeagueTradesComponent {
       stocks1: [],
       stocks2: []
     };
+    this.selectedUserStocks = [];
   }
 
   toggleStockSelection(stockList: string[], stock: string) {
@@ -47,6 +49,22 @@ export class LeagueTradesComponent {
       stockList.push(stock);
     } else {
       stockList.splice(index, 1);
+    }
+  }
+
+  onUserSelectionChange(event: Event) {
+    const selectedUser = (event.target as HTMLSelectElement).value;
+    if (selectedUser) {
+      // For now, we're hardcoding stocks for each user. In a real implementation, you would fetch this data from the backend.
+      const userStocksMap: { [key: string]: string[] } = {
+        User1: ['AAPL', 'TSLA'],
+        User2: ['MSFT', 'NVDA'],
+        User3: ['GOOGL', 'AMZN'],
+        User4: ['NFLX', 'META']
+      };
+      this.selectedUserStocks = userStocksMap[selectedUser] || [];
+    } else {
+      this.selectedUserStocks = [];
     }
   }
 
