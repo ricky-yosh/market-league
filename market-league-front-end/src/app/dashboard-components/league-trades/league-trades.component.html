@@ -1,13 +1,59 @@
 <section class="trades">
     <div class="centering-container flex-column">
         <div class="h1-container">
-            <h1>
-                Trades
-            </h1>
+            <h1>Trades</h1>
         </div>
 
         <div class="container">
-            <p>Container</p>
+            <h2>Create a Trade</h2>
+            <form (ngSubmit)="onSubmit()" #tradeForm="ngForm">
+
+            <!-- User Selection -->
+            <div class="form-group">
+                <label for="user2">Counterparty User</label>
+                <select 
+                id="user2" 
+                name="user2" 
+                [(ngModel)]="trade.user2" 
+                required>
+                <option value="" disabled selected>Select a user</option>
+                <option *ngFor="let user of leagueUsers" [value]="user">{{ user }}</option>
+                </select>
+            </div>
+        
+            <!-- Stocks Offered by User 1 -->
+            <div class="form-group">
+                <label for="stocks1">Your Stocks</label>
+                <div class="stock-list">
+                    <button 
+                        type="button" 
+                        *ngFor="let stock of availableStocks" 
+                        (click)="toggleStockSelection(trade.stocks1, stock)"
+                        class="stock-button"
+                        [ngClass]="{ 'selected': trade.stocks1.includes(stock) }">
+                        {{ stock }}
+                    </button>
+                </div>
+            </div>
+        
+            <!-- Stocks Offered by User 2 -->
+            <div class="form-group">
+                <label for="stocks2">Counterparty's Stocks</label>
+                <div class="stock-list">
+                    <button 
+                        type="button" 
+                        *ngFor="let stock of availableStocks" 
+                        (click)="toggleStockSelection(trade.stocks2, stock)"
+                        class="stock-button"
+                        [ngClass]="{ 'selected': trade.stocks2.includes(stock) }">
+                        {{ stock }}
+                    </button>
+                </div>
+            </div>
+            
+                <!-- Submit Button -->
+                <button type="submit" class="submit-button" [disabled]="!tradeForm.form.valid">Submit Trade</button>
+            </form>
         </div>
     </div>
 </section>

@@ -21,7 +21,7 @@
 }
 
 .sidebar:hover .leagues {
-    scrollbar-color: rgba($market-league-white, 20%) transparent;
+    scrollbar-color: $scrollbar-grey transparent;
 }
 
 /* Leagues list styling */
