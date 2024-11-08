@@ -1,7 +1,7 @@
 import { NgFor } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { UserLeaguesService } from '../league-services/user-leagues/user-leagues.service';
+import { UserLeaguesService } from '../services/user-leagues.service';
 import { User } from '../../models/user.model';
 import { League } from '../../models/league.model';
 import { Stock } from '../../models/stock.model';

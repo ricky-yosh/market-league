@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
-import { UserLeaguesService } from '../league-services/user-leagues/user-leagues.service';
+import { UserLeaguesService } from '../services/user-leagues.service';
 import { devLog } from '../../../environments/development/devlog';
 import { FormsModule } from '@angular/forms';
 import { guard, guardRFC3339 } from '../../utils/guard';

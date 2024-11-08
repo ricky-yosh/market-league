@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
-import { environment } from '../../../../environments/environment';
+import { environment } from '../../../environments/environment';
 import { BehaviorSubject, Observable, map } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { League } from '../../../models/league.model'; // Assuming you have this model defined
-import { User } from '../../../models/user.model';
-import { Leagues } from '../../../models/leagues.model';
-import { Stock } from '../../../models/stock.model';
-import { Portfolio } from '../../../models/portfolio.model';
-import { Trade } from '../../../models/trade.model';
+import { League } from '../../models/league.model'; // Assuming you have this model defined
+import { User } from '../../models/user.model';
+import { Leagues } from '../../models/leagues.model';
+import { Stock } from '../../models/stock.model';
+import { Portfolio } from '../../models/portfolio.model';
+import { Trade } from '../../models/trade.model';
 
 @Injectable({
   providedIn: 'root'

@@ -2,7 +2,7 @@ import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { Component, EventEmitter, Output } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
-import { UserLeaguesService } from '../league-services/user-leagues/user-leagues.service';
+import { UserLeaguesService } from '../services/user-leagues.service';
 import { firstValueFrom } from 'rxjs';
 import { User } from '../../models/user.model';
 import { League } from '../../models/league.model';
