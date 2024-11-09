@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
-import { UserLeaguesService } from '../services/user-leagues.service';
+import { LeagueService } from '../services/league.service';
 import { devLog } from '../../../environments/development/devlog';
 import { FormsModule } from '@angular/forms';
 import { guard, guardRFC3339 } from '../../utils/guard';
@@ -18,7 +18,7 @@ export class CreateLeagueComponent {
 
   constructor(
     private userService: VerifyUserService,
-    private leagueService: UserLeaguesService
+    private leagueService: LeagueService
   ) {}
 
   onSubmit() {

@@ -1,7 +1,7 @@
 import { NgFor } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { UserLeaguesService } from '../services/user-leagues.service';
+import { LeagueService } from '../services/league.service';
 import { User } from '../../models/user.model';
 import { League } from '../../models/league.model';
 import { Stock } from '../../models/stock.model';
@@ -26,7 +26,7 @@ export class LeagueHomeComponent implements OnInit {
   leagueMembers: string[] | null = null;
 
   constructor(
-    private leagueService: UserLeaguesService,
+    private leagueService: LeagueService,
     private userService: VerifyUserService,
     private cd: ChangeDetectorRef
   ) {}

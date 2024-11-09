@@ -19,7 +19,7 @@
                 (change)="onUserSelectionChange($event)"
                 required>
                 <option value="" disabled selected>Select a user</option>
-                <option *ngFor="let user of leagueUsers" [value]="user">{{ user }}</option>
+                <option *ngFor="let user of leagueUsers" [value]="user.username">{{ user.username }}</option>
                 </select>
             </div>
         

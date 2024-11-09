@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { LeagueService } from '../services/league.service';
+import { User } from '../../models/user.model';
+import { VerifyUserService } from '../../user-verification/verify-user.service';
 
 @Component({
   selector: 'app-league-trades',
@@ -12,8 +14,9 @@ import { FormsModule } from '@angular/forms';
 })
 export class LeagueTradesComponent {
   availableStocks: string[] = ['AAPL', 'TSLA', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'NFLX', 'META'];
-  leagueUsers: string[] = ['User1', 'User2', 'User3', 'User4'];
+  leagueUsers: User[] = [];
   selectedUserStocks: string[] = [];
+  currentUser: User | null = null
 
   trade: { user2: string; stocks1: string[]; stocks2: string[] } = {
     user2: '',
@@ -21,7 +24,15 @@ export class LeagueTradesComponent {
     stocks2: []
   };
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private leagueService: LeagueService,
+    private userService: VerifyUserService
+  ) {}
+
+  ngOnInit() {
+    this.populateLeagueUsers();
+    this.loadUser();
+  }
 
   onSubmit() {
     if (this.trade.user2 && this.trade.stocks1.length > 0 && this.trade.stocks2.length > 0) {
@@ -66,6 +77,31 @@ export class LeagueTradesComponent {
     } else {
       this.selectedUserStocks = [];
     }
+  }
+
+  populateLeagueUsers() {
+    // Fetching the selected league from the service.
+    const selectedLeague = this.leagueService.getStoredLeague();
+    if (selectedLeague) {
+      const leagueId = selectedLeague.id;
+      this.leagueService.getLeagueMembers(leagueId).subscribe(users => {
+        this.leagueUsers = users;
+      });
+    } else {
+      console.warn('No league selected');
+    }
+  }
+
+  private loadUser(): void {
+    this.userService.getUserFromToken().subscribe({
+      next: (user: User) => {
+        console.log('User fetched successfully:', user);
+        this.currentUser = user;
+      },
+      error: (error) => {
+        console.error('Failed to fetch user from token:', error);
+      }
+    });
   }
 
 }

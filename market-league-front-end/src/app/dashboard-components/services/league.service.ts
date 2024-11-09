@@ -12,7 +12,7 @@ import { Trade } from '../../models/trade.model';
 @Injectable({
   providedIn: 'root'
 })
-export class UserLeaguesService {
+export class LeagueService {
   private baseUrl = environment.api_url;
   private findUserLeaguesUrl = `${this.baseUrl}/api/users/user-leagues`;
   private findLeagueMembersUrl = `${this.baseUrl}/api/leagues/details`;
@@ -58,7 +58,7 @@ export class UserLeaguesService {
   }
 
   // Retrieve the stored league from localStorage (if it exists)
-  private getStoredLeague(): League | null {
+  getStoredLeague(): League | null {
     const storedLeague = localStorage.getItem('selectedLeague');
     
     // Check if storedLeague is a valid JSON
