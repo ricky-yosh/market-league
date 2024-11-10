@@ -131,7 +131,15 @@ export class LeagueTradesComponent {
     this.leagueService.getUserPortfolio(currentUserId, selectedLeagueId).subscribe(portfolio => {
       devLog("currentUserId's Portfolio: ", portfolio);
       this.currentUsersStocks = portfolio.stocks.map(stock => stock.ticker_symbol);
+      this.removeCurrentPlayerFromTradeList();
     });
+  }
+
+  private removeCurrentPlayerFromTradeList() {
+    const currentUserId = this.currentUser?.id
+    if (currentUserId != null) {
+      this.leagueUsers = this.leagueUsers.filter(user => user.id !== currentUserId);
+    }
   }
 
 }
