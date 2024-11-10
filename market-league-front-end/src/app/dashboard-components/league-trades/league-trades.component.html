@@ -12,14 +12,14 @@
             <div class="form-group margin-top">
                 <label for="user2">Select a user to trade with</label>
                 <select 
-                id="user2" 
-                name="user2" 
-                class="user-select"
-                [(ngModel)]="trade.user2" 
-                (change)="onUserSelectionChange($event)"
-                required>
-                <option value="" disabled selected>Select a user</option>
-                <option *ngFor="let user of leagueUsers" [value]="user.username">{{ user.username }}</option>
+                    id="user2" 
+                    name="user2" 
+                    class="user-select"
+                    [(ngModel)]="trade.user2" 
+                    (ngModelChange)="onUserSelectionChange($event)"
+                    required>
+                    <option [ngValue]="null" disabled selected>Select a user</option>
+                    <option *ngFor="let user of leagueUsers" [ngValue]="user">{{ user.username }}</option>
                 </select>
             </div>
         
@@ -40,7 +40,7 @@
         
             <!-- Stocks Offered by User 2 -->
             <div class="form-group margin-top">
-                <label for="stocks2">{{ trade.user2 ? trade.user2 + "'s Stocks" : 'Selected User\'s Stocks' }}</label>
+                <label for="stocks2">{{ trade.user2 ? trade.user2.username + "'s Stocks" : 'Selected User\'s Stocks' }}</label>
                 <div class="stock-list">
                     <button 
                         type="button" 

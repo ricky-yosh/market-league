@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { LeagueService } from '../services/league.service';
 import { User } from '../../models/user.model';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
+import { League } from '../../models/league.model';
+import { devLog } from '../../../environments/development/devlog';
 
 @Component({
   selector: 'app-league-trades',
@@ -17,9 +19,10 @@ export class LeagueTradesComponent {
   leagueUsers: User[] = [];
   selectedUserStocks: string[] = [];
   currentUser: User | null = null
+  currentLeague: League | null = null
 
-  trade: { user2: string; stocks1: string[]; stocks2: string[] } = {
-    user2: '',
+  trade: { user2: User | null; stocks1: string[]; stocks2: string[] } = {
+    user2: null,
     stocks1: [],
     stocks2: []
   };
@@ -32,12 +35,13 @@ export class LeagueTradesComponent {
   ngOnInit() {
     this.populateLeagueUsers();
     this.loadUser();
+    this.getCurrentLeague();
   }
 
   onSubmit() {
     if (this.trade.user2 && this.trade.stocks1.length > 0 && this.trade.stocks2.length > 0) {
       // For simplicity, we're just logging the trade instead of making an actual HTTP request.
-      console.log('Trade details:', this.trade);
+      devLog('Trade details:', this.trade);
       alert('Trade successfully created!');
       this.resetForm();
     } else {
@@ -47,7 +51,7 @@ export class LeagueTradesComponent {
 
   resetForm() {
     this.trade = {
-      user2: '',
+      user2: null,
       stocks1: [],
       stocks2: []
     };
@@ -63,20 +67,23 @@ export class LeagueTradesComponent {
     }
   }
 
-  onUserSelectionChange(event: Event) {
-    const selectedUser = (event.target as HTMLSelectElement).value;
-    if (selectedUser) {
-      // For now, we're hardcoding stocks for each user. In a real implementation, you would fetch this data from the backend.
-      const userStocksMap: { [key: string]: string[] } = {
-        User1: ['AAPL', 'TSLA'],
-        User2: ['MSFT', 'NVDA'],
-        User3: ['GOOGL', 'AMZN'],
-        User4: ['NFLX', 'META']
-      };
-      this.selectedUserStocks = userStocksMap[selectedUser] || [];
-    } else {
-      this.selectedUserStocks = [];
+  onUserSelectionChange(selectedUser: User | null) {
+    this.selectedUserStocks = []; // empty list to clear earlier portfolio
+  
+    if (!selectedUser || !this.currentLeague) {
+      return; // if user or league is null, return early
     }
+  
+    const selectedUserId = selectedUser.id;
+    const selectedLeagueId = this.currentLeague.id;
+  
+    devLog("selectedUserId & selectedLeagueId: ", selectedUserId, selectedLeagueId);
+    
+    // Fetch user's portfolio for the selected league
+    this.leagueService.getUserPortfolio(selectedUserId, selectedLeagueId).subscribe(portfolio => {
+      devLog("selectedUserId's Portfolio: ", portfolio);
+      this.selectedUserStocks = portfolio.stocks.map(stock => stock.ticker_symbol);
+    });
   }
 
   populateLeagueUsers() {
@@ -95,13 +102,17 @@ export class LeagueTradesComponent {
   private loadUser(): void {
     this.userService.getUserFromToken().subscribe({
       next: (user: User) => {
-        console.log('User fetched successfully:', user);
+        devLog('User fetched successfully:', user);
         this.currentUser = user;
       },
       error: (error) => {
-        console.error('Failed to fetch user from token:', error);
+        devLog('Failed to fetch user from token:', error);
       }
     });
+  }
+
+  private getCurrentLeague(): void {
+    this.currentLeague = this.leagueService.getStoredLeague();
   }
 
 }
