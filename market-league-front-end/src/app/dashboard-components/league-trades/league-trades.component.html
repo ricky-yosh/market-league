@@ -29,7 +29,7 @@
                 <div class="stock-list">
                     <button 
                         type="button" 
-                        *ngFor="let stock of availableStocks" 
+                        *ngFor="let stock of currentUsersStocks" 
                         (click)="toggleStockSelection(trade.stocks1, stock)"
                         class="stock-button"
                         [ngClass]="{ 'selected': trade.stocks1.includes(stock) }">

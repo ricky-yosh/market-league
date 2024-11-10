@@ -15,7 +15,7 @@ import { devLog } from '../../../environments/development/devlog';
   styleUrl: './league-trades.component.scss'
 })
 export class LeagueTradesComponent {
-  availableStocks: string[] = ['AAPL', 'TSLA', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'NFLX', 'META'];
+  currentUsersStocks: string[] = [];
   leagueUsers: User[] = [];
   selectedUserStocks: string[] = [];
   currentUser: User | null = null
@@ -68,7 +68,6 @@ export class LeagueTradesComponent {
   }
 
   onUserSelectionChange(selectedUser: User | null) {
-    this.selectedUserStocks = []; // empty list to clear earlier portfolio
   
     if (!selectedUser || !this.currentLeague) {
       return; // if user or league is null, return early
@@ -104,6 +103,7 @@ export class LeagueTradesComponent {
       next: (user: User) => {
         devLog('User fetched successfully:', user);
         this.currentUser = user;
+        this.getCurrentUsersPortfolio(); // load portfolio for logged in user
       },
       error: (error) => {
         devLog('Failed to fetch user from token:', error);
@@ -113,6 +113,25 @@ export class LeagueTradesComponent {
 
   private getCurrentLeague(): void {
     this.currentLeague = this.leagueService.getStoredLeague();
+  }
+
+  private getCurrentUsersPortfolio() {
+
+    devLog("Current User: ", this.currentUser)
+    if (!this.currentUser || !this.currentLeague) {
+      return; // if user or league is null, return early
+    }
+  
+    const currentUserId = this.currentUser.id;
+    const selectedLeagueId = this.currentLeague.id;
+  
+    devLog("currentUserId & selectedLeagueId: ", currentUserId, selectedLeagueId);
+    
+    // Fetch user's portfolio for the selected league
+    this.leagueService.getUserPortfolio(currentUserId, selectedLeagueId).subscribe(portfolio => {
+      devLog("currentUserId's Portfolio: ", portfolio);
+      this.currentUsersStocks = portfolio.stocks.map(stock => stock.ticker_symbol);
+    });
   }
 
 }
