@@ -6,6 +6,7 @@ import { User } from '../../models/user.model';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
 import { League } from '../../models/league.model';
 import { devLog } from '../../../environments/development/devlog';
+import { Stock } from '../../models/stock.model';
 
 @Component({
   selector: 'app-league-trades',
@@ -15,13 +16,13 @@ import { devLog } from '../../../environments/development/devlog';
   styleUrl: './league-trades.component.scss'
 })
 export class LeagueTradesComponent {
-  currentUsersStocks: string[] = [];
+  currentUsersStocks: Stock[] = [];
   leagueUsers: User[] = [];
-  selectedUserStocks: string[] = [];
+  selectedUserStocks: Stock[] = [];
   currentUser: User | null = null
   currentLeague: League | null = null
 
-  trade: { user2: User | null; stocks1: string[]; stocks2: string[] } = {
+  formInput: { user2: User | null; stocks1: Stock[]; stocks2: Stock[] } = {
     user2: null,
     stocks1: [],
     stocks2: []
@@ -39,18 +40,30 @@ export class LeagueTradesComponent {
   }
 
   onSubmit() {
-    if (this.trade.user2 && this.trade.stocks1.length > 0 && this.trade.stocks2.length > 0) {
-      // For simplicity, we're just logging the trade instead of making an actual HTTP request.
-      devLog('Trade details:', this.trade);
-      alert('Trade successfully created!');
-      this.resetForm();
+    const league_id = this.currentLeague?.id;
+    const user1_id = this.currentUser?.id;
+    const user2_id = this.formInput.user2?.id;
+    const stocks1_ids = this.formInput.stocks1.map((stock: Stock) => stock.id);
+    const stocks2_ids = this.formInput.stocks2.map((stock: Stock) => stock.id);
+
+    if (league_id &&
+      user1_id &&
+      user2_id &&
+      stocks1_ids.length > 0 &&
+      stocks2_ids.length > 0) {
+      
+      this.leagueService.createTrade(league_id, user1_id, user2_id, stocks1_ids, stocks2_ids).subscribe(response => {
+        devLog('Trade successfully created:', response);
+        alert('Trade successfully created!');
+        this.resetForm();
+      });
     } else {
       alert('Please complete the form before submitting.');
     }
   }
 
   resetForm() {
-    this.trade = {
+    this.formInput = {
       user2: null,
       stocks1: [],
       stocks2: []
@@ -58,7 +71,7 @@ export class LeagueTradesComponent {
     this.selectedUserStocks = [];
   }
 
-  toggleStockSelection(stockList: string[], stock: string) {
+  toggleStockSelection(stockList: Stock[], stock: Stock) {
     const index = stockList.indexOf(stock);
     if (index === -1) {
       stockList.push(stock);
@@ -81,7 +94,7 @@ export class LeagueTradesComponent {
     // Fetch user's portfolio for the selected league
     this.leagueService.getUserPortfolio(selectedUserId, selectedLeagueId).subscribe(portfolio => {
       devLog("selectedUserId's Portfolio: ", portfolio);
-      this.selectedUserStocks = portfolio.stocks.map(stock => stock.ticker_symbol);
+      this.selectedUserStocks = portfolio.stocks;
     });
   }
 
@@ -130,7 +143,7 @@ export class LeagueTradesComponent {
     // Fetch user's portfolio for the selected league
     this.leagueService.getUserPortfolio(currentUserId, selectedLeagueId).subscribe(portfolio => {
       devLog("currentUserId's Portfolio: ", portfolio);
-      this.currentUsersStocks = portfolio.stocks.map(stock => stock.ticker_symbol);
+      this.currentUsersStocks = portfolio.stocks;
       this.removeCurrentPlayerFromTradeList();
     });
   }

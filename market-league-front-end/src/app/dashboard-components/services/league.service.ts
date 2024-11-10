@@ -20,6 +20,7 @@ export class LeagueService {
   private findUserTradesUrl = `${this.baseUrl}/api/users/user-trades`;
   private createLeagueUrl = `${this.baseUrl}/api/leagues/create-league`;
   private removeLeagueUrl = `${this.baseUrl}/api/leagues/remove-league`;
+  private createTradeUrl = `${this.baseUrl}/api/trades/create-trade`;
 
   // BehaviorSubject for managing the selected league
   private selectedLeagueSource = new BehaviorSubject<League | null>(this.getStoredLeague());
@@ -94,6 +95,17 @@ export class LeagueService {
   removeLeague(leagueId: number): Observable<any> {
     const payload = { league_id: leagueId }; // Payload with league_id
     return this.http.post<any>(this.removeLeagueUrl, payload); // Send POST request
+  }
+
+  createTrade(leagueId: number, user1Id: number, user2Id: number, stocks1Id: number[], stocks2Id: number[]): Observable<any> {
+    const payload = {
+      leagueId: leagueId,
+      user1Id: user1Id,
+      user2Id: user2Id,
+      stocks1Id: stocks1Id,
+      stocks2Id: stocks2Id
+    }
+    return this.http.post<any>(this.createTradeUrl, payload); // Send POST request to create a trade
   }
 
 }

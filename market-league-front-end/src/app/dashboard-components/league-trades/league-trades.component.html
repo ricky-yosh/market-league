@@ -15,7 +15,7 @@
                     id="user2" 
                     name="user2" 
                     class="user-select"
-                    [(ngModel)]="trade.user2" 
+                    [(ngModel)]="formInput.user2" 
                     (ngModelChange)="onUserSelectionChange($event)"
                     required>
                     <option [ngValue]="null" disabled selected>Select a user</option>
@@ -30,25 +30,25 @@
                     <button 
                         type="button" 
                         *ngFor="let stock of currentUsersStocks" 
-                        (click)="toggleStockSelection(trade.stocks1, stock)"
+                        (click)="toggleStockSelection(formInput.stocks1, stock)"
                         class="stock-button"
-                        [ngClass]="{ 'selected': trade.stocks1.includes(stock) }">
-                        {{ stock }}
+                        [ngClass]="{ 'selected': formInput.stocks1.includes(stock) }">
+                        {{ stock.ticker_symbol }}
                     </button>
                 </div>
             </div>
         
             <!-- Stocks Offered by User 2 -->
             <div class="form-group margin-top">
-                <label for="stocks2">{{ trade.user2 ? trade.user2.username + "'s Stocks" : 'Selected User\'s Stocks' }}</label>
+                <label for="stocks2">{{ formInput.user2 ? formInput.user2.username + "'s Stocks" : 'Selected User\'s Stocks' }}</label>
                 <div class="stock-list">
                     <button 
                         type="button" 
                         *ngFor="let stock of selectedUserStocks" 
-                        (click)="toggleStockSelection(trade.stocks2, stock)"
+                        (click)="toggleStockSelection(formInput.stocks2, stock)"
                         class="stock-button"
-                        [ngClass]="{ 'selected': trade.stocks2.includes(stock) }">
-                        {{ stock }}
+                        [ngClass]="{ 'selected': formInput.stocks2.includes(stock) }">
+                        {{ stock.ticker_symbol }}
                     </button>
                 </div>
             </div>
