@@ -9,6 +9,7 @@ import { Portfolio } from '../../models/portfolio.model';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
 import { EMPTY, Observable, catchError, map, of, switchMap, tap } from 'rxjs';
 import { Trade } from '../../models/trade.model';
+import { devLog } from '../../../environments/development/devlog';
 
 @Component({
   selector: 'app-league-home',
@@ -124,9 +125,8 @@ export class LeagueHomeComponent implements OnInit {
   // Load the user's trades for a specific league
   private loadUserTrades(userId: number, leagueId: number): Observable<Trade[]> {
     return this.leagueService.getUserTrades(userId, leagueId).pipe(
-      map((response) => {
-        console.log('User trades fetched successfully:', response.trades);
-        return response.trades;
+      tap((response) => {
+        devLog('User trades fetched successfully:', response);
       }),
       catchError((error) => {
         console.error('Failed to fetch user trades:', error);

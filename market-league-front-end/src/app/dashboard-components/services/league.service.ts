@@ -18,7 +18,7 @@ export class LeagueService {
   private findUserLeaguesUrl = `${this.baseUrl}/api/users/user-leagues`;
   private findLeagueMembersUrl = `${this.baseUrl}/api/leagues/details`;
   private findUserPortfolioUrl = `${this.baseUrl}/api/portfolio/league-portfolio`;
-  private findUserTradesUrl = `${this.baseUrl}/api/users/user-trades`;
+  private findUserTradesUrl = `${this.baseUrl}/api/trades/get-trades`;
   private createLeagueUrl = `${this.baseUrl}/api/leagues/create-league`;
   private removeLeagueUrl = `${this.baseUrl}/api/leagues/remove-league`;
   private createTradeUrl = `${this.baseUrl}/api/trades/create-trade`;
@@ -78,8 +78,8 @@ export class LeagueService {
   }
 
   // Fetch user trades based on userId and leagueId
-  getUserTrades(userId: number, leagueId: number): Observable<{ trades: Trade[] }> {
-    return this.http.post<{ trades: Trade[] }>(this.findUserTradesUrl, { user_id: userId, league_id: leagueId });
+  getUserTrades(userId: number, leagueId: number): Observable<Trade[]> {
+    return this.http.post<any>(this.findUserTradesUrl, { user_id: userId, league_id: leagueId });
   }
 
   // Create League

@@ -1,6 +1,7 @@
 package trade
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -72,4 +73,14 @@ func (s *TradeService) CreateTrade(leagueID, user1ID, user2ID uint, stocks1IDs, 
 	}
 
 	return trade, nil
+}
+
+func (s *TradeService) GetTradesForUser(userID, leagueID uint) ([]models.Trade, error) {
+	// Business logic can be applied here if needed, e.g., filtering, validation, etc.
+	trades, err := s.TradeRepo.FetchTradesByUserAndLeague(userID, leagueID)
+	if err != nil {
+		return nil, fmt.Errorf("could not fetch trades: %w", err)
+	}
+
+	return trades, nil
 }

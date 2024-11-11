@@ -41,3 +41,24 @@ func (h *TradeHandler) CreateTrade(c *gin.Context) {
 
 	c.JSON(http.StatusOK, trade)
 }
+
+func (h *TradeHandler) GetTradesForUser(c *gin.Context) {
+	var request struct {
+		UserID   uint `json:"user_id"` // Corrected json tag format
+		LeagueID uint `json:"league_id"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
+
+	// Call the service to get the trades for the user
+	trades, err := h.TradeService.GetTradesForUser(request.UserID, request.LeagueID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, trades)
+}
