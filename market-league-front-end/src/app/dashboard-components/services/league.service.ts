@@ -8,6 +8,7 @@ import { Leagues } from '../../models/leagues.model';
 import { Stock } from '../../models/stock.model';
 import { Portfolio } from '../../models/portfolio.model';
 import { Trade } from '../../models/trade.model';
+import { devLog } from '../../../environments/development/devlog';
 
 @Injectable({
   providedIn: 'root'
@@ -99,12 +100,14 @@ export class LeagueService {
 
   createTrade(leagueId: number, user1Id: number, user2Id: number, stocks1Id: number[], stocks2Id: number[]): Observable<any> {
     const payload = {
-      leagueId: leagueId,
-      user1Id: user1Id,
-      user2Id: user2Id,
-      stocks1Id: stocks1Id,
-      stocks2Id: stocks2Id
+      league_id: leagueId,
+      user1_id: user1Id,
+      user2_id: user2Id,
+      stocks1_ids: stocks1Id,
+      stocks2_ids: stocks2Id
     }
+
+    devLog("Payload: ", payload)
     return this.http.post<any>(this.createTradeUrl, payload); // Send POST request to create a trade
   }
 

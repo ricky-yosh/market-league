@@ -69,7 +69,7 @@ func RegisterRoutes(router *gin.Engine) {
 
 	// Trades routes
 	tradeRepo := trade.NewTradeRepository(database)
-	tradeService := trade.NewTradeService(tradeRepo, stockRepo)
+	tradeService := trade.NewTradeService(tradeRepo, stockRepo, portfolioRepo)
 	tradeHandler := trade.NewTradeHandler(tradeService)
 
 	tradeRoutes := router.Group("/api/trades")

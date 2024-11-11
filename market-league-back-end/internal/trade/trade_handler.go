@@ -21,13 +21,11 @@ func NewTradeHandler(tradeService *TradeService) *TradeHandler {
 // CreateTradeHandler handles the creation of a new trade
 func (h *TradeHandler) CreateTrade(c *gin.Context) {
 	var request struct {
-		LeagueID     uint   `json:"league_id"`
-		User1ID      uint   `json:"user1_id"`
-		User2ID      uint   `json:"user2_id"`
-		Portfolio1ID uint   `json:"portfolio1_id"`
-		Portfolio2ID uint   `json:"portfolio2_id"`
-		Stocks1IDs   []uint `json:"stocks1_ids"`
-		Stocks2IDs   []uint `json:"stocks2_ids"`
+		LeagueID   uint   `json:"league_id"`
+		User1ID    uint   `json:"user1_id"`
+		User2ID    uint   `json:"user2_id"`
+		Stocks1IDs []uint `json:"stocks1_ids"`
+		Stocks2IDs []uint `json:"stocks2_ids"`
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -35,7 +33,7 @@ func (h *TradeHandler) CreateTrade(c *gin.Context) {
 		return
 	}
 
-	trade, err := h.TradeService.CreateTrade(request.LeagueID, request.User1ID, request.User2ID, request.Portfolio1ID, request.Portfolio2ID, request.Stocks1IDs, request.Stocks2IDs)
+	trade, err := h.TradeService.CreateTrade(request.LeagueID, request.User1ID, request.User2ID, request.Stocks1IDs, request.Stocks2IDs)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
