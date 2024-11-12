@@ -26,7 +26,7 @@ func NewLeagueHandler(service *LeagueService, portfolioService *portfolio.Portfo
 func (h *LeagueHandler) CreateLeague(c *gin.Context) {
 	var leagueRequest struct {
 		LeagueName string `json:"league_name" binding:"required"`
-		OwnerUser  string `json:"owner_user" binding:"required"`
+		OwnerUser  uint   `json:"owner_user" binding:"required"`
 		EndDate    string `json:"end_date" binding:"required"`
 	}
 
@@ -45,7 +45,20 @@ func (h *LeagueHandler) CreateLeague(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, league)
+	// Create a portfolio for the user in the league
+	portfolio, err := h.portfolioService.CreatePortfolio(leagueRequest.OwnerUser, league.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	// Construct response with sanitized user details
+	response := gin.H{
+		"message":   "League successfully created",
+		"league":    league,
+		"portfolio": portfolio,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // AddUserToLeague handles adding a user to a league.
@@ -72,8 +85,18 @@ func (h *LeagueHandler) AddUserToLeague(c *gin.Context) {
 		return
 	}
 
-	// Return success response
-	c.JSON(http.StatusOK, gin.H{"message": "User successfully added to league"})
+	// Create a portfolio for the user in the league
+	portfolio, err := h.portfolioService.CreatePortfolio(request.UserID, request.LeagueID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Return success response with portfolio details
+	c.JSON(http.StatusOK, gin.H{
+		"message":   "User successfully added to league",
+		"portfolio": portfolio,
+	})
 }
 
 // GetLeagueDetails handles fetching the details of a specific league.

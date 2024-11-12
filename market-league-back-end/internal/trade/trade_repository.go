@@ -25,7 +25,12 @@ func (r *TradeRepository) CreateTrade(trade *models.Trade) error {
 // FetchTradesByUserAndLeague retrieves trades associated with a user and league from the database.
 func (r *TradeRepository) FetchTradesByUserAndLeague(userID, leagueID uint) ([]models.Trade, error) {
 	var trades []models.Trade
-	err := r.db.Where("(user1_id = ? OR user2_id = ?) AND league_id = ?", userID, userID, leagueID).Find(&trades).Error
+	err := r.db.
+		Where("(user1_id = ? OR user2_id = ?) AND league_id = ?", userID, userID, leagueID).
+		Preload("Stocks1").
+		Preload("Stocks2").
+		Find(&trades).Error
+
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("no trades found for user ID %d in league ID %d", userID, leagueID)

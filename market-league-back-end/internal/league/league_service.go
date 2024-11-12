@@ -35,7 +35,7 @@ type LeagueResponse struct {
 }
 
 // CreateLeague creates a new league with the given details.
-func (s *LeagueService) CreateLeague(leagueName, ownerUser, startDate, endDate string) (*LeagueResponse, error) {
+func (s *LeagueService) CreateLeague(leagueName string, ownerUser uint, startDate, endDate string) (*LeagueResponse, error) {
 	// Parse start and end dates into time.Time
 	start, err := time.Parse(time.RFC3339, startDate)
 	if err != nil {
@@ -48,7 +48,7 @@ func (s *LeagueService) CreateLeague(leagueName, ownerUser, startDate, endDate s
 	}
 
 	// Fetch the user by username
-	owner, err := s.userRepo.GetUserByUsername(ownerUser)
+	owner, err := s.userRepo.GetUserByID(ownerUser)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find owner user: %v", err)
 	}

@@ -35,7 +35,7 @@ export class CreateLeagueComponent {
 
     this.userService.getUserFromToken().subscribe({
       next: (user) => {
-        this.createLeague(this.leagueName, user.username, formattedEndDate);
+        this.createLeague(this.leagueName, user.id, formattedEndDate);
       },
       error: (error) => {
         devLog('Failed to fetch user from token:', error);
@@ -44,7 +44,7 @@ export class CreateLeagueComponent {
 
   }
 
-  private createLeague(leagueName: string, username: string, endDate: string | null): void {    
+  private createLeague(leagueName: string, username: number, endDate: string | null): void {    
     guard(leagueName != '', "League name is empty!");
     guardRFC3339(endDate, "End date is required and must be in RFC3339 format");
 

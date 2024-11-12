@@ -83,7 +83,7 @@ export class LeagueService {
   }
 
   // Create League
-  createLeague(leagueName: string, ownerUser: string, endDate: string): Observable<any> {
+  createLeague(leagueName: string, ownerUser: number, endDate: string): Observable<any> {
     const payload = {
       league_name: leagueName,
       owner_user: ownerUser,
