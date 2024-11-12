@@ -7,8 +7,10 @@ import (
 type Trade struct {
 	ID             uint      `json:"id" gorm:"primaryKey;autoIncrement"`
 	LeagueID       uint      `json:"league_id" gorm:"not null"`
-	User1ID        uint      `json:"user1_id" gorm:"not null"`                         // Initiating user
-	User2ID        uint      `json:"user2_id" gorm:"not null"`                         // Counterparty user
+	User1ID        uint      `json:"user1_id"`
+	User1          *User     `json:"user1" gorm:"foreignKey:User1ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	User2ID        uint      `json:"user2_id"`
+	User2          *User     `json:"user2" gorm:"foreignKey:User2ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 	Portfolio1ID   uint      `json:"portfolio1_id" gorm:"not null"`                    // Portfolio of User 1
 	Portfolio2ID   uint      `json:"portfolio2_id" gorm:"not null"`                    // Portfolio of User 2
 	Stocks1        []Stock   `json:"stocks1" gorm:"many2many:trade_stocks1"`           // Stocks User 1 is offering

@@ -41,8 +41,11 @@
             <ul *ngIf="userTrades && userTrades.length > 0; else noTrades">
                 <li *ngFor="let trade of userTrades" class="trade-item" style="display: flex; justify-content: space-between;">
                     <div>
-                        <p>{{ trade.user1_id }}</p>
-                        <p>{{ trade.user1_confirmed }}</p>
+                        <p>{{ trade.user1.username }}</p>
+                        <div 
+                            [ngClass]="{'trade-confirmed': trade.user1_confirmed, 'trade-not-confirmed': !trade.user1_confirmed}"
+                            class="confirmation-status">
+                        </div>
                         <p *ngFor="let stock of trade.stocks1">
                             {{ stock.ticker_symbol }}
                         </p>
@@ -52,8 +55,11 @@
                         <p>{{ trade.created_at | date: 'MMMM d, yyyy, h:mm a' }}</p>
                     </div>
                     <div>
-                        <p>{{ trade.user2_id }}</p>
-                        <p>{{ trade.user2_confirmed }}</p>
+                        <p>{{ trade.user2.username }}</p>
+                        <div 
+                            [ngClass]="{'trade-confirmed': trade.user1_confirmed, 'trade-not-confirmed': !trade.user1_confirmed}"
+                            class="confirmation-status">
+                        </div>
                         <p *ngFor="let stock of trade.stocks2">
                             {{ stock.ticker_symbol }}
                         </p>

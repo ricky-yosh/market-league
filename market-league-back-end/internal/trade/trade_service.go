@@ -8,6 +8,7 @@ import (
 	"github.com/market-league/internal/models"
 	"github.com/market-league/internal/portfolio"
 	"github.com/market-league/internal/stock"
+	"github.com/market-league/internal/user"
 )
 
 // TradeService handles the business logic for trades.
@@ -15,19 +16,21 @@ type TradeService struct {
 	TradeRepo     *TradeRepository
 	StockRepo     *stock.StockRepository
 	PortfolioRepo *portfolio.PortfolioRepository
+	UserRepo      *user.UserRepository
 }
 
 // NewTradeService creates a new instance of TradeService
-func NewTradeService(tradeRepo *TradeRepository, stockRepo *stock.StockRepository, portfolioRepo *portfolio.PortfolioRepository) *TradeService {
+func NewTradeService(tradeRepo *TradeRepository, stockRepo *stock.StockRepository, portfolioRepo *portfolio.PortfolioRepository, userRepo *user.UserRepository) *TradeService {
 	return &TradeService{
 		TradeRepo:     tradeRepo,
 		StockRepo:     stockRepo,
 		PortfolioRepo: portfolioRepo,
+		UserRepo:      userRepo,
 	}
 }
 
 // CreateTrade initializes a new trade between two users.
-func (s *TradeService) CreateTrade(leagueID, user1ID, user2ID uint, stocks1IDs, stocks2IDs []uint) (*models.Trade, error) {
+func (s *TradeService) CreateTrade(leagueID, user1ID, user2ID uint, stocks1IDs, stocks2IDs []uint) (*models.SanitizedTrade, error) {
 
 	// Fetch stock details from the repository
 	stocks1, err := s.StockRepo.GetStocksByIDs(stocks1IDs)
@@ -35,6 +38,16 @@ func (s *TradeService) CreateTrade(leagueID, user1ID, user2ID uint, stocks1IDs, 
 		return nil, err
 	}
 	stocks2, err := s.StockRepo.GetStocksByIDs(stocks2IDs)
+	if err != nil {
+		return nil, err
+	}
+
+	// Fetch user details from the repository
+	user1, err := s.UserRepo.GetUserByID(user1ID)
+	if err != nil {
+		return nil, err
+	}
+	user2, err := s.UserRepo.GetUserByID(user2ID)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +70,9 @@ func (s *TradeService) CreateTrade(leagueID, user1ID, user2ID uint, stocks1IDs, 
 
 	trade := &models.Trade{
 		LeagueID:     leagueID,
+		User1:        user1,
 		User1ID:      user1ID,
+		User2:        user2,
 		User2ID:      user2ID,
 		Portfolio1ID: portfolio1ID,
 		Portfolio2ID: portfolio2ID,
@@ -71,11 +86,37 @@ func (s *TradeService) CreateTrade(leagueID, user1ID, user2ID uint, stocks1IDs, 
 	if err := s.TradeRepo.CreateTrade(trade); err != nil {
 		return nil, err
 	}
+	// Convert to a sanitized trade
+	sanitizedTrade := &models.SanitizedTrade{
+		ID:       trade.ID,
+		LeagueID: trade.LeagueID,
+		User1: models.SanitizedUser{
+			ID:        trade.User1.ID,
+			Username:  trade.User1.Username,
+			Email:     trade.User1.Email,
+			CreatedAt: trade.User1.CreatedAt,
+		},
+		User2: models.SanitizedUser{
+			ID:        trade.User2.ID,
+			Username:  trade.User2.Username,
+			Email:     trade.User2.Email,
+			CreatedAt: trade.User2.CreatedAt,
+		},
+		Portfolio1ID:   trade.Portfolio1ID,
+		Portfolio2ID:   trade.Portfolio2ID,
+		Stocks1:        trade.Stocks1,
+		Stocks2:        trade.Stocks2,
+		User1Confirmed: trade.User1Confirmed,
+		User2Confirmed: trade.User2Confirmed,
+		Status:         trade.Status,
+		CreatedAt:      trade.CreatedAt,
+		UpdatedAt:      trade.UpdatedAt,
+	}
 
-	return trade, nil
+	return sanitizedTrade, nil
 }
 
-func (s *TradeService) GetTradesForUser(userID, leagueID uint) ([]models.Trade, error) {
+func (s *TradeService) GetTradesForUser(userID, leagueID uint) ([]models.SanitizedTrade, error) {
 	// Business logic can be applied here if needed, e.g., filtering, validation, etc.
 	trades, err := s.TradeRepo.FetchTradesByUserAndLeague(userID, leagueID)
 	if err != nil {

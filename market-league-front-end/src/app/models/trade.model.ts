@@ -1,8 +1,10 @@
+import { User } from "./user.model";
+
 export interface Trade {
     id: number;
     league_id: number;
-    user1_id: number;
-    user2_id: number;
+    user1: User;
+    user2: User;
     portfolio1_id: number;
     portfolio2_id: number;
     stocks1: any[] | null; // Adjust the type as needed

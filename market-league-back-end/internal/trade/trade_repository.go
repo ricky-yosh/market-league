@@ -23,10 +23,12 @@ func (r *TradeRepository) CreateTrade(trade *models.Trade) error {
 }
 
 // FetchTradesByUserAndLeague retrieves trades associated with a user and league from the database.
-func (r *TradeRepository) FetchTradesByUserAndLeague(userID, leagueID uint) ([]models.Trade, error) {
+func (r *TradeRepository) FetchTradesByUserAndLeague(userID, leagueID uint) ([]models.SanitizedTrade, error) {
 	var trades []models.Trade
 	err := r.db.
 		Where("(user1_id = ? OR user2_id = ?) AND league_id = ?", userID, userID, leagueID).
+		Preload("User1").
+		Preload("User2").
 		Preload("Stocks1").
 		Preload("Stocks2").
 		Find(&trades).Error
@@ -37,5 +39,36 @@ func (r *TradeRepository) FetchTradesByUserAndLeague(userID, leagueID uint) ([]m
 		}
 		return nil, fmt.Errorf("failed to fetch trades: %w", err)
 	}
-	return trades, nil
+
+	// Map to sanitized trades
+	var sanitizedTrades []models.SanitizedTrade
+	for _, trade := range trades {
+		sanitizedTrade := models.SanitizedTrade{
+			ID:       trade.ID,
+			LeagueID: trade.LeagueID,
+			User1: models.SanitizedUser{
+				ID:        trade.User1.ID,
+				Username:  trade.User1.Username,
+				Email:     trade.User1.Email,
+				CreatedAt: trade.User1.CreatedAt,
+			},
+			User2: models.SanitizedUser{
+				ID:        trade.User2.ID,
+				Username:  trade.User2.Username,
+				Email:     trade.User2.Email,
+				CreatedAt: trade.User2.CreatedAt,
+			},
+			Portfolio1ID:   trade.Portfolio1ID,
+			Portfolio2ID:   trade.Portfolio2ID,
+			Stocks1:        trade.Stocks1,
+			Stocks2:        trade.Stocks2,
+			User1Confirmed: trade.User1Confirmed,
+			User2Confirmed: trade.User2Confirmed,
+			Status:         trade.Status,
+			CreatedAt:      trade.CreatedAt,
+			UpdatedAt:      trade.UpdatedAt,
+		}
+		sanitizedTrades = append(sanitizedTrades, sanitizedTrade)
+	}
+	return sanitizedTrades, nil
 }

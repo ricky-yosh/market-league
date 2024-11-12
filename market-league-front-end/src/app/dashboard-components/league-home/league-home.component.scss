@@ -66,6 +66,18 @@ h2 {
     border-bottom: 1px solid darken($market-league-white, 10%);
 }
 
-.trade-item {
-    
+.confirmation-status {
+    width: 2.1em;
+    height: 0.6em;
+    display: inline-block;
+    border-radius: 5px;
+}
+
+.trade-confirmed {
+    background-color: $market-league-green;
+}
+
+.trade-not-confirmed {
+    background-color: $market-league-red;
+
 }
