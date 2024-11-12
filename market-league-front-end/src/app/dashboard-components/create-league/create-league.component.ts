@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
-import { UserLeaguesService } from '../league-services/user-leagues/user-leagues.service';
+import { LeagueService } from '../services/league.service';
 import { devLog } from '../../../environments/development/devlog';
 import { FormsModule } from '@angular/forms';
 import { guard, guardRFC3339 } from '../../utils/guard';
@@ -18,7 +18,7 @@ export class CreateLeagueComponent {
 
   constructor(
     private userService: VerifyUserService,
-    private leagueService: UserLeaguesService
+    private leagueService: LeagueService
   ) {}
 
   onSubmit() {
@@ -35,7 +35,7 @@ export class CreateLeagueComponent {
 
     this.userService.getUserFromToken().subscribe({
       next: (user) => {
-        this.createLeague(this.leagueName, user.username, formattedEndDate);
+        this.createLeague(this.leagueName, user.id, formattedEndDate);
       },
       error: (error) => {
         devLog('Failed to fetch user from token:', error);
@@ -44,7 +44,7 @@ export class CreateLeagueComponent {
 
   }
 
-  private createLeague(leagueName: string, username: string, endDate: string | null): void {    
+  private createLeague(leagueName: string, username: number, endDate: string | null): void {    
     guard(leagueName != '', "League name is empty!");
     guardRFC3339(endDate, "End date is required and must be in RFC3339 format");
 

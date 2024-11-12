@@ -2,7 +2,7 @@ import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { Component, EventEmitter, Output } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
-import { UserLeaguesService } from '../league-services/user-leagues/user-leagues.service';
+import { LeagueService } from '../services/league.service';
 import { firstValueFrom } from 'rxjs';
 import { User } from '../../models/user.model';
 import { League } from '../../models/league.model';
@@ -25,7 +25,7 @@ export class DashboardMainComponent {
   constructor(
     private router: Router,
     private userService: VerifyUserService,
-    private leagueService: UserLeaguesService
+    private leagueService: LeagueService
   ) {}
 
   ngOnInit(): void {
@@ -60,6 +60,10 @@ export class DashboardMainComponent {
 
   redirectToRemoveLeague() {
     this.router.navigate(['dashboard/remove-league']);
+  }
+
+  redirectToSettings() {
+    this.router.navigate(['dashboard/settings']);
   }
 
   // Method to load the leagues for the user

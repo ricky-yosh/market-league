@@ -25,7 +25,7 @@
     </div>
 
     <div class="flex-container middle">
-        <div class="flex-item scrollable-section" style="flex: 2;">
+        <div class="flex-item scrollable-section" style="flex: 1;">
             <h2>Portfolio</h2>
             <ul *ngIf="userPortfolio && userPortfolio.length > 0; else noPortfolio">
                 <li *ngFor="let stock of userPortfolio">{{ stock.ticker_symbol }}</li>
@@ -36,12 +36,34 @@
 
         </div>
 
-        <div class="flex-item scrollable-section" style="flex: 1;">
+        <div class="flex-item scrollable-section" style="flex: 3;">
             <h2>Trades</h2>
             <ul *ngIf="userTrades && userTrades.length > 0; else noTrades">
-                <li *ngFor="let trade of userTrades">
-                    <p>{{ trade.ID }}</p>
-                    <p>{{ trade.created_at | date: 'MMMM d, yyyy, h:mm:ss a' }}</p>
+                <li *ngFor="let trade of userTrades" class="trade-item" style="display: flex; justify-content: space-between;">
+                    <div>
+                        <p>{{ trade.user1.username }}</p>
+                        <div 
+                            [ngClass]="{'trade-confirmed': trade.user1_confirmed, 'trade-not-confirmed': !trade.user1_confirmed}"
+                            class="confirmation-status">
+                        </div>
+                        <p *ngFor="let stock of trade.stocks1">
+                            {{ stock.ticker_symbol }}
+                        </p>
+                    </div>
+                    <div>
+                        <p style="display: flex; justify-content: center;">Trades for</p>
+                        <p>{{ trade.created_at | date: 'MMMM d, yyyy, h:mm a' }}</p>
+                    </div>
+                    <div>
+                        <p>{{ trade.user2.username }}</p>
+                        <div 
+                            [ngClass]="{'trade-confirmed': trade.user1_confirmed, 'trade-not-confirmed': !trade.user1_confirmed}"
+                            class="confirmation-status">
+                        </div>
+                        <p *ngFor="let stock of trade.stocks2">
+                            {{ stock.ticker_symbol }}
+                        </p>
+                    </div>
                 </li>
             </ul>
             <ng-template #noTrades>

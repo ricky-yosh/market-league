@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 import { Leagues } from '../../models/leagues.model';
 import { League } from '../../models/league.model';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
-import { UserLeaguesService } from '../league-services/user-leagues/user-leagues.service';
+import { LeagueService } from '../services/league.service';
 import { User } from '../../models/user.model';
 import { devLog } from '../../../environments/development/devlog';
 
@@ -21,7 +21,7 @@ export class RemoveLeagueComponent {
 
   constructor(
     private userService: VerifyUserService,
-    private leagueService: UserLeaguesService
+    private leagueService: LeagueService
   ) {}
 
   ngOnInit(): void {

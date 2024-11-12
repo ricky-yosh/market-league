@@ -1,7 +1,7 @@
 import { NgFor } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { UserLeaguesService } from '../league-services/user-leagues/user-leagues.service';
+import { LeagueService } from '../services/league.service';
 import { User } from '../../models/user.model';
 import { League } from '../../models/league.model';
 import { Stock } from '../../models/stock.model';
@@ -9,6 +9,7 @@ import { Portfolio } from '../../models/portfolio.model';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
 import { EMPTY, Observable, catchError, map, of, switchMap, tap } from 'rxjs';
 import { Trade } from '../../models/trade.model';
+import { devLog } from '../../../environments/development/devlog';
 
 @Component({
   selector: 'app-league-home',
@@ -26,7 +27,7 @@ export class LeagueHomeComponent implements OnInit {
   leagueMembers: string[] | null = null;
 
   constructor(
-    private leagueService: UserLeaguesService,
+    private leagueService: LeagueService,
     private userService: VerifyUserService,
     private cd: ChangeDetectorRef
   ) {}
@@ -124,9 +125,8 @@ export class LeagueHomeComponent implements OnInit {
   // Load the user's trades for a specific league
   private loadUserTrades(userId: number, leagueId: number): Observable<Trade[]> {
     return this.leagueService.getUserTrades(userId, leagueId).pipe(
-      map((response) => {
-        console.log('User trades fetched successfully:', response.trades);
-        return response.trades;
+      tap((response) => {
+        devLog('User trades fetched successfully:', response);
       }),
       catchError((error) => {
         console.error('Failed to fetch user trades:', error);

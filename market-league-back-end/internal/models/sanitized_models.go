@@ -32,3 +32,19 @@ type SanitizedStock struct {
 	CompanyName  string  `json:"company_name"`
 	CurrentPrice float64 `json:"current_price"`
 }
+
+type SanitizedTrade struct {
+	ID             uint          `json:"id"`
+	LeagueID       uint          `json:"league_id"`
+	User1          SanitizedUser `json:"user1"`
+	User2          SanitizedUser `json:"user2"`
+	Portfolio1ID   uint          `json:"portfolio1_id"`
+	Portfolio2ID   uint          `json:"portfolio2_id"`
+	Stocks1        []Stock       `json:"stocks1"`
+	Stocks2        []Stock       `json:"stocks2"`
+	User1Confirmed bool          `json:"user1_confirmed"`
+	User2Confirmed bool          `json:"user2_confirmed"`
+	Status         string        `json:"status"`
+	CreatedAt      time.Time     `json:"created_at"`
+	UpdatedAt      time.Time     `json:"updated_at"`
+}

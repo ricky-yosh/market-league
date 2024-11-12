@@ -2,98 +2,126 @@ package trade
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/market-league/internal/models"
+	"github.com/market-league/internal/portfolio"
 	"github.com/market-league/internal/stock"
+	"github.com/market-league/internal/user"
 )
 
-// TradeService handles business logic related to trades.
+// TradeService handles the business logic for trades.
 type TradeService struct {
-	tradeRepo *TradeRepository       // Reference to the repository layer
-	stockRepo *stock.StockRepository // Reference to the StockRepository
+	TradeRepo     *TradeRepository
+	StockRepo     *stock.StockRepository
+	PortfolioRepo *portfolio.PortfolioRepository
+	UserRepo      *user.UserRepository
 }
 
-// NewTradeService creates a new instance of TradeService.
-func NewTradeService(tradeRepo *TradeRepository, stockRepo *stock.StockRepository) *TradeService {
+// NewTradeService creates a new instance of TradeService
+func NewTradeService(tradeRepo *TradeRepository, stockRepo *stock.StockRepository, portfolioRepo *portfolio.PortfolioRepository, userRepo *user.UserRepository) *TradeService {
 	return &TradeService{
-		tradeRepo: tradeRepo,
-		stockRepo: stockRepo,
+		TradeRepo:     tradeRepo,
+		StockRepo:     stockRepo,
+		PortfolioRepo: portfolioRepo,
+		UserRepo:      userRepo,
 	}
 }
 
-// CreateTrade creates a new trade between two players within a specific league and portfolios.
-func (s *TradeService) CreateTrade(
-	leagueID, player1ID, player2ID, player1PortfolioID, player2PortfolioID uint,
-	player1StockIDs, player2StockIDs []uint) error {
+// CreateTrade initializes a new trade between two users.
+func (s *TradeService) CreateTrade(leagueID, user1ID, user2ID uint, stocks1IDs, stocks2IDs []uint) (*models.SanitizedTrade, error) {
 
-	// Fetch stocks for Player 1 using the StockRepository's GetStocksByIDs method
-	player1Stocks, err := s.stockRepo.GetStocksByIDs(player1StockIDs)
+	// Fetch stock details from the repository
+	stocks1, err := s.StockRepo.GetStocksByIDs(stocks1IDs)
 	if err != nil {
-		return fmt.Errorf("failed to fetch stocks for Player 1: %v", err)
+		return nil, err
+	}
+	stocks2, err := s.StockRepo.GetStocksByIDs(stocks2IDs)
+	if err != nil {
+		return nil, err
 	}
 
-	// Fetch stocks for Player 2 using the StockRepository's GetStocksByIDs method
-	player2Stocks, err := s.stockRepo.GetStocksByIDs(player2StockIDs)
+	// Fetch user details from the repository
+	user1, err := s.UserRepo.GetUserByID(user1ID)
 	if err != nil {
-		return fmt.Errorf("failed to fetch stocks for Player 2: %v", err)
+		return nil, err
+	}
+	user2, err := s.UserRepo.GetUserByID(user2ID)
+	if err != nil {
+		return nil, err
 	}
 
-	// Create a new trade instance
+	portfolio1ID, err := s.PortfolioRepo.GetPortfolioIDByUserAndLeague(user1ID, leagueID)
+	if err != nil {
+		// Handle the error appropriately (e.g., return it, log it, etc.)
+		log.Printf("error fetching portfolio for user1: %v", err)
+		return nil, err
+	}
+	log.Printf("Portfolio 1: %v", portfolio1ID)
+
+	portfolio2ID, err := s.PortfolioRepo.GetPortfolioIDByUserAndLeague(user2ID, leagueID)
+	if err != nil {
+		// Handle the error appropriately (e.g., return it, log it, etc.)
+		log.Printf("error fetching portfolio for user2: %v", err)
+		return nil, err
+	}
+	log.Printf("Portfolio 2: %v", portfolio2ID)
+
 	trade := &models.Trade{
-		LeagueID:           leagueID,
-		Player1ID:          player1ID,
-		Player2ID:          player2ID,
-		Player1PortfolioID: player1PortfolioID,
-		Player2PortfolioID: player2PortfolioID,
-		Player1Stocks:      player1Stocks,
-		Player2Stocks:      player2Stocks,
-		Player1Confirmed:   false,
-		Player2Confirmed:   false,
+		LeagueID:     leagueID,
+		User1:        user1,
+		User1ID:      user1ID,
+		User2:        user2,
+		User2ID:      user2ID,
+		Portfolio1ID: portfolio1ID,
+		Portfolio2ID: portfolio2ID,
+		Stocks1:      stocks1,
+		Stocks2:      stocks2,
+		Status:       "pending",
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 
-	// Save the trade using the TradeRepository
-	return s.tradeRepo.CreateTrade(trade)
+	if err := s.TradeRepo.CreateTrade(trade); err != nil {
+		return nil, err
+	}
+	// Convert to a sanitized trade
+	sanitizedTrade := &models.SanitizedTrade{
+		ID:       trade.ID,
+		LeagueID: trade.LeagueID,
+		User1: models.SanitizedUser{
+			ID:        trade.User1.ID,
+			Username:  trade.User1.Username,
+			Email:     trade.User1.Email,
+			CreatedAt: trade.User1.CreatedAt,
+		},
+		User2: models.SanitizedUser{
+			ID:        trade.User2.ID,
+			Username:  trade.User2.Username,
+			Email:     trade.User2.Email,
+			CreatedAt: trade.User2.CreatedAt,
+		},
+		Portfolio1ID:   trade.Portfolio1ID,
+		Portfolio2ID:   trade.Portfolio2ID,
+		Stocks1:        trade.Stocks1,
+		Stocks2:        trade.Stocks2,
+		User1Confirmed: trade.User1Confirmed,
+		User2Confirmed: trade.User2Confirmed,
+		Status:         trade.Status,
+		CreatedAt:      trade.CreatedAt,
+		UpdatedAt:      trade.UpdatedAt,
+	}
+
+	return sanitizedTrade, nil
 }
 
-// CreateTrade creates a new trade in the database.
-func (s *TradeService) ConfirmTrade(tradeID, playerID uint) error {
-	// Fetch the trade by ID
-	trade, err := s.tradeRepo.GetTradeByID(tradeID)
+func (s *TradeService) GetTradesForUser(userID, leagueID uint) ([]models.SanitizedTrade, error) {
+	// Business logic can be applied here if needed, e.g., filtering, validation, etc.
+	trades, err := s.TradeRepo.FetchTradesByUserAndLeague(userID, leagueID)
 	if err != nil {
-		return fmt.Errorf("failed to fetch trade: %v", err)
+		return nil, fmt.Errorf("could not fetch trades: %w", err)
 	}
 
-	// Mark the trade as confirmed by the player
-	if playerID == trade.Player1ID {
-		trade.Player1Confirmed = true
-	} else if playerID == trade.Player2ID {
-		trade.Player2Confirmed = true
-	} else {
-		return fmt.Errorf("player ID %d is not part of this trade", playerID)
-	}
-
-	// Check if both players have confirmed the trade
-	if trade.Player1Confirmed && trade.Player2Confirmed {
-		// Both players have confirmed; execute the stock swap
-		if err := s.tradeRepo.SwapStocks(trade); err != nil {
-			return fmt.Errorf("failed to swap stocks: %v", err)
-		}
-
-		// Set the confirmed timestamp
-		now := time.Now()
-		trade.ConfirmedAt = &now
-	}
-
-	// Save the updated trade
-	if err := s.tradeRepo.SaveTrade(trade); err != nil {
-		return fmt.Errorf("failed to save trade confirmation: %v", err)
-	}
-
-	return nil
-}
-
-func (s *TradeService) GetTrades(portfolioID, leagueID uint, filterByPortfolio, filterByLeague bool) ([]models.Trade, error) {
-	// Call the repository to fetch trades based on the filter criteria
-	return s.tradeRepo.GetTrades(portfolioID, leagueID, filterByPortfolio, filterByLeague)
+	return trades, nil
 }

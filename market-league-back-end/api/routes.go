@@ -67,18 +67,6 @@ func RegisterRoutes(router *gin.Engine) {
 		stockRoutes.POST("/update-price-history", stockHandler.UpdatePriceHistory) // Update price history by ID
 	}
 
-	// Trades routes
-	tradeRepo := trade.NewTradeRepository(database)
-	tradeService := trade.NewTradeService(tradeRepo, stockRepo)
-	tradeHandler := trade.NewTradeHandler(tradeService)
-
-	tradeRoutes := router.Group("/api/trades")
-	{
-		tradeRoutes.POST("/create-trade", tradeHandler.CreateTrade) // Create a new trade
-		tradeRoutes.POST("/confirm-trade", tradeHandler.ConfirmTrade)
-		tradeRoutes.POST("/get-trades", tradeHandler.GetTrades)
-	}
-
 	userRepo := user.NewUserRepository(database)
 	userService := user.NewUserService(userRepo)
 	userHandler := user.NewUserHandler(userService)
@@ -90,6 +78,18 @@ func RegisterRoutes(router *gin.Engine) {
 		userRoutes.POST("/user-trades", userHandler.GetUserTrades)
 		userRoutes.POST("/user-portfolios", userHandler.GetUserPortfolios)
 		// userRoutes.POST("/update-user", userHandler.GetUserByID)
+	}
+
+	// Trades routes
+	tradeRepo := trade.NewTradeRepository(database)
+	tradeService := trade.NewTradeService(tradeRepo, stockRepo, portfolioRepo, userRepo)
+	tradeHandler := trade.NewTradeHandler(tradeService)
+
+	tradeRoutes := router.Group("/api/trades")
+	{
+		tradeRoutes.POST("/create-trade", tradeHandler.CreateTrade) // Create a new trade
+		// tradeRoutes.POST("/confirm-trade", tradeHandler.ConfirmTrade)
+		tradeRoutes.POST("/get-trades", tradeHandler.GetTradesForUser)
 	}
 
 	// League routes

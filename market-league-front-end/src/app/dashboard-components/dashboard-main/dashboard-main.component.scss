@@ -21,7 +21,7 @@
 }
 
 .sidebar:hover .leagues {
-    scrollbar-color: rgba($market-league-white, 20%) transparent;
+    scrollbar-color: $scrollbar-grey transparent;
 }
 
 /* Leagues list styling */
@@ -45,6 +45,7 @@
     align-items: center;
     padding: 10px;
     white-space: nowrap;
+    flex-direction: row;
 }
 
 .league-item .first-letter {
@@ -56,6 +57,12 @@
     margin-left: 10px;
     opacity: 0; /* Initially hidden */
     transition: opacity 0.3s ease, margin-left 0.3s ease;
+
+    // Truncate css
+    max-width: 15em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* On hover, show the full name */
@@ -101,7 +108,7 @@
     font-size: 1.1rem;
     width: 100%;
     box-sizing: border-box;
-    display: inline-block;
+    // display: inline-block;
     padding: 0.6em 0.5em 0.6em 0.5em; /* Space around the content */
     background-color: transparent; /* Initial background */
     transition: background-color 0.3s ease; /* Smooth transition for the hover effect */

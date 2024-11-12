@@ -5,16 +5,19 @@ import (
 )
 
 type Trade struct {
-	ID                 uint       `gorm:"primaryKey;autoIncrement"`
-	LeagueID           uint       `json:"league_id"`                                             // ID of the league in which the trade is taking place
-	Player1ID          uint       `json:"player1_id"`                                            // ID of the first player (initiator)
-	Player2ID          uint       `json:"player2_id"`                                            // ID of the second player (recipient)
-	Player1PortfolioID uint       `json:"player1_portfolio_id"`                                  // ID of the first player's portfolio
-	Player2PortfolioID uint       `json:"player2_portfolio_id"`                                  // ID of the second player's portfolio
-	Player1Stocks      []Stock    `json:"player1_stocks" gorm:"many2many:trade_player1_stocks;"` // Stocks offered by player 1
-	Player2Stocks      []Stock    `json:"player2_stocks" gorm:"many2many:trade_player2_stocks;"` // Stocks offered by player 2
-	Player1Confirmed   bool       `json:"player1_confirmed"`                                     // Whether Player 1 has confirmed the trade
-	Player2Confirmed   bool       `json:"player2_confirmed"`                                     // Whether Player 2 has confirmed the trade
-	CreatedAt          time.Time  `json:"created_at" gorm:"autoCreateTime"`                      // Timestamp of when the trade was created
-	ConfirmedAt        *time.Time `json:"confirmed_at"`                                          // Timestamp of when the trade was confirmed (nullable)
+	ID             uint      `json:"id" gorm:"primaryKey;autoIncrement"`
+	LeagueID       uint      `json:"league_id" gorm:"not null"`
+	User1ID        uint      `json:"user1_id"`
+	User1          *User     `json:"user1" gorm:"foreignKey:User1ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	User2ID        uint      `json:"user2_id"`
+	User2          *User     `json:"user2" gorm:"foreignKey:User2ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	Portfolio1ID   uint      `json:"portfolio1_id" gorm:"not null"`                    // Portfolio of User 1
+	Portfolio2ID   uint      `json:"portfolio2_id" gorm:"not null"`                    // Portfolio of User 2
+	Stocks1        []Stock   `json:"stocks1" gorm:"many2many:trade_stocks1"`           // Stocks User 1 is offering
+	Stocks2        []Stock   `json:"stocks2" gorm:"many2many:trade_stocks2"`           // Stocks User 2 is offering
+	User1Confirmed bool      `json:"user1_confirmed" gorm:"default:false"`             // Confirmation status of User 1
+	User2Confirmed bool      `json:"user2_confirmed" gorm:"default:false"`             // Confirmation status of User 2
+	Status         string    `json:"status" gorm:"type:varchar(20);default:'pending'"` // Status of the trade
+	CreatedAt      time.Time `json:"created_at" gorm:"autoCreateTime"`                 // Creation timestamp
+	UpdatedAt      time.Time `json:"updated_at" gorm:"autoUpdateTime"`                 // Last update timestamp
 }
