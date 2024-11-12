@@ -49,11 +49,14 @@
                     </div>
                     <div>
                         <p style="display: flex; justify-content: center;">Trades for</p>
-                        <p>{{ trade.created_at | date: 'MMMM d, yyyy, h:mm:ss a' }}</p>
+                        <p>{{ trade.created_at | date: 'MMMM d, yyyy, h:mm a' }}</p>
                     </div>
                     <div>
                         <p>{{ trade.user2_id }}</p>
                         <p>{{ trade.user2_confirmed }}</p>
+                        <p *ngFor="let stock of trade.stocks2">
+                            {{ stock.ticker_symbol }}
+                        </p>
                     </div>
                 </li>
             </ul>
