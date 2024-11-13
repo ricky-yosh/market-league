@@ -66,6 +66,12 @@ h2 {
     border-bottom: 1px solid darken($market-league-white, 10%);
 }
 
+.trade-item {
+    display: flex;
+    justify-content: space-between;
+    padding-right: 0.7em !important;
+}
+
 .confirmation-status {
     width: 2.1em;
     height: 0.6em;
@@ -79,5 +85,4 @@ h2 {
 
 .trade-not-confirmed {
     background-color: $market-league-red;
-
 }
