@@ -27,10 +27,8 @@ h1 {
     background-color: $market-league-white;
     padding: 1em 0.4em 1em 1em;
     border-radius: 10px;
-    margin: 0em 2em;
-
-    width: 100%;
     max-width: 40em;
+    max-height: fit-content;
 }
 
 .centering-container {
@@ -41,7 +39,6 @@ h1 {
 
 .h1-container {
     width: 100%;
-    max-width: 40em;
 }
 
 .form-group {
@@ -124,4 +121,52 @@ label {
 
 .stock-button:hover {
     background-color: lighten($market-league-purple, 20%);
+}
+
+.trade-item {
+    display: flex;
+    justify-content: space-between;
+    
+    padding: 1em 0;
+    padding-right: 0.7em !important;
+
+    font-size: 16px;
+    border-bottom: 1px solid darken($market-league-white, 10%);
+    width: 100%;
+}
+
+.confirmation-status {
+    width: 2.1em;
+    height: 0.6em;
+    display: inline-block;
+    border-radius: 5px;
+}
+
+.trade-confirmed {
+    background-color: $market-league-green;
+}
+
+.trade-not-confirmed {
+    background-color: $market-league-red;
+}
+
+.trades-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    max-height: 50em;
+    overflow-y: auto;
+    scrollbar-color: $scrollbar-grey transparent;
+}
+
+.trade-container {
+    display: flex;
+    gap: 1em;
+    max-height: 50%;
+}
+
+@media (max-width: 70em) {
+    .trade-container {
+        flex-direction: column;
+    }
 }
