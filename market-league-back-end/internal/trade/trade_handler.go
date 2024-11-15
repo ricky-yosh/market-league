@@ -42,19 +42,28 @@ func (h *TradeHandler) CreateTrade(c *gin.Context) {
 	c.JSON(http.StatusOK, trade)
 }
 
-func (h *TradeHandler) GetTradesForUser(c *gin.Context) {
+func (h *TradeHandler) GetTrades(c *gin.Context) {
 	var request struct {
-		UserID   uint `json:"user_id"` // Corrected json tag format
-		LeagueID uint `json:"league_id"`
+		UserID         *uint `json:"user_id"`         // Optional User ID
+		LeagueID       uint  `json:"league_id"`       // Required League ID
+		ReceivingTrade *bool `json:"receiving_trade"` // Optional: Filter for receiving trades
+		SendingTrade   *bool `json:"sending_trade"`   // Optional: Filter for sending trades
 	}
 
+	// Parse the JSON request
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	// Call the service to get the trades for the user
-	trades, err := h.TradeService.GetTradesForUser(request.UserID, request.LeagueID)
+	// Ensure LeagueID is always provided
+	if request.LeagueID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "league_id is required"})
+		return
+	}
+
+	// Call the service to fetch trades
+	trades, err := h.TradeService.GetTrades(request.LeagueID, request.UserID, request.ReceivingTrade, request.SendingTrade)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

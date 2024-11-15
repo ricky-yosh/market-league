@@ -89,7 +89,7 @@ func RegisterRoutes(router *gin.Engine) {
 	{
 		tradeRoutes.POST("/create-trade", tradeHandler.CreateTrade) // Create a new trade
 		// tradeRoutes.POST("/confirm-trade", tradeHandler.ConfirmTrade)
-		tradeRoutes.POST("/get-trades", tradeHandler.GetTradesForUser)
+		tradeRoutes.POST("/get-trades", tradeHandler.GetTrades)
 	}
 
 	// League routes

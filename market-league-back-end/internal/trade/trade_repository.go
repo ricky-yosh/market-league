@@ -22,28 +22,34 @@ func (r *TradeRepository) CreateTrade(trade *models.Trade) error {
 	return r.db.Create(trade).Error
 }
 
-// FetchTradesByUserAndLeague retrieves trades associated with a user and league from the database.
-func (r *TradeRepository) FetchTradesByUserAndLeague(userID, leagueID uint) ([]models.SanitizedTrade, error) {
+// FetchTrades retrieves trades associated with specific filters and sanitizes the output.
+func (r *TradeRepository) FetchTrades(filters map[string]interface{}) ([]models.SanitizedTrade, error) {
 	var trades []models.Trade
-	err := r.db.
-		Where("(user1_id = ? OR user2_id = ?) AND league_id = ?", userID, userID, leagueID).
-		Preload("User1").
-		Preload("User2").
-		Preload("Stocks1").
-		Preload("Stocks2").
-		Find(&trades).Error
+	query := r.db.Model(&models.Trade{}).Preload("User1").Preload("User2").Preload("Stocks1").Preload("Stocks2")
 
-	if err != nil {
+	// Apply filters dynamically
+	if leagueID, exists := filters["league_id"]; exists {
+		query = query.Where("league_id = ?", leagueID)
+	}
+	if user1ID, exists := filters["user1_id"]; exists {
+		query = query.Where("user1_id = ?", user1ID)
+	}
+	if user2ID, exists := filters["user2_id"]; exists {
+		query = query.Where("user2_id = ?", user2ID)
+	}
+
+	// Execute query
+	if err := query.Find(&trades).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("no trades found for user ID %d in league ID %d", userID, leagueID)
+			return nil, fmt.Errorf("no trades found with the provided filters")
 		}
 		return nil, fmt.Errorf("failed to fetch trades: %w", err)
 	}
 
-	// Map to sanitized trades
+	// Sanitize trades
 	var sanitizedTrades []models.SanitizedTrade
 	for _, trade := range trades {
-		sanitizedTrade := models.SanitizedTrade{
+		sanitizedTrades = append(sanitizedTrades, models.SanitizedTrade{
 			ID:       trade.ID,
 			LeagueID: trade.LeagueID,
 			User1: models.SanitizedUser{
@@ -67,8 +73,8 @@ func (r *TradeRepository) FetchTradesByUserAndLeague(userID, leagueID uint) ([]m
 			Status:         trade.Status,
 			CreatedAt:      trade.CreatedAt,
 			UpdatedAt:      trade.UpdatedAt,
-		}
-		sanitizedTrades = append(sanitizedTrades, sanitizedTrade)
+		})
 	}
+
 	return sanitizedTrades, nil
 }
