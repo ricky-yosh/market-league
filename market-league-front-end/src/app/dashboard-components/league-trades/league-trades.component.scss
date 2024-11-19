@@ -29,7 +29,6 @@ h1 {
     border-radius: 10px;
     max-width: 40em;
     max-height: fit-content;
-    width: 100%;
 }
 
 .centering-container {
@@ -164,6 +163,28 @@ label {
     display: flex;
     gap: 1em;
     max-height: 50%;
+}
+.center-column {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.btn {
+    background: darken($market-league-gold, 1%);
+    border-color: $market-league-gold;
+    border-radius: 20px;
+
+    color: darken($market-league-purple, 10%);
+    padding: 0.7em 2em;
+    transition: background 0.3s;
+    font-weight: bold;
+    border-style: none;
+    margin-top: 1em;
+}
+
+.btn:hover {
+    background: lighten($market-league-gold, 20%);
 }
 
 @media (max-width: 70em) {
