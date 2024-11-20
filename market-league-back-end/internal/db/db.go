@@ -38,6 +38,7 @@ func InitDB() {
 		&models.League{},
 		&models.Portfolio{},
 		&models.Stock{},
+		&models.PriceHistory{},
 		&models.Trade{},
 		&models.User{},
 	)
