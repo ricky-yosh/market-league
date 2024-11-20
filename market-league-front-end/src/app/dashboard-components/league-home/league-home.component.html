@@ -57,7 +57,7 @@
                     <div>
                         <p>{{ trade.user2.username }}</p>
                         <div 
-                            [ngClass]="{'trade-confirmed': trade.user1_confirmed, 'trade-not-confirmed': !trade.user1_confirmed}"
+                            [ngClass]="{'trade-confirmed': trade.user2_confirmed, 'trade-not-confirmed': !trade.user2_confirmed}"
                             class="confirmation-status">
                         </div>
                         <p *ngFor="let stock of trade.stocks2">
