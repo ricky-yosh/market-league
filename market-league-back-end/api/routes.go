@@ -59,12 +59,8 @@ func RegisterRoutes(router *gin.Engine) {
 
 	stockRoutes := router.Group("/api/stocks")
 	{
-		stockRoutes.POST("/create-stock", stockHandler.CreateStock)                // Create a new stock
-		stockRoutes.POST("/create-stocks", stockHandler.CreateMultipleStocks)      // Create multiple stocks
-		stockRoutes.POST("/stock-price", stockHandler.GetPrice)                    // Fetch stock price by ID
-		stockRoutes.POST("/update-stock-price", stockHandler.UpdateStockPrice)     // Update stock price by ID
-		stockRoutes.POST("/price-history", stockHandler.GetPriceHistory)           // Fetch price history by ID
-		stockRoutes.POST("/update-price-history", stockHandler.UpdatePriceHistory) // Update price history by ID
+		stockRoutes.POST("/create-stock", stockHandler.CreateStock)           // Create a new stock
+		stockRoutes.POST("/create-stocks", stockHandler.CreateMultipleStocks) // Create multiple stocks
 	}
 
 	userRepo := user.NewUserRepository(database)
@@ -77,7 +73,6 @@ func RegisterRoutes(router *gin.Engine) {
 		userRoutes.POST("/user-leagues", userHandler.GetUserLeagues)
 		userRoutes.POST("/user-trades", userHandler.GetUserTrades)
 		userRoutes.POST("/user-portfolios", userHandler.GetUserPortfolios)
-		// userRoutes.POST("/update-user", userHandler.GetUserByID)
 	}
 
 	// Trades routes
