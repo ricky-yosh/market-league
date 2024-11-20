@@ -39,7 +39,7 @@
         <div class="flex-item scrollable-section" style="flex: 3;">
             <h2>Trades</h2>
             <ul *ngIf="userTrades && userTrades.length > 0; else noTrades">
-                <li *ngFor="let trade of userTrades" class="trade-item" style="display: flex; justify-content: space-between;">
+                <li *ngFor="let trade of userTrades" class="trade-item">
                     <div>
                         <p>{{ trade.user1.username }}</p>
                         <div 

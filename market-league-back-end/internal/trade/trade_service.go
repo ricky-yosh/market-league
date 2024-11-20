@@ -1,7 +1,7 @@
 package trade
 
 import (
-	"fmt"
+	"errors"
 	"log"
 	"time"
 
@@ -9,6 +9,7 @@ import (
 	"github.com/market-league/internal/portfolio"
 	"github.com/market-league/internal/stock"
 	"github.com/market-league/internal/user"
+	"gorm.io/gorm"
 )
 
 // TradeService handles the business logic for trades.
@@ -116,12 +117,66 @@ func (s *TradeService) CreateTrade(leagueID, user1ID, user2ID uint, stocks1IDs, 
 	return sanitizedTrade, nil
 }
 
-func (s *TradeService) GetTradesForUser(userID, leagueID uint) ([]models.SanitizedTrade, error) {
-	// Business logic can be applied here if needed, e.g., filtering, validation, etc.
-	trades, err := s.TradeRepo.FetchTradesByUserAndLeague(userID, leagueID)
-	if err != nil {
-		return nil, fmt.Errorf("could not fetch trades: %w", err)
+func (s *TradeService) GetTrades(leagueID uint, userID *uint, receivingTrade *bool, sendingTrade *bool) ([]models.SanitizedTrade, error) {
+	// Build filters based on input
+	filters := map[string]interface{}{
+		"league_id": leagueID,
 	}
 
-	return trades, nil
+	if userID != nil {
+		if receivingTrade != nil && *receivingTrade {
+			filters["user2_id"] = *userID
+		}
+		if sendingTrade != nil && *sendingTrade {
+			filters["user1_id"] = *userID
+		}
+	}
+
+	// Call the repository to fetch filtered trades
+	return s.TradeRepo.FetchTrades(filters)
+}
+
+func (s *TradeService) ConfirmTrade(tradeID uint, userID uint) error {
+	// Retrieve the trade
+	trade, err := s.TradeRepo.GetTradeByID(tradeID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("trade not found")
+		}
+		return err
+	}
+
+	// Check if the trade is already confirmed
+	if trade.Status == "confirmed" {
+		return errors.New("trade is already confirmed")
+	}
+
+	// Determine which user is confirming and update the respective flag
+	if trade.User1ID == userID {
+		if trade.User1Confirmed {
+			return errors.New("user1 has already confirmed this trade")
+		}
+		trade.User1Confirmed = true
+	} else if trade.User2ID == userID {
+		if trade.User2Confirmed {
+			return errors.New("user2 has already confirmed this trade")
+		}
+		trade.User2Confirmed = true
+	} else {
+		return errors.New("user is not part of this trade")
+	}
+
+	// Update the trade confirmation flags
+	if err := s.TradeRepo.UpdateTrade(trade); err != nil {
+		return err
+	}
+
+	// If both users have confirmed, execute the trade
+	if trade.User1Confirmed && trade.User2Confirmed {
+		if err := s.TradeRepo.SwapStocks(trade); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

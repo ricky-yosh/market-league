@@ -7,6 +7,9 @@ import { VerifyUserService } from '../../user-verification/verify-user.service';
 import { League } from '../../models/league.model';
 import { devLog } from '../../../environments/development/devlog';
 import { Stock } from '../../models/stock.model';
+import { EMPTY, Observable, catchError, of, tap } from 'rxjs';
+import { Trade } from '../../models/trade.model';
+import { guard } from '../../utils/guard';
 
 @Component({
   selector: 'app-league-trades',
@@ -19,8 +22,9 @@ export class LeagueTradesComponent {
   currentUsersStocks: Stock[] = [];
   leagueUsers: User[] = [];
   selectedUserStocks: Stock[] = [];
-  currentUser: User | null = null
-  currentLeague: League | null = null
+  currentUser: User | null = null;
+  currentLeague: League | null = null;
+  currentUsersTrades: Trade[] | null = null;
 
   formInput: { user2: User | null; stocks1: Stock[]; stocks2: Stock[] } = {
     user2: null,
@@ -117,6 +121,9 @@ export class LeagueTradesComponent {
         devLog('User fetched successfully:', user);
         this.currentUser = user;
         this.getCurrentUsersPortfolio(); // load portfolio for logged in user
+        this.loadUserTrades(user.id, this.currentLeague?.id ? this.currentLeague?.id : null).subscribe(userTrades => {
+          this.currentUsersTrades = userTrades;
+        })
       },
       error: (error) => {
         devLog('Failed to fetch user from token:', error);
@@ -153,6 +160,29 @@ export class LeagueTradesComponent {
     if (currentUserId != null) {
       this.leagueUsers = this.leagueUsers.filter(user => user.id !== currentUserId);
     }
+  }
+
+  // Load the user's trades for a specific league
+  private loadUserTrades(userId: number, leagueId: number | null): Observable<Trade[]> {
+    guard(leagueId != null, "LeagueId is Null");
+
+    const receivingTrade: boolean = true;
+    const sendingTrade: boolean = false;
+    return this.leagueService.getTrades(userId, leagueId, receivingTrade, sendingTrade).pipe(
+      tap((response) => {
+        devLog('User trades fetched successfully:', response);
+      }),
+      catchError((error) => {
+        console.error('Failed to fetch user trades:', error);
+        return of([]);
+      })
+    );
+  }
+
+  confirmTrade(tradeId: number): void {
+    guard(tradeId != null, "tradeId is null");
+    
+
   }
 
 }
