@@ -180,9 +180,14 @@ export class LeagueTradesComponent {
   }
 
   confirmTrade(tradeId: number): void {
+    let currentUserId = this.currentUser?.id
     guard(tradeId != null, "tradeId is null");
-    
+    guard(currentUserId != null, "UserID is null!")
 
+    this.leagueService.confirmTradeForUser(tradeId, currentUserId).subscribe(response => {
+      devLog('Trade successfully confirmed:', response);
+      alert('Trade successfully confirmed!');
+    });
   }
 
 }

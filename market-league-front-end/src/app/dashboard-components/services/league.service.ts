@@ -22,6 +22,7 @@ export class LeagueService {
   private createLeagueUrl = `${this.baseUrl}/api/leagues/create-league`;
   private removeLeagueUrl = `${this.baseUrl}/api/leagues/remove-league`;
   private createTradeUrl = `${this.baseUrl}/api/trades/create-trade`;
+  private confirmTradeUrl = `${this.baseUrl}/api/trades/confirm-trade`;
 
   // BehaviorSubject for managing the selected league
   private selectedLeagueSource = new BehaviorSubject<League | null>(this.getStoredLeague());
@@ -115,6 +116,16 @@ export class LeagueService {
 
     devLog("Payload: ", payload)
     return this.http.post<any>(this.createTradeUrl, payload); // Send POST request to create a trade
+  }
+
+  confirmTradeForUser(tradeId: number, userId: number): Observable<any> {
+    const payload = {
+      trade_id: tradeId,
+      user_id: userId
+    }
+
+    devLog("Payload: ", payload)
+    return this.http.post<any>(this.confirmTradeUrl, payload); // Send POST request to create a trade
   }
 
 }
