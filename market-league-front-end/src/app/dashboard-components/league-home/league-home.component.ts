@@ -124,7 +124,7 @@ export class LeagueHomeComponent implements OnInit {
 
   // Load the user's trades for a specific league
   private loadUserTrades(userId: number, leagueId: number): Observable<Trade[]> {
-    return this.leagueService.getUserTrades(userId, leagueId).pipe(
+    return this.leagueService.getTrades(userId, leagueId).pipe(
       tap((response) => {
         devLog('User trades fetched successfully:', response);
       }),

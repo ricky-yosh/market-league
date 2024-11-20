@@ -1,9 +1,11 @@
 package trade
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // TradeHandler handles HTTP requests for trades
@@ -70,4 +72,55 @@ func (h *TradeHandler) GetTrades(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, trades)
+}
+
+// ConfirmTrade handles the confirmation of a trade
+func (h *TradeHandler) ConfirmTrade(c *gin.Context) {
+	var req struct {
+		TradeID uint `json:"trade_id" binding:"required"`
+		UserID  uint `json:"user_id" binding:"required"`
+	}
+
+	// ConfirmTradeResponse represents the response after confirming a trade
+	type ConfirmTradeResponse struct {
+		Success bool   `json:"success"`
+		Message string `json:"message"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, ConfirmTradeResponse{
+			Success: false,
+			Message: "Invalid request payload",
+		})
+		return
+	}
+
+	// Call the service to confirm the trade
+	if err := h.TradeService.ConfirmTrade(req.TradeID, req.UserID); err != nil {
+		// Determine the appropriate status code based on the error
+		var statusCode int
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound) || err.Error() == "trade not found":
+			statusCode = http.StatusNotFound
+		case err.Error() == "trade is already confirmed" ||
+			err.Error() == "user1 has already confirmed this trade" ||
+			err.Error() == "user2 has already confirmed this trade" ||
+			err.Error() == "user is not part of this trade":
+			statusCode = http.StatusBadRequest
+		default:
+			statusCode = http.StatusInternalServerError
+		}
+
+		c.JSON(statusCode, ConfirmTradeResponse{
+			Success: false,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	// Success response
+	c.JSON(http.StatusOK, ConfirmTradeResponse{
+		Success: true,
+		Message: "Trade confirmed successfully",
+	})
 }

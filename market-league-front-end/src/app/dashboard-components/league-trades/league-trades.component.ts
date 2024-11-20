@@ -166,7 +166,9 @@ export class LeagueTradesComponent {
   private loadUserTrades(userId: number, leagueId: number | null): Observable<Trade[]> {
     guard(leagueId != null, "LeagueId is Null");
 
-    return this.leagueService.getUserTrades(userId, leagueId).pipe(
+    const receivingTrade: boolean = true;
+    const sendingTrade: boolean = false;
+    return this.leagueService.getTrades(userId, leagueId, receivingTrade, sendingTrade).pipe(
       tap((response) => {
         devLog('User trades fetched successfully:', response);
       }),
@@ -175,6 +177,12 @@ export class LeagueTradesComponent {
         return of([]);
       })
     );
+  }
+
+  confirmTrade(tradeId: number): void {
+    guard(tradeId != null, "tradeId is null");
+    
+
   }
 
 }

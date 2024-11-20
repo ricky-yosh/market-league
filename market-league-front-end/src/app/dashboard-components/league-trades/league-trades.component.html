@@ -73,9 +73,12 @@
                                 {{ stock.ticker_symbol }}
                             </p>
                         </div>
-                        <div>
-                            <p style="display: flex; justify-content: center;">Trades for</p>
+                        <div class="center-column">
+                            <p>Trades for</p>
                             <p>{{ trade.created_at | date: 'MMMM d, yyyy, h:mm a' }}</p>
+                            <button (click)="confirmTrade(trade.id)" class="btn">
+                                Confirm Trade
+                            </button>
                         </div>
                         <div>
                             <p>{{ trade.user2.username }}</p>

@@ -78,3 +78,69 @@ func (r *TradeRepository) FetchTrades(filters map[string]interface{}) ([]models.
 
 	return sanitizedTrades, nil
 }
+
+func (r *TradeRepository) GetTradeByID(tradeID uint) (*models.Trade, error) {
+	var trade models.Trade
+	if err := r.db.Preload("Stocks1").Preload("Stocks2").First(&trade, tradeID).Error; err != nil {
+		return nil, err
+	}
+	return &trade, nil
+}
+
+func (r *TradeRepository) UpdateTrade(trade *models.Trade) error {
+	return r.db.Save(trade).Error
+}
+
+func (r *TradeRepository) SwapStocks(trade *models.Trade) error {
+	// Begin a transaction
+	tx := r.db.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Retrieve portfolios with locks to prevent race conditions
+	var portfolio1, portfolio2 models.Portfolio
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&portfolio1, trade.Portfolio1ID).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&portfolio2, trade.Portfolio2ID).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Remove Stocks1 from Portfolio1 and add to Portfolio2
+	if err := tx.Model(&portfolio1).Association("Stocks").Delete(trade.Stocks1); err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Model(&portfolio2).Association("Stocks").Append(trade.Stocks1); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Remove Stocks2 from Portfolio2 and add to Portfolio1
+	if err := tx.Model(&portfolio2).Association("Stocks").Delete(trade.Stocks2); err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Model(&portfolio1).Association("Stocks").Append(trade.Stocks2); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Update the trade status to "confirmed"
+	trade.Status = "confirmed"
+	if err := tx.Save(trade).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit().Error
+}
