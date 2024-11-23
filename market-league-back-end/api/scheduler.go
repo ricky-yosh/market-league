@@ -10,9 +10,9 @@ import (
 func StartDailyTask() {
     go func() {
         for {
-            location, err := time.LoadLocation("America/New_York")
-            if err != nil {
-                log.Printf("Error loading time location: %v", err)
+            location, errLoc := time.LoadLocation("America/New_York")
+            if errLoc != nil {
+                log.Printf("Error loading time location: %v", errLoc)
                 return
             }
 
@@ -36,7 +36,11 @@ func StartDailyTask() {
                 } else {
                     log.Printf("Fetched stock data: %+v", quote)
                     // NEED TO OPEN STOCK INFO
-                    UpdateStockCurrentPrice(company,quote)
+                    errUp := UpdateStockCurrentPrice(company,quote)
+                    if errUp != nil {
+                        log.Printf("Failed to update stock price for company %s with quote %f: %v", company, quote, errUp)
+                        // Continue handling based on your requirements
+                    }
                 }
                 time.Sleep(40 * time.Millisecond)
             }
@@ -49,7 +53,13 @@ func StartDailyTask() {
 }
 func (r *scheduler) changeCurrentPrice(symbol string, price float64) {
     company, err := FindCompany(symbol)
-    return r.db.Model(&models.User{}).Where("TickerSymbol = ?", symbol).Update("CurrentPrice", price).Error
+    if err != nil:
+    {
+        return err
+    }else {
+        // here update history price
+        return r.db.Model(&models.User{}).Where("TickerSymbol = ?", symbol).Update("CurrentPrice", price).Error
+    }
 }
 func (r *scheduler) FindCompany(symbol string) {
     var foundCompany models.Stock
