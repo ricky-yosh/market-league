@@ -105,7 +105,7 @@ export class LeagueService {
     return this.http.post<any>(this.removeLeagueUrl, payload); // Send POST request
   }
 
-  createTrade(leagueId: number, user1Id: number, user2Id: number, stocks1Id: number[], stocks2Id: number[]): Observable<any> {
+  createTrade(leagueId: number, user1Id: number, user2Id: number, stocks1Id: number[], stocks2Id: number[]): Observable<Trade> {
     const payload = {
       league_id: leagueId,
       user1_id: user1Id,
@@ -115,7 +115,7 @@ export class LeagueService {
     }
 
     devLog("Payload: ", payload)
-    return this.http.post<any>(this.createTradeUrl, payload); // Send POST request to create a trade
+    return this.http.post<Trade>(this.createTradeUrl, payload); // Send POST request to create a trade
   }
 
   confirmTradeForUser(tradeId: number, userId: number): Observable<any> {

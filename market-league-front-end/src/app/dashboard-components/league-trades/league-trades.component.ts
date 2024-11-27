@@ -59,6 +59,7 @@ export class LeagueTradesComponent {
       this.leagueService.createTrade(league_id, user1_id, user2_id, stocks1_ids, stocks2_ids).subscribe(response => {
         devLog('Trade successfully created:', response);
         alert('Trade successfully created!');
+        this.confirmTrade(response.id);
         this.resetForm();
       });
     } else {
