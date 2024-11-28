@@ -2,6 +2,7 @@ package stock
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/market-league/internal/models"
@@ -134,4 +135,105 @@ func extractStocksData(stocks []*models.Stock) []models.Stock {
 		result = append(result, *stock)
 	}
 	return result
+}
+
+// UpdatePriceRequest represents the expected payload for updating stock price
+type UpdatePriceRequest struct {
+	StockID   uint       `json:"stock_id" binding:"required"`
+	NewPrice  float64    `json:"new_price" binding:"required"`
+	Timestamp *time.Time `json:"timestamp,omitempty"`
+}
+
+// UpdatePrice handles the request to update a stock's current price
+func (h *StockHandler) UpdatePrice(c *gin.Context) {
+	var req UpdatePriceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Invalid request payload",
+		})
+		return
+	}
+
+	if err := h.StockService.UpdateStockPrice(req.StockID, req.NewPrice, req.Timestamp); err != nil {
+		// You can customize error responses based on error types
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Stock price updated successfully",
+	})
+}
+
+type GetStockInfoRequest struct {
+	StockID uint `json:"stock_id" binding:"required"`
+}
+
+type GetStockInfoResponse struct {
+	Success bool      `json:"success"`
+	Message string    `json:"message,omitempty"`
+	Stock   StockInfo `json:"stock,omitempty"`
+}
+
+type StockInfo struct {
+	ID             uint              `json:"id"`
+	TickerSymbol   string            `json:"ticker_symbol"`
+	CompanyName    string            `json:"company_name"`
+	CurrentPrice   float64           `json:"current_price"`
+	PriceHistories []PriceHistoryDTO `json:"price_histories"`
+}
+
+type PriceHistoryDTO struct {
+	ID        uint      `json:"id"`
+	Price     float64   `json:"price"`
+	Timestamp time.Time `json:"timestamp"`
+}
+
+func (h *StockHandler) GetStockInfo(c *gin.Context) {
+	var req GetStockInfoRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, GetStockInfoResponse{
+			Success: false,
+			Message: "Invalid request payload",
+		})
+		return
+	}
+
+	stock, err := h.StockService.GetStockInfo(req.StockID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, GetStockInfoResponse{
+			Success: false,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	// Map models.Stock to StockInfo DTO
+	stockInfo := StockInfo{
+		ID:           stock.ID,
+		TickerSymbol: stock.TickerSymbol,
+		CompanyName:  stock.CompanyName,
+		CurrentPrice: stock.CurrentPrice,
+		PriceHistories: func(histories []models.PriceHistory) []PriceHistoryDTO {
+			dto := make([]PriceHistoryDTO, len(histories))
+			for i, ph := range histories {
+				dto[i] = PriceHistoryDTO{
+					ID:        ph.ID,
+					Price:     ph.Price,
+					Timestamp: ph.Timestamp,
+				}
+			}
+			return dto
+		}(stock.PriceHistories),
+	}
+
+	c.JSON(http.StatusOK, GetStockInfoResponse{
+		Success: true,
+		Stock:   stockInfo,
+	})
 }

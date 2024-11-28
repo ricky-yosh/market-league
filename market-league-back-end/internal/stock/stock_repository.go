@@ -76,3 +76,43 @@ func (r *StockRepository) CreateMultipleStocks(stocks []*models.Stock) error {
 		return nil
 	})
 }
+
+func (r *StockRepository) UpdateCurrentPrice(stockID uint, newPrice float64, timestamp *time.Time) error {
+	// Start a transaction
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var stock models.Stock
+		if err := tx.First(&stock, stockID).Error; err != nil {
+			return err
+		}
+
+		// Update the current price
+		stock.CurrentPrice = newPrice
+		if err := tx.Save(&stock).Error; err != nil {
+			return err
+		}
+
+		// Create a new PriceHistory entry
+		priceHistory := models.PriceHistory{
+			StockID: stock.ID,
+			Price:   newPrice,
+		}
+
+		if timestamp != nil {
+			priceHistory.Timestamp = *timestamp
+		}
+
+		if err := tx.Create(&priceHistory).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (r *StockRepository) GetStockWithHistory(stockID uint) (models.Stock, error) {
+	var stock models.Stock
+	if err := r.db.Preload("PriceHistories").First(&stock, stockID).Error; err != nil {
+		return models.Stock{}, err
+	}
+	return stock, nil
+}
