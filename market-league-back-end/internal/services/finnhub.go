@@ -8,15 +8,12 @@ import (
 	finnhub "github.com/Finnhub-Stock-API/finnhub-go/v2"
 )
 
-func GetTestStock() (finnhub.Quote, error) {
+func GetTestStock(symbol string) (finnhub.Quote, error) {
 	// Set up the API client
 	apiKey := os.Getenv("FINNHUB_API_KEY")
 	cfg := finnhub.NewConfiguration()
 	cfg.AddDefaultHeader("X-Finnhub-Token", apiKey)
 	client := finnhub.NewAPIClient(cfg).DefaultApi
-
-	// Define the stock symbol and time range
-	symbol := "AAPL"
 
 	// Call the stock candle endpoint
 	quote, _, err := client.Quote(context.Background()).Symbol(symbol).Execute()
