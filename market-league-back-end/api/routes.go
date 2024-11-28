@@ -59,8 +59,10 @@ func RegisterRoutes(router *gin.Engine) {
 
 	stockRoutes := router.Group("/api/stocks")
 	{
-		stockRoutes.POST("/create-stock", stockHandler.CreateStock)           // Create a new stock
-		stockRoutes.POST("/create-stocks", stockHandler.CreateMultipleStocks) // Create multiple stocks
+		stockRoutes.POST("/create-stock", stockHandler.CreateStock)               // Create a new stock
+		stockRoutes.POST("/create-stocks", stockHandler.CreateMultipleStocks)     // Create multiple stocks
+		stockRoutes.POST("/get-stock-information", stockHandler.GetStockInfo)     // Get Stock information
+		stockRoutes.POST("/update-current-stock-price", stockHandler.UpdatePrice) // Update current stock and add it to history
 	}
 
 	userRepo := user.NewUserRepository(database)
