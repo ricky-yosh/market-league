@@ -1,18 +1,21 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { LoginService } from './services/login.service';
-import { LoginResponse } from './services/login-response.interface';
+import { LoginService } from './login-service/login.service';
+import { LoginResponse } from './login-service/login-response.interface';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { FooterComponent } from '../footer/footer.component';
+import { NgIf } from '@angular/common';
+import { devLog } from '../../environments/development/devlog';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [NavbarComponent, FooterComponent],
+  imports: [NavbarComponent, FooterComponent, NgIf],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
 export class LoginComponent {
+  errorMessage: string | null = null;
 
   constructor(private loginService: LoginService, private router: Router) {}
 
@@ -45,14 +48,15 @@ export class LoginComponent {
 
   handleUpdateResponse(response: LoginResponse) {
     // Success
-    console.log('Login successful', response);
+    devLog('Login successful', response);
     // Session Token Handling
     localStorage.setItem('token', response.token);
     this.router.navigate(['/dashboard']);
   }
 
   handleError(error: any) {
-    console.error('Login failed', error);
+    devLog("Sign Up Error", error);
+    this.errorMessage = "Incorrect username or password!";
   }
 
 }

@@ -98,3 +98,29 @@ a {
     color: inherit;
     cursor: pointer;
 }
+
+.error-message {
+    color: $market-league-red;
+    background-color: $market-league-black;
+    padding: 0.2em 0.5em;
+    border-radius: 0.5em;
+}
+
+@media (max-width: 35em) {
+    .signup-input {
+        max-width: 15em;
+    }
+
+    .btn {
+        padding: 1em 6em;
+    }
+
+    .login-content {
+        padding: 2em 0em;
+        width: 100%;
+    }
+
+    .checkered-background {
+        height: 110vh;
+    }
+}

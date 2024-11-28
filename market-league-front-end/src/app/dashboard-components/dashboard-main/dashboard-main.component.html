@@ -11,14 +11,14 @@
                 </button>
             </div>
 
-            <div class="middle-icons">
-                <div class="form-field">
-                    <input type="search" class="search-input" placeholder="Search Stocks..." />
-                    <button class="search-button" aria-label="Search">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    </button>
-                </div>     
-    
+            <div class="form-field">
+                <input type="search" class="search-input" placeholder="Search Stocks..." />
+                <button class="search-button" aria-label="Search">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
+            </div>
+            
+            <div class="middle-icons hide-on-small-screen">
                 <button (click)="redirectToDashboard()" title="League Dashboard" class="topbar-icon">
                     <img src="/images/four-squares-icon.svg" alt="Image" width="22px">
                 </button>
@@ -31,11 +31,34 @@
                 <button (click)="redirectToLeaderboard()" title="Leaderboard" class="topbar-icon">
                     <img src="/images/leaderboard-icon.svg" alt="Image" width="35px">
                 </button>
+                <button (click)="redirectToSettings()" title="Settings" class="topbar-icon">
+                    <img src="/images/settings-icon.svg" alt="Image" width="30px">
+                </button>
             </div>
+            
+            <div class="menu-btn hide-on-big-screen" (click)="toggleMenu()" [ngClass]="{'close': showMenu}">
+                <div class="btn-line"></div>
+                <div class="btn-line"></div>
+                <div class="btn-line"></div>
+            </div>
+            <ul class="dropdown-menu-items" [ngClass]="{'show': showMenu}">
+                <li class="nav-item" (click)="redirectToDashboard()" title="League Dashboard">
+                    <p>Dashboard</p>
+                </li>
+                <li class="nav-item" (click)="redirectToPortfolio()" title="Portfolio">
+                    <p>Portfolio</p>
+                </li>
+                <li class="nav-item" (click)="redirectToTrades()" title="Trades">
+                    <p>Trades</p>
+                </li>
+                <li class="nav-item" (click)="redirectToLeaderboard()" title="Leaderboard">
+                    <p>Leaderboard</p>
+                </li>
+                <li class="nav-item" (click)="redirectToSettings()" title="Settings">
+                    <p>Settings</p>
+                </li>
+            </ul>
 
-            <button (click)="redirectToLeaderboard()" title="Settings" class="topbar-icon">
-                <img src="/images/settings-icon.svg" alt="Image" width="30px">
-            </button>
         </div>
         
     </header>
@@ -48,28 +71,27 @@
                     <h2 class="leagues-header">Leagues</h2>
                     <hr style="width: 2em;">
                     <div class="league-options">
-                        <button (click)="redirectToLeaderboard()" title="Add League" class="topbar-icon">
+                        <button (click)="redirectToCreateLeague()" title="Add League" class="topbar-icon">
                             <img src="/images/plus-icon.svg" alt="Image" width="25px">
                         </button>
-                        <button (click)="redirectToLeaderboard()" title="Remove League" class="topbar-icon">
-                            <img src="/images/minus-round-icon.svg" alt="Image" width="25px">
+                        <button (click)="redirectToRemoveLeague()" title="Remove League" class="topbar-icon">
+                            <img src="/images/minus-round-icon-white.svg" alt="Image" width="25px">
                         </button>
                     </div>
                     <ul class="leagues">
                         <li 
-                            *ngFor="let league of leagues" 
+                            *ngFor="let league of leagues.leagues" 
                             class="league-item"
                             (click)="selectLeague(league)"
-                            [class.selected]="league === selectedLeague"
                         >
-                            <span class="first-letter">{{ league[0] }}</span>
-                            <span class="full-name">{{ league }}</span>
+                            <p class="first-letter">{{ league.league_name[0] }}</p>
+                            <p class="full-name">{{ league.league_name }}</p>
                         </li>
                     </ul>
                 </div>
                 <div *ngIf="user" class="user-text">
-                    <button (click)="redirectToLeaderboard()" title="Logout" class="logout-button">
-                        <p>Logout {{user}}</p>
+                    <button (click)="redirectToHome()" title="Logout" class="logout-button">
+                        <p>Logout: {{user}}</p>
                     </button>
                 </div>
             </div>

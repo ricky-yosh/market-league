@@ -10,6 +10,7 @@ import (
 func StartDailyTask() {
     go func() {
         for {
+
             location, errLoc := time.LoadLocation("America/New_York")
             if errLoc != nil {
                 log.Printf("Error loading time location: %v", errLoc)
@@ -18,6 +19,7 @@ func StartDailyTask() {
 
             now := time.Now().In(location)
             nextRun := time.Date(now.Year(), now.Month(), now.Day(), 19, 30, 0, 0, now.Location()) // Set to 9:31 AM in New York
+
             if now.After(nextRun) {
                 nextRun = nextRun.Add(24 * time.Hour)
             }
@@ -69,3 +71,4 @@ func (r *scheduler) FindCompany(symbol string) {
 	}
 	return &foundCompany, nil
 }
+

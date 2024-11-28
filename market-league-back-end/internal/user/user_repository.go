@@ -46,12 +46,13 @@ func (r *UserRepository) GetUserLeagues(userID uint) ([]models.League, error) {
 	return user.Leagues, nil
 }
 
-// GetUserTrades retrieves all trades involving a specific user.
-func (r *UserRepository) GetUserTrades(userID uint) ([]models.Trade, error) {
+// GetUserTrades retrieves all trades involving a specific user in a specific league.
+func (r *UserRepository) GetUserTrades(userID uint, leagueID uint) ([]models.Trade, error) {
 	var trades []models.Trade
-	err := r.db.Where("player1_id = ? OR player2_id = ?", userID, userID).Find(&trades).Error
+	// Fetch trades where the user is involved in either side and the league matches
+	err := r.db.Where("(player1_id = ? OR player2_id = ?) AND league_id = ?", userID, userID, leagueID).Find(&trades).Error
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve trades: %w", err)
+		return nil, fmt.Errorf("failed to retrieve trades for user in league %d: %w", leagueID, err)
 	}
 	return trades, nil
 }

@@ -18,4 +18,4 @@ jobs:
           script: |
               cd /home/market-league
               git pull origin main
-              docker compose -f docker-compose.prod.yml up --build -d
+              /home/market-league/deploy.sh

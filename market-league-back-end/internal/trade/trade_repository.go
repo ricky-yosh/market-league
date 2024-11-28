@@ -17,91 +17,130 @@ func NewTradeRepository(db *gorm.DB) *TradeRepository {
 	return &TradeRepository{db: db}
 }
 
-// CreateTrade inserts a new trade record into the database.
+// CreateTrade inserts a new trade into the database
 func (r *TradeRepository) CreateTrade(trade *models.Trade) error {
-	// Use a database transaction to ensure data consistency.
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		// Create the trade record
-		if err := tx.Create(trade).Error; err != nil {
-			return fmt.Errorf("failed to create trade record: %w", err)
-		}
+	return r.db.Create(trade).Error
+}
 
-		// Associate Player 1's stocks with the trade
-		if len(trade.Player1Stocks) > 0 {
-			if err := tx.Model(trade).Association("Player1Stocks").Replace(trade.Player1Stocks); err != nil {
-				return fmt.Errorf("failed to associate Player 1's stocks with the trade: %w", err)
-			}
-		}
+// FetchTrades retrieves trades associated with specific filters and sanitizes the output.
+func (r *TradeRepository) FetchTrades(filters map[string]interface{}) ([]models.SanitizedTrade, error) {
+	var trades []models.Trade
+	query := r.db.Model(&models.Trade{}).Preload("User1").Preload("User2").Preload("Stocks1").Preload("Stocks2")
 
-		// Associate Player 2's stocks with the trade
-		if len(trade.Player2Stocks) > 0 {
-			if err := tx.Model(trade).Association("Player2Stocks").Replace(trade.Player2Stocks); err != nil {
-				return fmt.Errorf("failed to associate Player 2's stocks with the trade: %w", err)
-			}
-		}
+	// Apply filters dynamically
+	if leagueID, exists := filters["league_id"]; exists {
+		query = query.Where("league_id = ?", leagueID)
+	}
+	if user1ID, exists := filters["user1_id"]; exists {
+		query = query.Where("user1_id = ?", user1ID)
+	}
+	if user2ID, exists := filters["user2_id"]; exists {
+		query = query.Where("user2_id = ?", user2ID)
+	}
 
-		return nil
-	})
+	// Execute query
+	if err := query.Find(&trades).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("no trades found with the provided filters")
+		}
+		return nil, fmt.Errorf("failed to fetch trades: %w", err)
+	}
+
+	// Sanitize trades
+	var sanitizedTrades []models.SanitizedTrade
+	for _, trade := range trades {
+		sanitizedTrades = append(sanitizedTrades, models.SanitizedTrade{
+			ID:       trade.ID,
+			LeagueID: trade.LeagueID,
+			User1: models.SanitizedUser{
+				ID:        trade.User1.ID,
+				Username:  trade.User1.Username,
+				Email:     trade.User1.Email,
+				CreatedAt: trade.User1.CreatedAt,
+			},
+			User2: models.SanitizedUser{
+				ID:        trade.User2.ID,
+				Username:  trade.User2.Username,
+				Email:     trade.User2.Email,
+				CreatedAt: trade.User2.CreatedAt,
+			},
+			Portfolio1ID:   trade.Portfolio1ID,
+			Portfolio2ID:   trade.Portfolio2ID,
+			Stocks1:        trade.Stocks1,
+			Stocks2:        trade.Stocks2,
+			User1Confirmed: trade.User1Confirmed,
+			User2Confirmed: trade.User2Confirmed,
+			Status:         trade.Status,
+			CreatedAt:      trade.CreatedAt,
+			UpdatedAt:      trade.UpdatedAt,
+		})
+	}
+
+	return sanitizedTrades, nil
 }
 
 func (r *TradeRepository) GetTradeByID(tradeID uint) (*models.Trade, error) {
 	var trade models.Trade
-	if err := r.db.Preload("Player1Stocks").Preload("Player2Stocks").First(&trade, tradeID).Error; err != nil {
-		return nil, fmt.Errorf("failed to find trade with ID %d: %w", tradeID, err)
+	if err := r.db.Preload("Stocks1").Preload("Stocks2").First(&trade, tradeID).Error; err != nil {
+		return nil, err
 	}
 	return &trade, nil
 }
 
-// SaveTrade updates a trade record in the database.
-func (r *TradeRepository) SaveTrade(trade *models.Trade) error {
+func (r *TradeRepository) UpdateTrade(trade *models.Trade) error {
 	return r.db.Save(trade).Error
 }
 
-// SwapStocks swaps the stocks between two portfolios.
 func (r *TradeRepository) SwapStocks(trade *models.Trade) error {
-	// Transfer stocks from Player 1 to Player 2
-	for _, stock := range trade.Player1Stocks {
-		// Remove stock from Player 1's portfolio and add to Player 2's portfolio
-		if err := r.db.Model(&trade.Player1PortfolioID).Association("Stocks").Delete(&stock); err != nil {
-			return fmt.Errorf("failed to remove stock from Player 1's portfolio: %w", err)
+	// Begin a transaction
+	tx := r.db.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
 		}
-		if err := r.db.Model(&trade.Player2PortfolioID).Association("Stocks").Append(&stock); err != nil {
-			return fmt.Errorf("failed to add stock to Player 2's portfolio: %w", err)
-		}
+	}()
+
+	// Retrieve portfolios with locks to prevent race conditions
+	var portfolio1, portfolio2 models.Portfolio
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&portfolio1, trade.Portfolio1ID).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&portfolio2, trade.Portfolio2ID).Error; err != nil {
+		tx.Rollback()
+		return err
 	}
 
-	// Transfer stocks from Player 2 to Player 1
-	for _, stock := range trade.Player2Stocks {
-		// Remove stock from Player 2's portfolio and add to Player 1's portfolio
-		if err := r.db.Model(&trade.Player2PortfolioID).Association("Stocks").Delete(&stock); err != nil {
-			return fmt.Errorf("failed to remove stock from Player 2's portfolio: %w", err)
-		}
-		if err := r.db.Model(&trade.Player1PortfolioID).Association("Stocks").Append(&stock); err != nil {
-			return fmt.Errorf("failed to add stock to Player 1's portfolio: %w", err)
-		}
+	// Remove Stocks1 from Portfolio1 and add to Portfolio2
+	if err := tx.Model(&portfolio1).Association("Stocks").Delete(trade.Stocks1); err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Model(&portfolio2).Association("Stocks").Append(trade.Stocks1); err != nil {
+		tx.Rollback()
+		return err
 	}
 
-	return nil
-}
-
-// GetTrades fetches trades based on the provided filter criteria.
-func (r *TradeRepository) GetTrades(portfolioID, leagueID uint, filterByPortfolio, filterByLeague bool) ([]models.Trade, error) {
-	var trades []models.Trade
-	query := r.db
-
-	// Apply filters if requested
-	if filterByPortfolio {
-		query = query.Where("player1_portfolio_id = ? OR player2_portfolio_id = ?", portfolioID, portfolioID)
+	// Remove Stocks2 from Portfolio2 and add to Portfolio1
+	if err := tx.Model(&portfolio2).Association("Stocks").Delete(trade.Stocks2); err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Model(&portfolio1).Association("Stocks").Append(trade.Stocks2); err != nil {
+		tx.Rollback()
+		return err
 	}
 
-	if filterByLeague {
-		query = query.Where("league_id = ?", leagueID)
+	// Update the trade status to "confirmed"
+	trade.Status = "confirmed"
+	if err := tx.Save(trade).Error; err != nil {
+		tx.Rollback()
+		return err
 	}
 
-	// Fetch the filtered trades from the database
-	if err := query.Preload("Player1Stocks").Preload("Player2Stocks").Find(&trades).Error; err != nil {
-		return nil, fmt.Errorf("failed to fetch trades: %w", err)
-	}
-
-	return trades, nil
+	return tx.Commit().Error
 }

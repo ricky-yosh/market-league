@@ -42,7 +42,7 @@ services:
       - market-league-dev
     command: air                         # Use Air for live-reloading
 
-  # Database: PostgreSQL, changing image from 17 to 16
+  # Database: PostgreSQL
   db:
     image: postgres:17.0
     restart: always

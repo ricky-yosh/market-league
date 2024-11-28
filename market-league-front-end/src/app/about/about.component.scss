@@ -59,3 +59,14 @@ header {
 .margin-left {
     margin-left: 9em;
 }
+
+@media (max-width: 50em) {
+    .about-us-bubble {
+        padding: 0em 3em;
+    }
+
+    .bubble {
+        margin-right: 0em;
+        margin-left: 0em;
+    }
+}

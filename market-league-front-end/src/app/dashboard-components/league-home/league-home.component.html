@@ -1,41 +1,75 @@
 <section class="league-home">
     <h1>
-        Leagues {{ selectedLeague ? selectedLeague : 'Select a League' }}
+        {{ selectedLeague?.league_name ? selectedLeague?.league_name : 'Select a League' }}
     </h1>
     <div class="flex-container top">
         <div class="flex-item scrollable-section" style="flex: 1;">
             <h2>League Members</h2>
-            <ul>
+            <ul *ngIf="leagueMembers && leagueMembers.length > 0; else noLeagueMembers">
                 <li *ngFor="let member of leagueMembers">{{ member }}</li>
             </ul>
+            <ng-template #noLeagueMembers>
+                <p>No League Members Found</p>
+            </ng-template>
         </div>
+        
         <div class="flex-item scrollable-section" style="flex: 1;">
             <h2>Leaderboard</h2>
-            <ul>
+            <ul *ngIf="leagueMembers && leagueMembers.length > 0; else noLeaderboard">
                 <li *ngFor="let member of leagueMembers">{{ member }}</li>
             </ul>
+            <ng-template #noLeaderboard>
+                <p>No Leaderboard Found</p>
+            </ng-template>
         </div>
     </div>
+
     <div class="flex-container middle">
-        <div class="flex-item scrollable-section" style="flex: 2;">
-            <h2>Portfolio</h2>
-            <ul>
-                <li *ngFor="let member of leagueMembers">{{ member }}</li>
-            </ul>
-        </div>
         <div class="flex-item scrollable-section" style="flex: 1;">
+            <h2>Portfolio</h2>
+            <ul *ngIf="userPortfolio && userPortfolio.length > 0; else noPortfolio">
+                <li *ngFor="let stock of userPortfolio">{{ stock.ticker_symbol }}</li>
+            </ul>
+            <ng-template #noPortfolio>
+                <p>No Stocks Found</p>
+            </ng-template>
+
+        </div>
+
+        <div class="flex-item scrollable-section" style="flex: 3;">
             <h2>Trades</h2>
-            <ul>
-                <li *ngFor="let stock of userPortfolio">{{ stock }}</li>
+            <ul *ngIf="userTrades && userTrades.length > 0; else noTrades">
+                <li *ngFor="let trade of userTrades" class="trade-item">
+                    <div>
+                        <p>{{ trade.user1.username }}</p>
+                        <div 
+                            [ngClass]="{'trade-confirmed': trade.user1_confirmed, 'trade-not-confirmed': !trade.user1_confirmed}"
+                            class="confirmation-status">
+                        </div>
+                        <p *ngFor="let stock of trade.stocks1">
+                            {{ stock.ticker_symbol }}
+                        </p>
+                    </div>
+                    <div>
+                        <p style="display: flex; justify-content: center;">Trades for</p>
+                        <p>{{ trade.created_at | date: 'MMMM d, yyyy, h:mm a' }}</p>
+                    </div>
+                    <div>
+                        <p>{{ trade.user2.username }}</p>
+                        <div 
+                            [ngClass]="{'trade-confirmed': trade.user1_confirmed, 'trade-not-confirmed': !trade.user1_confirmed}"
+                            class="confirmation-status">
+                        </div>
+                        <p *ngFor="let stock of trade.stocks2">
+                            {{ stock.ticker_symbol }}
+                        </p>
+                    </div>
+                </li>
             </ul>
+            <ng-template #noTrades>
+                <p>No Trades Found</p>
+            </ng-template>
         </div>
+
     </div>
-    <!-- <div class="flex-container bottom">
-        <div class="flex-item" style="flex: 3;">
-            <h2>Price</h2>
-            <ul>
-                <li *ngFor="let member of leagueMembers">{{ member }}</li>
-            </ul>
-        </div>
-    </div> -->
 </section>

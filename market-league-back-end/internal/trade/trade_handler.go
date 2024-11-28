@@ -1,101 +1,126 @@
 package trade
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-// TradeHandler defines the HTTP handler for trade-related operations.
+// TradeHandler handles HTTP requests for trades
 type TradeHandler struct {
-	service *TradeService
+	TradeService *TradeService
 }
 
-// NewTradeHandler creates a new instance of TradeHandler.
-func NewTradeHandler(service *TradeService) *TradeHandler {
-	return &TradeHandler{service: service}
+// NewTradeHandler creates a new instance of TradeHandler
+func NewTradeHandler(tradeService *TradeService) *TradeHandler {
+	return &TradeHandler{
+		TradeService: tradeService,
+	}
 }
 
-// CreateTrade creates a new trade between two players within a league.
+// CreateTradeHandler handles the creation of a new trade
 func (h *TradeHandler) CreateTrade(c *gin.Context) {
 	var request struct {
-		LeagueID           uint   `json:"league_id" binding:"required"`
-		Player1ID          uint   `json:"player1_id" binding:"required"`
-		Player2ID          uint   `json:"player2_id" binding:"required"`
-		Player1PortfolioID uint   `json:"player1_portfolio_id" binding:"required"`
-		Player2PortfolioID uint   `json:"player2_portfolio_id" binding:"required"`
-		Player1Stocks      []uint `json:"player1_stocks" binding:"required"` // List of stock IDs offered by Player 1
-		Player2Stocks      []uint `json:"player2_stocks" binding:"required"` // List of stock IDs offered by Player 2
+		LeagueID   uint   `json:"league_id"`
+		User1ID    uint   `json:"user1_id"`
+		User2ID    uint   `json:"user2_id"`
+		Stocks1IDs []uint `json:"stocks1_ids"`
+		Stocks2IDs []uint `json:"stocks2_ids"`
 	}
 
-	// Bind the request data to the struct
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Call the service to create the trade
-	err := h.service.CreateTrade(
-		request.LeagueID,
-		request.Player1ID,
-		request.Player2ID,
-		request.Player1PortfolioID,
-		request.Player2PortfolioID,
-		request.Player1Stocks,
-		request.Player2Stocks,
-	)
+	trade, err := h.TradeService.CreateTrade(request.LeagueID, request.User1ID, request.User2ID, request.Stocks1IDs, request.Stocks2IDs)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "Trade created successfully"})
+	c.JSON(http.StatusOK, trade)
 }
 
-// ConfirmTrade confirms a trade for a player.
-func (h *TradeHandler) ConfirmTrade(c *gin.Context) {
-	var request struct {
-		TradeID  uint `json:"trade_id" binding:"required"`
-		PlayerID uint `json:"player_id" binding:"required"`
-	}
-
-	// Bind the request data to the struct
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Call the service to confirm the trade
-	err := h.service.ConfirmTrade(request.TradeID, request.PlayerID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Trade confirmed successfully"})
-}
-
-// GetTrades fetches trades based on filter criteria.
 func (h *TradeHandler) GetTrades(c *gin.Context) {
 	var request struct {
-		PortfolioID       uint `json:"portfolio_id"`        // Portfolio ID to filter by, if applicable
-		LeagueID          uint `json:"league_id"`           // League ID to filter by, if applicable
-		FilterByPortfolio bool `json:"filter_by_portfolio"` // Whether to filter by portfolio
-		FilterByLeague    bool `json:"filter_by_league"`    // Whether to filter by league
+		UserID         *uint `json:"user_id"`         // Optional User ID
+		LeagueID       uint  `json:"league_id"`       // Required League ID
+		ReceivingTrade *bool `json:"receiving_trade"` // Optional: Filter for receiving trades
+		SendingTrade   *bool `json:"sending_trade"`   // Optional: Filter for sending trades
 	}
 
-	// Bind the JSON request data to the struct
+	// Parse the JSON request
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	// Call the service to get the trades based on the filter criteria
-	trades, err := h.service.GetTrades(request.PortfolioID, request.LeagueID, request.FilterByPortfolio, request.FilterByLeague)
+	// Ensure LeagueID is always provided
+	if request.LeagueID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "league_id is required"})
+		return
+	}
+
+	// Call the service to fetch trades
+	trades, err := h.TradeService.GetTrades(request.LeagueID, request.UserID, request.ReceivingTrade, request.SendingTrade)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch trades"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, trades)
+}
+
+// ConfirmTrade handles the confirmation of a trade
+func (h *TradeHandler) ConfirmTrade(c *gin.Context) {
+	var req struct {
+		TradeID uint `json:"trade_id" binding:"required"`
+		UserID  uint `json:"user_id" binding:"required"`
+	}
+
+	// ConfirmTradeResponse represents the response after confirming a trade
+	type ConfirmTradeResponse struct {
+		Success bool   `json:"success"`
+		Message string `json:"message"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, ConfirmTradeResponse{
+			Success: false,
+			Message: "Invalid request payload",
+		})
+		return
+	}
+
+	// Call the service to confirm the trade
+	if err := h.TradeService.ConfirmTrade(req.TradeID, req.UserID); err != nil {
+		// Determine the appropriate status code based on the error
+		var statusCode int
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound) || err.Error() == "trade not found":
+			statusCode = http.StatusNotFound
+		case err.Error() == "trade is already confirmed" ||
+			err.Error() == "user1 has already confirmed this trade" ||
+			err.Error() == "user2 has already confirmed this trade" ||
+			err.Error() == "user is not part of this trade":
+			statusCode = http.StatusBadRequest
+		default:
+			statusCode = http.StatusInternalServerError
+		}
+
+		c.JSON(statusCode, ConfirmTradeResponse{
+			Success: false,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	// Success response
+	c.JSON(http.StatusOK, ConfirmTradeResponse{
+		Success: true,
+		Message: "Trade confirmed successfully",
+	})
 }

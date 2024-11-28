@@ -26,7 +26,7 @@ func NewLeagueHandler(service *LeagueService, portfolioService *portfolio.Portfo
 func (h *LeagueHandler) CreateLeague(c *gin.Context) {
 	var leagueRequest struct {
 		LeagueName string `json:"league_name" binding:"required"`
-		OwnerUser  string `json:"owner_user" binding:"required"`
+		OwnerUser  uint   `json:"owner_user" binding:"required"`
 		EndDate    string `json:"end_date" binding:"required"`
 	}
 
@@ -45,7 +45,20 @@ func (h *LeagueHandler) CreateLeague(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, league)
+	// Create a portfolio for the user in the league
+	portfolio, err := h.portfolioService.CreatePortfolio(leagueRequest.OwnerUser, league.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	// Construct response with sanitized user details
+	response := gin.H{
+		"message":   "League successfully created",
+		"league":    league,
+		"portfolio": portfolio,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // AddUserToLeague handles adding a user to a league.
@@ -72,8 +85,18 @@ func (h *LeagueHandler) AddUserToLeague(c *gin.Context) {
 		return
 	}
 
-	// Return success response
-	c.JSON(http.StatusOK, gin.H{"message": "User successfully added to league"})
+	// Create a portfolio for the user in the league
+	portfolio, err := h.portfolioService.CreatePortfolio(request.UserID, request.LeagueID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Return success response with portfolio details
+	c.JSON(http.StatusOK, gin.H{
+		"message":   "User successfully added to league",
+		"portfolio": portfolio,
+	})
 }
 
 // GetLeagueDetails handles fetching the details of a specific league.
@@ -125,4 +148,26 @@ func (h *LeagueHandler) GetLeaderboard(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, leaderboard)
+}
+
+// RemoveLeague handles the removal of a league and all associated records
+func (h *LeagueHandler) RemoveLeague(c *gin.Context) {
+	var request struct {
+		LeagueID uint `json:"league_id" binding:"required"`
+	}
+
+	// Bind JSON input to the request struct
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	// Call the service to remove the league
+	if err := h.service.RemoveLeague(request.LeagueID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Return success response
+	c.JSON(http.StatusOK, gin.H{"message": "League and associated data removed successfully"})
 }

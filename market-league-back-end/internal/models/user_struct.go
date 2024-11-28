@@ -6,7 +6,7 @@ import (
 
 // User struct with auto-incrementing ID, many-to-many relationship, and timestamps
 type User struct {
-	ID        uint      `gorm:"primaryKey;autoIncrement"`               // Auto-incrementing primary key
+	ID        uint      `json:"id" gorm:"primaryKey;autoIncrement"`     // Auto-incrementing primary key
 	Username  string    `json:"username"`                               // Username
 	Email     string    `json:"email"`                                  // User email
 	Password  string    `gorm:"not null"`                               // Store hashed password (not plaintext)

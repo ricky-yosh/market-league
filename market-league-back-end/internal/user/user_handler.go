@@ -61,10 +61,11 @@ func (h *UserHandler) GetUserLeagues(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"leagues": leagues})
 }
 
-// GetUserTrades handles requests to retrieve trades that a user is involved in.
+// GetUserTrades handles requests to retrieve trades that a user is involved in within a specific league.
 func (h *UserHandler) GetUserTrades(c *gin.Context) {
 	var request struct {
-		UserID uint `json:"user_id" binding:"required"`
+		UserID   uint `json:"user_id" binding:"required"`
+		LeagueID uint `json:"league_id" binding:"required"`
 	}
 
 	// Bind the incoming JSON to the request struct
@@ -73,8 +74,8 @@ func (h *UserHandler) GetUserTrades(c *gin.Context) {
 		return
 	}
 
-	// Call the service to get user trades
-	trades, err := h.service.GetUserTrades(request.UserID)
+	// Call the service to get user trades for the specified league
+	trades, err := h.service.GetUserTrades(request.UserID, request.LeagueID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
