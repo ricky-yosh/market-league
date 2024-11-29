@@ -27,7 +27,6 @@ h1 {
     background-color: $market-league-white;
     padding: 1em 0.4em 1em 1em;
     border-radius: 10px;
-    max-width: 40em;
     max-height: fit-content;
 }
 
@@ -163,6 +162,7 @@ label {
     display: flex;
     gap: 1em;
     max-height: 50%;
+    width: 100%;
 }
 .center-column {
     display: flex;
@@ -187,7 +187,7 @@ label {
     background: lighten($market-league-gold, 20%);
 }
 
-@media (max-width: 70em) {
+@media (max-width: 60em) {
     .trade-container {
         flex-direction: column;
     }

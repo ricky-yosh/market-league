@@ -11,6 +11,7 @@ import { LeaguePortfolioComponent } from './dashboard-components/league-portfoli
 import { CreateLeagueComponent } from './dashboard-components/create-league/create-league.component';
 import { RemoveLeagueComponent } from './dashboard-components/remove-league/remove-league.component';
 import { SettingsComponent } from './dashboard-components/settings/settings.component';
+import { LeagueDraftComponent } from './dashboard-components/league-draft/league-draft.component';
 
 export const routes: Routes = [
     { path: '', component: HomeComponent },
@@ -22,6 +23,7 @@ export const routes: Routes = [
         children: [
             { path: '', component: LeagueHomeComponent },
             { path: 'home', component: LeagueHomeComponent },
+            { path: 'draft', component: LeagueDraftComponent},
             { path: 'leaderboard', component: LeagueLeaderboardComponent },
             { path: 'portfolio', component: LeaguePortfolioComponent },
             { path: 'trades', component: LeagueTradesComponent },

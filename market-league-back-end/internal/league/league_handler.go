@@ -5,20 +5,25 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	league_portfolio "github.com/market-league/internal/leagueportfolio"
 	"github.com/market-league/internal/portfolio"
 )
 
 // LeagueHandler defines the HTTP handler for league-related operations.
 type LeagueHandler struct {
-	service          *LeagueService
-	portfolioService *portfolio.PortfolioService
+	service                *LeagueService
+	portfolioService       *portfolio.PortfolioService
+	leaguePortfolioService *league_portfolio.LeaguePortfolioService
 }
 
 // NewLeagueHandler creates a new instance of LeagueHandler.
-func NewLeagueHandler(service *LeagueService, portfolioService *portfolio.PortfolioService) *LeagueHandler {
+func NewLeagueHandler(service *LeagueService,
+	portfolioService *portfolio.PortfolioService,
+	leaguePortfolioService *league_portfolio.LeaguePortfolioService) *LeagueHandler {
 	return &LeagueHandler{
-		service:          service,
-		portfolioService: portfolioService,
+		service:                service,
+		portfolioService:       portfolioService,
+		leaguePortfolioService: leaguePortfolioService,
 	}
 }
 
@@ -51,14 +56,23 @@ func (h *LeagueHandler) CreateLeague(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	// Construct response with sanitized user details
-	response := gin.H{
-		"message":   "League successfully created",
-		"league":    league,
-		"portfolio": portfolio,
+
+	// Create a league portfolio using the new LeaguePortfolioService
+	leaguePortfolio, err := h.leaguePortfolioService.CreateLeaguePortfolio(league.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
-	c.JSON(http.StatusOK, response)
+	// Construct response with sanitized user details
+	response := gin.H{
+		"message":         "League successfully created",
+		"league":          league,
+		"userPortfolio":   portfolio,
+		"leaguePortfolio": leaguePortfolio,
+	}
+
+	c.JSON(http.StatusCreated, response)
 }
 
 // AddUserToLeague handles adding a user to a league.

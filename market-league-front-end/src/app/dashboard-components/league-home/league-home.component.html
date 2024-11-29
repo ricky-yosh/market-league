@@ -1,7 +1,12 @@
 <section class="league-home">
-    <h1>
-        {{ selectedLeague?.league_name ? selectedLeague?.league_name : 'Select a League' }}
-    </h1>
+    <div class="main-title-bar">
+        <h1>
+            {{ selectedLeague?.league_name ? selectedLeague?.league_name : 'Select a League' }}
+        </h1>
+        <button (click)="redirectToDraft()" class="draft-stocks-button">
+            Draft Stocks
+        </button>
+    </div>
     <div class="flex-container top">
         <div class="flex-item scrollable-section" style="flex: 1;">
             <h2>League Members</h2>
@@ -57,7 +62,7 @@
                     <div>
                         <p>{{ trade.user2.username }}</p>
                         <div 
-                            [ngClass]="{'trade-confirmed': trade.user1_confirmed, 'trade-not-confirmed': !trade.user1_confirmed}"
+                            [ngClass]="{'trade-confirmed': trade.user2_confirmed, 'trade-not-confirmed': !trade.user2_confirmed}"
                             class="confirmation-status">
                         </div>
                         <p *ngFor="let stock of trade.stocks2">

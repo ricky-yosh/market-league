@@ -7,6 +7,7 @@ import (
 	"github.com/market-league/internal/auth"
 	"github.com/market-league/internal/db"
 	"github.com/market-league/internal/league"
+	league_portfolio "github.com/market-league/internal/leagueportfolio"
 	"github.com/market-league/internal/portfolio"
 	"github.com/market-league/internal/stock"
 	"github.com/market-league/internal/trade"
@@ -90,9 +91,11 @@ func RegisterRoutes(router *gin.Engine) {
 	}
 
 	// League routes
+	leaguePortfolioRepository := league_portfolio.NewLeaguePortfolioRepository(database)
 	leagueRepo := league.NewLeagueRepository(database)
+	leaguePortfolioService := league_portfolio.NewLeaguePortfolioService(leaguePortfolioRepository, *stockRepo)
 	leagueService := league.NewLeagueService(leagueRepo, userRepo, portfolioRepo)
-	leagueHandler := league.NewLeagueHandler(leagueService, portfolioService)
+	leagueHandler := league.NewLeagueHandler(leagueService, portfolioService, leaguePortfolioService)
 
 	leagueRoutes := router.Group("/api/leagues")
 	{

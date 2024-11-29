@@ -10,6 +10,7 @@ import { VerifyUserService } from '../../user-verification/verify-user.service';
 import { EMPTY, Observable, catchError, map, of, switchMap, tap } from 'rxjs';
 import { Trade } from '../../models/trade.model';
 import { devLog } from '../../../environments/development/devlog';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-league-home',
@@ -29,7 +30,8 @@ export class LeagueHomeComponent implements OnInit {
   constructor(
     private leagueService: LeagueService,
     private userService: VerifyUserService,
-    private cd: ChangeDetectorRef
+    private cd: ChangeDetectorRef,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -133,6 +135,10 @@ export class LeagueHomeComponent implements OnInit {
         return of([]); // Return an empty array on error
       })
     );
+  }
+
+  redirectToDraft() {
+    this.router.navigate(['dashboard/draft']);
   }
 
 }

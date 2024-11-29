@@ -5,7 +5,7 @@
         </div>
 
         <div class="trade-container">
-            <div class="container">
+            <div class="container" style="flex: 1;">
                 <h2>Create a Trade</h2>
                 <form (ngSubmit)="onSubmit()" #tradeForm="ngForm">
     
@@ -59,7 +59,7 @@
                 </form>
             </div>
     
-            <div class="container">
+            <div class="container" style="flex: 2;">
                 <h2>Incoming Trades</h2>
                 <ul *ngIf="currentUsersTrades && currentUsersTrades.length > 0; else noTrades" class="trades-list">
                     <li *ngFor="let trade of currentUsersTrades" class="trade-item">
@@ -83,7 +83,7 @@
                         <div>
                             <p>{{ trade.user2.username }}</p>
                             <div 
-                                [ngClass]="{'trade-confirmed': trade.user1_confirmed, 'trade-not-confirmed': !trade.user1_confirmed}"
+                                [ngClass]="{'trade-confirmed': trade.user2_confirmed, 'trade-not-confirmed': !trade.user2_confirmed}"
                                 class="confirmation-status">
                             </div>
                             <p *ngFor="let stock of trade.stocks2">

@@ -59,6 +59,7 @@ export class LeagueTradesComponent {
       this.leagueService.createTrade(league_id, user1_id, user2_id, stocks1_ids, stocks2_ids).subscribe(response => {
         devLog('Trade successfully created:', response);
         alert('Trade successfully created!');
+        this.confirmTrade(response.id);
         this.resetForm();
       });
     } else {
@@ -180,9 +181,14 @@ export class LeagueTradesComponent {
   }
 
   confirmTrade(tradeId: number): void {
+    let currentUserId = this.currentUser?.id
     guard(tradeId != null, "tradeId is null");
-    
+    guard(currentUserId != null, "UserID is null!")
 
+    this.leagueService.confirmTradeForUser(tradeId, currentUserId).subscribe(response => {
+      devLog('Trade successfully confirmed:', response);
+      alert('Trade successfully confirmed!');
+    });
   }
 
 }
