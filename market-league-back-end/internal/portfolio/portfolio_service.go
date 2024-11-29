@@ -153,20 +153,3 @@ func (s *PortfolioService) CalculateTotalValue(portfolio *models.Portfolio) floa
 
 	return total
 }
-
-// Helper Functions
-func (r *PortfolioRepository) UserExists(userID uint) (bool, error) {
-	var count int64
-	if err := r.db.Model(&models.User{}).Where("id = ?", userID).Count(&count).Error; err != nil {
-		return false, err
-	}
-	return count > 0, nil
-}
-
-func (r *PortfolioRepository) LeagueExists(leagueID uint) (bool, error) {
-	var count int64
-	if err := r.db.Model(&models.League{}).Where("id = ?", leagueID).Count(&count).Error; err != nil {
-		return false, err
-	}
-	return count > 0, nil
-}

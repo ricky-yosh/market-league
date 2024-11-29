@@ -116,3 +116,12 @@ func (r *StockRepository) GetStockWithHistory(stockID uint) (models.Stock, error
 	}
 	return stock, nil
 }
+
+// GetAllStocks retrieves all stocks from the database.
+func (r *StockRepository) GetAllStocks() ([]models.Stock, error) {
+	var stocks []models.Stock
+	if err := r.db.Find(&stocks).Error; err != nil {
+		return nil, err
+	}
+	return stocks, nil
+}
