@@ -7,21 +7,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type LeaguePortfolioRepository interface {
-	CreateLeaguePortfolio(portfolio *models.LeaguePortfolio) (*models.LeaguePortfolio, error)
-	GetLeagueDetails(leagueID uint) (*models.League, error)
-	AddStocksToLeaguePortfolio(portfolioID uint, stocks []models.Stock) error
-}
-
-type leaguePortfolioRepository struct {
+type LeaguePortfolioRepository struct {
 	db *gorm.DB
 }
 
-func NewLeaguePortfolioRepository(db *gorm.DB) LeaguePortfolioRepository {
-	return &leaguePortfolioRepository{db}
+func NewLeaguePortfolioRepository(db *gorm.DB) *LeaguePortfolioRepository {
+	return &LeaguePortfolioRepository{db: db}
 }
 
-func (r *leaguePortfolioRepository) CreateLeaguePortfolio(portfolio *models.LeaguePortfolio) (*models.LeaguePortfolio, error) {
+func (r *LeaguePortfolioRepository) CreateLeaguePortfolio(portfolio *models.LeaguePortfolio) (*models.LeaguePortfolio, error) {
 	if err := r.db.Create(portfolio).Error; err != nil {
 		return nil, err
 	}
@@ -29,14 +23,14 @@ func (r *leaguePortfolioRepository) CreateLeaguePortfolio(portfolio *models.Leag
 }
 
 // GetLeagueDetails retrieves details for a specific league by ID.
-func (r *leaguePortfolioRepository) GetLeagueDetails(leagueID uint) (*models.League, error) {
+func (r *LeaguePortfolioRepository) GetLeagueDetails(leagueID uint) (*models.League, error) {
 	var league models.League
 	err := r.db.Preload("Users").Where("id = ?", leagueID).First(&league).Error
 	return &league, err
 }
 
 // AddStocksToLeaguePortfolio associates stocks with a league portfolio.
-func (r *leaguePortfolioRepository) AddStocksToLeaguePortfolio(portfolioID uint, stocks []models.Stock) error {
+func (r *LeaguePortfolioRepository) AddStocksToLeaguePortfolio(portfolioID uint, stocks []models.Stock) error {
 	// Check if there are stocks to add
 	if len(stocks) == 0 {
 		return nil
@@ -56,6 +50,49 @@ func (r *leaguePortfolioRepository) AddStocksToLeaguePortfolio(portfolioID uint,
 		if err := r.db.Model(&portfolio).Association("Stocks").Append(&stock); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+// GetLeaguePortfolioWithID retrieves a league portfolio by its ID.
+func (r *LeaguePortfolioRepository) GetLeaguePortfolioWithID(leaguePortfolioID uint) (*models.LeaguePortfolio, error) {
+	var leaguePortfolio models.LeaguePortfolio
+
+	// Preload associated stocks for the portfolio
+	err := r.db.
+		Preload("Stocks").
+		First(&leaguePortfolio, leaguePortfolioID).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("league portfolio with ID %d not found", leaguePortfolioID)
+		}
+		return nil, fmt.Errorf("failed to fetch league portfolio: %w", err)
+	}
+	return &leaguePortfolio, nil
+}
+
+// UpdateLeaguePortfolio updates an existing league portfolio in the database.
+func (r *LeaguePortfolioRepository) UpdateLeaguePortfolio(portfolio *models.LeaguePortfolio) error {
+	// Start a transaction to ensure atomicity
+	tx := r.db.Begin()
+
+	// Update the LeaguePortfolio itself (e.g., name, etc.)
+	if err := tx.Save(portfolio).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to update league portfolio: %w", err)
+	}
+
+	// Explicitly update the Stocks association
+	if err := tx.Model(portfolio).Association("Stocks").Replace(portfolio.Stocks); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to update stocks for league portfolio: %w", err)
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return nil

@@ -90,8 +90,14 @@ func RegisterRoutes(router *gin.Engine) {
 
 	// League routes
 	leaguePortfolioRepository := league_portfolio.NewLeaguePortfolioRepository(database)
+	leaguePortfolioService := league_portfolio.NewLeaguePortfolioService(*leaguePortfolioRepository, *stockRepo, *portfolioRepo)
+	leaguePortfolioHandler := league_portfolio.NewLeaguePortfolioHandler(*leaguePortfolioService)
+	leaguePortfolioRoutes := router.Group("/api/league-portfolio")
+	{
+		leaguePortfolioRoutes.POST("/draft-stock", leaguePortfolioHandler.DraftStock)
+	}
+
 	leagueRepo := league.NewLeagueRepository(database)
-	leaguePortfolioService := league_portfolio.NewLeaguePortfolioService(leaguePortfolioRepository, *stockRepo)
 	leagueService := league.NewLeagueService(leagueRepo, userRepo, portfolioRepo)
 	leagueHandler := league.NewLeagueHandler(leagueService, portfolioService, leaguePortfolioService)
 

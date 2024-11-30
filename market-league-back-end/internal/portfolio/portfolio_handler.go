@@ -1,6 +1,7 @@
 package portfolio
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -93,7 +94,12 @@ func (h *PortfolioHandler) AddStockToPortfolio(c *gin.Context) {
 
 	err := h.service.AddStockToPortfolio(request.PortfolioID, request.StockID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// Check for specific error about stock already being in portfolio
+		if err.Error() == fmt.Sprintf("stock with ID %d is already in the portfolio", request.StockID) {
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
 		return
 	}
 
@@ -113,7 +119,12 @@ func (h *PortfolioHandler) RemoveStockFromPortfolio(c *gin.Context) {
 
 	err := h.service.RemoveStockFromPortfolio(request.PortfolioID, request.StockID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// Check for specific error about stock not found
+		if err.Error() == fmt.Sprintf("stock with ID %d is not in the portfolio", request.StockID) {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
 		return
 	}
 
