@@ -19,7 +19,6 @@ type Scheduler struct {
 func (s *Scheduler) StartDailyTask() {
 	go func() {
 		for {
-
 			location, err := time.LoadLocation("America/New_York")
 			if err != nil {
 				log.Printf("Error loading time location: %v", err)
@@ -27,7 +26,7 @@ func (s *Scheduler) StartDailyTask() {
 			}
 
 			now := time.Now().In(location)
-			nextRun := time.Date(now.Year(), now.Month(), now.Day(), 14, 56, 0, 0, now.Location()) // Set to 9:31 AM in New York
+			nextRun := time.Date(now.Year(), now.Month(), now.Day(), 16, 21, 0, 0, now.Location()) // Set to 9:31 AM in New York
 
 			if now.After(nextRun) {
 				nextRun = nextRun.Add(24 * time.Hour)
