@@ -37,6 +37,9 @@ func (s *Scheduler) StartDailyTask() {
 
 			// need to get from DB
 			companies, err := s.stockRepo.GetAllStocks()
+			if err != nil {
+				log.Printf("Error with GetAllStocks call: %v", err)
+			}
 			// companies := []string {"AAPL",  "MSFT",  "GOOGL",  "AMZN",  "META",  "TSLA",  "NFLX",  "NVDA",  "JPM",  "BAC",  "DIS",  "V",  "MA",  "UNH",  "HD",  "PG",  "KO",  "PEP",  "CSCO",  "CMCSA",  "ORCL",  "INTC",  "IBM",  "TXN",  "UPS"}
 
 			// Max 30 API/sc
@@ -45,7 +48,7 @@ func (s *Scheduler) StartDailyTask() {
 				if err != nil {
 					log.Printf("Error fetching stock data: %v", err)
 				} else {
-					log.Printf("Fetched stock data: %+v", quote)
+					log.Printf("Fetched stock data: %s: %f", company.TickerSymbol, *quote.C)
 					// NEED TO OPEN STOCK INFO
 					// Here function not made yet
 					// h.StockService.UpdateStockPrice(stockID uint, newPrice float64, timestamp *time.Time) in stock package
