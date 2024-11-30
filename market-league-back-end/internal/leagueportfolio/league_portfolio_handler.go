@@ -49,12 +49,12 @@ func (h *LeaguePortfolioHandler) GetLeaguePortfolioInfo(c *gin.Context) {
 	}
 
 	// Call the service layer to get the stocks
-	stocks, err := h.leaguePortfolioService.GetLeaguePortfolioInfo(request.LeaguePortfolioID)
+	leaguePortfolio, err := h.leaguePortfolioService.GetLeaguePortfolioInfo(request.LeaguePortfolioID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Respond with the stocks
-	c.JSON(http.StatusOK, gin.H{"stocks": stocks})
+	c.JSON(http.StatusOK, leaguePortfolio)
 }

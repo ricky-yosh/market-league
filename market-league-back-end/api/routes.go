@@ -95,6 +95,7 @@ func RegisterRoutes(router *gin.Engine) {
 	leaguePortfolioRoutes := router.Group("/api/league-portfolio")
 	{
 		leaguePortfolioRoutes.POST("/draft-stock", leaguePortfolioHandler.DraftStock)
+		leaguePortfolioRoutes.POST("/get-league-portfolio-info", leaguePortfolioHandler.GetLeaguePortfolioInfo)
 	}
 
 	leagueRepo := league.NewLeagueRepository(database)
