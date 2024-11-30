@@ -10,12 +10,12 @@ import (
 )
 
 type LeaguePortfolioService struct {
-	repo          LeaguePortfolioRepository
-	stockRepo     stock.StockRepository
-	portfolioRepo portfolio.PortfolioRepository
+	repo          *LeaguePortfolioRepository
+	stockRepo     *stock.StockRepository
+	portfolioRepo *portfolio.PortfolioRepository
 }
 
-func NewLeaguePortfolioService(leaguePortfolioRepo LeaguePortfolioRepository, stockRepo stock.StockRepository, portfolioRepo portfolio.PortfolioRepository) *LeaguePortfolioService {
+func NewLeaguePortfolioService(leaguePortfolioRepo *LeaguePortfolioRepository, stockRepo *stock.StockRepository, portfolioRepo *portfolio.PortfolioRepository) *LeaguePortfolioService {
 	return &LeaguePortfolioService{
 		repo:          leaguePortfolioRepo,
 		stockRepo:     stockRepo,
@@ -105,4 +105,15 @@ func (s *LeaguePortfolioService) DraftStock(leaguePortfolioID, userPortfolioID, 
 	}
 
 	return nil
+}
+
+// GetLeaguePortfolioInfo fetches the details of a LeaguePortfolio by ID.
+func (s *LeaguePortfolioService) GetLeaguePortfolioInfo(leaguePortfolioID uint) (*models.LeaguePortfolio, error) {
+	// Fetch the LeaguePortfolio using the repository
+	leaguePortfolio, err := s.repo.GetLeaguePortfolioWithID(leaguePortfolioID)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching league portfolio: %w", err)
+	}
+
+	return leaguePortfolio, nil
 }

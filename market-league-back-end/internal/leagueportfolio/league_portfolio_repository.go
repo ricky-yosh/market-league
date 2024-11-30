@@ -25,7 +25,7 @@ func (r *LeaguePortfolioRepository) CreateLeaguePortfolio(portfolio *models.Leag
 // GetLeagueDetails retrieves details for a specific league by ID.
 func (r *LeaguePortfolioRepository) GetLeagueDetails(leagueID uint) (*models.League, error) {
 	var league models.League
-	err := r.db.Preload("Users").Where("id = ?", leagueID).First(&league).Error
+	err := r.db.Where("id = ?", leagueID).First(&league).Error
 	return &league, err
 }
 
@@ -59,17 +59,24 @@ func (r *LeaguePortfolioRepository) AddStocksToLeaguePortfolio(portfolioID uint,
 func (r *LeaguePortfolioRepository) GetLeaguePortfolioWithID(leaguePortfolioID uint) (*models.LeaguePortfolio, error) {
 	var leaguePortfolio models.LeaguePortfolio
 
-	// Preload associated stocks for the portfolio
-	err := r.db.
-		Preload("Stocks").
-		First(&leaguePortfolio, leaguePortfolioID).Error
-
+	// Preload the Stocks association for the portfolio
+	err := r.db.Preload("Stocks").First(&leaguePortfolio, leaguePortfolioID).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("league portfolio with ID %d not found", leaguePortfolioID)
 		}
 		return nil, fmt.Errorf("failed to fetch league portfolio: %w", err)
 	}
+
+	// Fetch the League details using the LeagueRepository
+	league, err := r.GetLeagueDetails(leaguePortfolio.LeagueID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch associated league: %w", err)
+	}
+
+	// Attach the fetched League to the LeaguePortfolio
+	leaguePortfolio.League = *league
+
 	return &leaguePortfolio, nil
 }
 
