@@ -4,21 +4,30 @@ import (
     "log"
     "time"
 
+	// "github.com/market-league/internal/models"
     "github.com/market-league/internal/services"
+	"github.com/market-league/internal/stock"
+	"gorm.io/gorm"
 )
 
-func StartDailyTask() {
+type scheduler struct {
+	db *gorm.DB
+	StockService *stock.StockService
+    stockRepo stock.StockRepository
+}
+
+func (s *scheduler) StartDailyTask() {
     go func() {
         for {
 
-            location, errLoc := time.LoadLocation("America/New_York")
-            if errLoc != nil {
-                log.Printf("Error loading time location: %v", errLoc)
+            location, err := time.LoadLocation("America/New_York")
+            if err != nil {
+                log.Printf("Error loading time location: %v", err)
                 return
             }
 
             now := time.Now().In(location)
-            nextRun := time.Date(now.Year(), now.Month(), now.Day(), 19, 30, 0, 0, now.Location()) // Set to 9:31 AM in New York
+            nextRun := time.Date(now.Year(), now.Month(), now.Day(), 14, 56, 0, 0, now.Location()) // Set to 9:31 AM in New York
 
             if now.After(nextRun) {
                 nextRun = nextRun.Add(24 * time.Hour)
@@ -28,21 +37,23 @@ func StartDailyTask() {
             time.Sleep(time.Until(nextRun))
             
             // need to get from DB
-            companies := []string {"AAPL",  "MSFT",  "GOOGL",  "AMZN",  "META",  "TSLA",  "NFLX",  "NVDA",  "JPM",  "BAC",  "DIS",  "V",  "MA",  "UNH",  "HD",  "PG",  "KO",  "PEP",  "CSCO",  "CMCSA",  "ORCL",  "INTC",  "IBM",  "TXN",  "UPS"}
+            companies, err := s.stockRepo.GetAllStocks()
+            // companies := []string {"AAPL",  "MSFT",  "GOOGL",  "AMZN",  "META",  "TSLA",  "NFLX",  "NVDA",  "JPM",  "BAC",  "DIS",  "V",  "MA",  "UNH",  "HD",  "PG",  "KO",  "PEP",  "CSCO",  "CMCSA",  "ORCL",  "INTC",  "IBM",  "TXN",  "UPS"}
             
             // Max 30 API/sc
             for _, company := range companies {
-                quote, err := services.GetTestStock(company)
+                quote, err := services.GetTestStock(company.TickerSymbol)
                 if err != nil {
                     log.Printf("Error fetching stock data: %v", err)
                 } else {
                     log.Printf("Fetched stock data: %+v", quote)
                     // NEED TO OPEN STOCK INFO
-                    errUp := UpdateStockCurrentPrice(company,quote)
-                    if errUp != nil {
-                        log.Printf("Failed to update stock price for company %s with quote %f: %v", company, quote, errUp)
-                        // Continue handling based on your requirements
-                    }
+                    // Here function not made yet
+                    // h.StockService.UpdateStockPrice(stockID uint, newPrice float64, timestamp *time.Time) in stock package
+                    // err := s.StockService.UpdateStockPrice(company.ID, quote.c, &now)
+                    // if err != nil {
+                    //     log.Printf("Failed to update stock price for company %s with quote %f: %v", company.TickerSymbol, quote, err)
+                    // }
                 }
                 time.Sleep(40 * time.Millisecond)
             }
@@ -53,22 +64,23 @@ func StartDailyTask() {
         }
     }()
 }
-func (r *scheduler) changeCurrentPrice(symbol string, price float64) {
-    company, err := FindCompany(symbol)
-    if err != nil:
-    {
-        return err
-    }else {
-        // here update history price
-        return r.db.Model(&models.User{}).Where("TickerSymbol = ?", symbol).Update("CurrentPrice", price).Error
-    }
-}
-func (r *scheduler) FindCompany(symbol string) {
-    var foundCompany models.Stock
-    err := r.db.Where("TickerSymbol = ?", symbol).First(&foundCompany).Error
-	if err != nil {
-		return nil, err
-	}
-	return &foundCompany, nil
-}
+// r * scheduler doesnt work like you think it does
+// func (r *scheduler) UpdateStockCurrentPrice(symbol string, price float64) {
+//     // company, err := FindCompany(symbol)
+//     if err != nil:
+//     {
+//         return err
+//     }else {
+//         // here update history price
+//         return r.db.Model(&models.User{}).Where("TickerSymbol = ?", symbol).Update("CurrentPrice", price).Error
+//     }
+// }
+// func (r *scheduler) FindCompany(symbol string) {
+//     var foundCompany models.Stock
+//     err := r.db.Where("TickerSymbol = ?", symbol).First(&foundCompany).Error
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return &foundCompany, nil
+// }
 

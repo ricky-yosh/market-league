@@ -12,9 +12,6 @@ import (
 	"github.com/market-league/internal/stock"
 	"github.com/market-league/internal/trade"
 	"github.com/market-league/internal/user"
-
-	// "github.com/market-league/internal/scheduler"
-	"github.com/market-league/internal/services"
 )
 
 func RegisterRoutes(router *gin.Engine) {
@@ -106,7 +103,7 @@ func RegisterRoutes(router *gin.Engine) {
 		leagueRoutes.POST("/leaderboard", leagueHandler.GetLeaderboard)         // Get League Leaderboard
 	}
 
-	go StartDailyTask()
+	
 	// router.GET("/api/services/stock-api", func(c *gin.Context) {
 	// 	quote, err := services.GetTestStock()
 	// 	if err != nil {
