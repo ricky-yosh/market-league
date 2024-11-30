@@ -21,6 +21,7 @@ func RegisterRoutes(router *gin.Engine) {
 			"message": "Welcome to MarketLeague API!",
 		})
 	})
+
 	database := db.GetDB()
 
 	// Set up the authentication flow by initializing the repository, service, and handler layers
@@ -103,7 +104,14 @@ func RegisterRoutes(router *gin.Engine) {
 		leagueRoutes.POST("/leaderboard", leagueHandler.GetLeaderboard)         // Get League Leaderboard
 	}
 
-	
+	// Initialize the scheduler and start it
+	scheduler := &Scheduler{
+		db:           database,
+		StockService: stockService,
+		stockRepo:    stockRepo,
+	}
+	scheduler.StartDailyTask()
+
 	// router.GET("/api/services/stock-api", func(c *gin.Context) {
 	// 	quote, err := services.GetTestStock()
 	// 	if err != nil {

@@ -22,8 +22,6 @@ func main() {
 	}))
 	// Create all api endpoints
 	api.RegisterRoutes(router)
-	// Call stock updater loop
-	api.StartDailyTask()
 	// Enable CORS for all origins and methods
 	router.Use(cors.Default())
 	// Port that go backend will run on
