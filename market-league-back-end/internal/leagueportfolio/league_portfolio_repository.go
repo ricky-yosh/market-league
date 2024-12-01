@@ -80,6 +80,22 @@ func (r *LeaguePortfolioRepository) GetLeaguePortfolioWithID(leaguePortfolioID u
 	return &leaguePortfolio, nil
 }
 
+func (r *LeaguePortfolioRepository) GetLeaguePortfolioIDByLeagueID(leagueID uint) (uint, error) {
+	var leaguePortfolioID uint
+
+	// Assuming the LeaguePortfolio model has a column named `league_id` for the relationship
+	err := r.db.Table("league_portfolios").
+		Select("id").
+		Where("league_id = ?", leagueID).
+		Scan(&leaguePortfolioID).Error
+
+	if err != nil {
+		return 0, fmt.Errorf("failed to fetch LeaguePortfolioID for LeagueID %d: %w", leagueID, err)
+	}
+
+	return leaguePortfolioID, nil
+}
+
 // UpdateLeaguePortfolio updates an existing league portfolio in the database.
 func (r *LeaguePortfolioRepository) UpdateLeaguePortfolio(portfolio *models.LeaguePortfolio) error {
 	// Start a transaction to ensure atomicity

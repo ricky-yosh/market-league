@@ -39,7 +39,7 @@ func (h *LeaguePortfolioHandler) DraftStock(c *gin.Context) {
 
 func (h *LeaguePortfolioHandler) GetLeaguePortfolioInfo(c *gin.Context) {
 	var request struct {
-		LeaguePortfolioID uint `json:"league_portfolio_id" binding:"required"`
+		LeaguePortfolioID uint `json:"league_id" binding:"required"`
 	}
 
 	// Bind the incoming JSON request to the struct

@@ -108,8 +108,14 @@ func (s *LeaguePortfolioService) DraftStock(leaguePortfolioID, userPortfolioID, 
 }
 
 // GetLeaguePortfolioInfo fetches the details of a LeaguePortfolio by ID.
-func (s *LeaguePortfolioService) GetLeaguePortfolioInfo(leaguePortfolioID uint) (*models.LeaguePortfolio, error) {
-	// Fetch the LeaguePortfolio using the repository
+func (s *LeaguePortfolioService) GetLeaguePortfolioInfo(leagueID uint) (*models.LeaguePortfolio, error) {
+	// Fetch the LeaguePortfolioID from the LeagueID
+	leaguePortfolioID, err := s.repo.GetLeaguePortfolioIDByLeagueID(leagueID)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching LeaguePortfolioID for LeagueID %d: %w", leagueID, err)
+	}
+
+	// Fetch the LeaguePortfolio using the LeaguePortfolioID
 	leaguePortfolio, err := s.repo.GetLeaguePortfolioWithID(leaguePortfolioID)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching league portfolio: %w", err)
