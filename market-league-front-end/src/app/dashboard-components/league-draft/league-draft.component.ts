@@ -90,6 +90,7 @@ export class LeagueDraftComponent {
     this.leagueService.draftStock(this.currentLeague.id, this.user.id, stock.id).subscribe({
       next: (data: LeaguePortfolio) => {
         this.getLeaguePortfolioInfo(this.currentLeague)
+        this.userPortfolioStocks.push(stock)
       },
       error: (error) => {
         console.error('Error fetching league portfolio info:', error);
