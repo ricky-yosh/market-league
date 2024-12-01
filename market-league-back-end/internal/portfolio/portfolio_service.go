@@ -107,6 +107,13 @@ func (s *PortfolioService) AddStockToPortfolio(portfolioID, stockID uint) error 
 		return fmt.Errorf("failed to fetch portfolio: %v", err)
 	}
 
+	// Check if the stock is already in the portfolio
+	for _, s := range portfolio.Stocks {
+		if s.ID == stockID {
+			return fmt.Errorf("stock with ID %d is already in the portfolio", stockID)
+		}
+	}
+
 	// Get the stock by ID (assuming a StockRepository exists)
 	stock := &models.Stock{}
 	err = s.repo.db.First(stock, stockID).Error
@@ -118,7 +125,11 @@ func (s *PortfolioService) AddStockToPortfolio(portfolioID, stockID uint) error 
 	portfolio.Stocks = append(portfolio.Stocks, *stock)
 
 	// Update the portfolio in the repository
-	return s.repo.UpdatePortfolio(portfolio)
+	if err := s.repo.UpdatePortfolio(portfolio); err != nil {
+		return fmt.Errorf("failed to update portfolio: %v", err)
+	}
+
+	return nil
 }
 
 // RemoveStockFromPortfolio removes a stock from the user's portfolio.
@@ -129,17 +140,30 @@ func (s *PortfolioService) RemoveStockFromPortfolio(portfolioID, stockID uint) e
 		return fmt.Errorf("failed to fetch portfolio: %v", err)
 	}
 
-	// Remove the stock from the portfolio
+	// Check if the stock exists in the portfolio
+	var stockFound bool
 	var updatedStocks []models.Stock
 	for _, s := range portfolio.Stocks {
-		if s.ID != stockID {
-			updatedStocks = append(updatedStocks, s)
+		if s.ID == stockID {
+			stockFound = true
+			continue // Skip adding this stock to the updated list
 		}
+		updatedStocks = append(updatedStocks, s)
 	}
+
+	if !stockFound {
+		return fmt.Errorf("stock with ID %d is not in the portfolio", stockID)
+	}
+
+	// Update the portfolio's stocks
 	portfolio.Stocks = updatedStocks
 
 	// Update the portfolio in the repository
-	return s.repo.UpdatePortfolio(portfolio)
+	if err := s.repo.UpdatePortfolio(portfolio); err != nil {
+		return fmt.Errorf("failed to update portfolio: %v", err)
+	}
+
+	return nil
 }
 
 // CalculateTotalValue calculates the total value of the portfolio based on its stocks.

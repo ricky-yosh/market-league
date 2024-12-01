@@ -100,7 +100,7 @@ export class LeagueHomeComponent implements OnInit {
   private loadUserPortfolio(userId: number, leagueId: number): Observable<Stock[]> {
     return this.leagueService.getUserPortfolio(userId, leagueId).pipe(
       map((response: Portfolio) => {
-        console.log('User portfolio fetched successfully:', response.stocks);
+        devLog('User portfolio fetched successfully:', response.stocks);
         return response.stocks;
       }),
       catchError((error) => {
@@ -114,7 +114,7 @@ export class LeagueHomeComponent implements OnInit {
   private loadUser(): Observable<User> {
     return this.userService.getUserFromToken().pipe(
       tap((user: User) => {
-        console.log('User fetched successfully:', user);
+        devLog('User fetched successfully:', user);
         this.user = user;
       }),
       catchError((error) => {
