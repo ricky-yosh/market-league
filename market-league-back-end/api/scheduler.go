@@ -19,14 +19,14 @@ type Scheduler struct {
 func (s *Scheduler) StartDailyTask() {
 	go func() {
 		for {
-			location, err := time.LoadLocation("America/New_York")
+			location, err := time.LoadLocation("America/Chicago")
 			if err != nil {
 				log.Printf("Error loading time location: %v", err)
 				return
 			}
 
 			now := time.Now().In(location)
-			nextRun := time.Date(now.Year(), now.Month(), now.Day(), 16, 21, 0, 0, now.Location()) // Set to 9:31 AM in New York
+			nextRun := time.Date(now.Year(), now.Month(), now.Day(), 18, 0, 0, 0, now.Location()) // Set to 9:31 AM in New York
 
 			if now.After(nextRun) {
 				nextRun = nextRun.Add(24 * time.Hour)
@@ -37,52 +37,34 @@ func (s *Scheduler) StartDailyTask() {
 
 			// need to get from DB
 			companies, err := s.stockRepo.GetAllStocks()
+            // log.Println(len(companies))
+            firstElement := companies[0]
+            log.Println("First element:", firstElement)
+    
 			if err != nil {
 				log.Printf("Error with GetAllStocks call: %v", err)
 			}
-			// companies := []string {"AAPL",  "MSFT",  "GOOGL",  "AMZN",  "META",  "TSLA",  "NFLX",  "NVDA",  "JPM",  "BAC",  "DIS",  "V",  "MA",  "UNH",  "HD",  "PG",  "KO",  "PEP",  "CSCO",  "CMCSA",  "ORCL",  "INTC",  "IBM",  "TXN",  "UPS"}
-
+            
 			// Max 30 API/sc
 			for _, company := range companies {
+                log.Println(company.TickerSymbol)
 				quote, err := services.GetTestStock(company.TickerSymbol)
 				if err != nil {
 					log.Printf("Error fetching stock data: %v", err)
 				} else {
-					log.Printf("Fetched stock data: %s: %f", company.TickerSymbol, *quote.C)
-					// NEED TO OPEN STOCK INFO
-					// Here function not made yet
-					// h.StockService.UpdateStockPrice(stockID uint, newPrice float64, timestamp *time.Time) in stock package
-					// err := s.StockService.UpdateStockPrice(company.ID, quote.c, &now)
-					// if err != nil {
-					//     log.Printf("Failed to update stock price for company %s with quote %f: %v", company.TickerSymbol, quote, err)
-					// }
+					// log.Printf("Fetched stock data: %s: %f", company.TickerSymbol, *quote.C)
+                    
+					err := s.StockService.UpdateStockPrice(company.ID, float64(*quote.C), &now)
+					if err != nil {
+					    log.Printf("Failed to update stock price for company %s with quote %f: %v", company.TickerSymbol, *quote.C, err)
+					}
 				}
 				time.Sleep(40 * time.Millisecond)
 			}
 			// Calculate time for the next execution
 			now = time.Now().In(location)
-			nextRun = time.Date(now.Year(), now.Month(), now.Day(), 19, 30, 0, 0, location).Add(24 * time.Hour)
+			nextRun = time.Date(now.Year(), now.Month(), now.Day(), 18, 0, 0, 0, location).Add(24 * time.Hour)
 			time.Sleep(time.Until(nextRun))
 		}
 	}()
 }
-
-// r * scheduler doesnt work like you think it does
-// func (r *scheduler) UpdateStockCurrentPrice(symbol string, price float64) {
-//     // company, err := FindCompany(symbol)
-//     if err != nil:
-//     {
-//         return err
-//     }else {
-//         // here update history price
-//         return r.db.Model(&models.User{}).Where("TickerSymbol = ?", symbol).Update("CurrentPrice", price).Error
-//     }
-// }
-// func (r *scheduler) FindCompany(symbol string) {
-//     var foundCompany models.Stock
-//     err := r.db.Where("TickerSymbol = ?", symbol).First(&foundCompany).Error
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &foundCompany, nil
-// }
