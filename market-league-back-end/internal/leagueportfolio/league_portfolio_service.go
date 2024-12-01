@@ -57,7 +57,13 @@ func (s *LeaguePortfolioService) CreateLeaguePortfolio(leagueID uint) (*models.L
 	return createdLeaguePortfolio, nil
 }
 
-func (s *LeaguePortfolioService) DraftStock(leaguePortfolioID, userPortfolioID, stockID uint) error {
+func (s *LeaguePortfolioService) DraftStock(leagueID, userPortfolioID, stockID uint) error {
+
+	leaguePortfolioID, err := s.repo.GetLeaguePortfolioIDByLeagueID(leagueID)
+	if err != nil {
+		return fmt.Errorf("error fetching LeaguePortfolioID for LeagueID %d: %w", leagueID, err)
+	}
+
 	// Fetch the league portfolio
 	leaguePortfolio, err := s.repo.GetLeaguePortfolioWithID(leaguePortfolioID)
 	if err != nil {
