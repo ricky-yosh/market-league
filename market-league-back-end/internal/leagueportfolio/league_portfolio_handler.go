@@ -18,9 +18,9 @@ func NewLeaguePortfolioHandler(leaguePortfolioService *LeaguePortfolioService) *
 
 func (h *LeaguePortfolioHandler) DraftStock(c *gin.Context) {
 	var request struct {
-		LeagueID        uint `json:"league_id" binding:"required"`
-		UserPortfolioID uint `json:"user_portfolio_id" binding:"required"`
-		StockID         uint `json:"stock_id" binding:"required"`
+		LeagueID uint `json:"league_id" binding:"required"`
+		UserID   uint `json:"user_id" binding:"required"`
+		StockID  uint `json:"stock_id" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -28,7 +28,7 @@ func (h *LeaguePortfolioHandler) DraftStock(c *gin.Context) {
 		return
 	}
 
-	err := h.leaguePortfolioService.DraftStock(request.LeagueID, request.UserPortfolioID, request.StockID)
+	err := h.leaguePortfolioService.DraftStock(request.LeagueID, request.UserID, request.StockID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
