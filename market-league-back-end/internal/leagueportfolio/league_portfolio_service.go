@@ -70,7 +70,7 @@ func (s *LeaguePortfolioService) DraftStock(leagueID, userID, stockID uint) erro
 		return fmt.Errorf("failed to fetch league portfolio: %v", err)
 	}
 
-	userPortfolioID, err := s.portfolioRepo.GetPortfolioIDByUserAndLeague(leagueID, userID)
+	userPortfolioID, err := s.portfolioRepo.GetPortfolioIDByUserAndLeague(userID, leagueID)
 	if err != nil {
 		return fmt.Errorf("error fetching userPortfolioID for LeagueID %d and UserID %d: %w", leagueID, userID, err)
 	}
