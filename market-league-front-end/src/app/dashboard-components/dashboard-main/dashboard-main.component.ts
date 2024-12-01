@@ -2,7 +2,7 @@ import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { Component, EventEmitter, Output } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
-import { UserLeaguesService } from '../league-services/user-leagues/user-leagues.service';
+import { LeagueService } from '../services/league.service';
 import { firstValueFrom } from 'rxjs';
 import { User } from '../../models/user.model';
 import { League } from '../../models/league.model';
@@ -17,15 +17,16 @@ import { Leagues } from '../../models/leagues.model';
 })
 export class DashboardMainComponent {
 
+    leagues: Leagues = { leagues: [] };
+    selectedLeague: League | null = null;
+    user: string = "User"
+    showMenu = false
+
   constructor(
     private router: Router,
     private userService: VerifyUserService,
-    private leagueService: UserLeaguesService
+    private leagueService: LeagueService
   ) {}
-
-  leagues: Leagues = { leagues: []};
-  selectedLeague: League | null = null;
-  user: string = "User"
 
   ngOnInit(): void {
     this.loadUserLeagues();
@@ -43,7 +44,6 @@ export class DashboardMainComponent {
   
   redirectToLeaderboard() {
     this.router.navigate(['dashboard/leaderboard']);
-    // current_league = id_of_league
   }
 
   redirectToPortfolio() {
@@ -52,6 +52,18 @@ export class DashboardMainComponent {
 
   redirectToTrades() {
     this.router.navigate(['dashboard/trades']);
+  }
+
+  redirectToCreateLeague() {
+    this.router.navigate(['dashboard/create-league']);
+  }
+
+  redirectToRemoveLeague() {
+    this.router.navigate(['dashboard/remove-league']);
+  }
+
+  redirectToSettings() {
+    this.router.navigate(['dashboard/settings']);
   }
 
   // Method to load the leagues for the user
@@ -82,6 +94,7 @@ export class DashboardMainComponent {
   // Method to handle league selection
   selectLeague(league: League) {
     this.leagueService.setSelectedLeague(league)
+    this.redirectToDashboard();
   }
 
   // Method to load the user data asynchronously
@@ -95,6 +108,10 @@ export class DashboardMainComponent {
         console.error('Failed to fetch user from token:', error);
       }
     });
+  }
+
+  toggleMenu() {
+    this.showMenu = !this.showMenu;
   }
 
 }

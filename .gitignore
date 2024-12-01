@@ -1,6 +1,5 @@
 /node_modules
 .env
 /.angular
-/tmp
+*/tmp
 */venv
-market-league-back-end/tmp/

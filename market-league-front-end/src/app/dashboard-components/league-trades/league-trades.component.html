@@ -1,3 +1,102 @@
-<section class="league-home">
-    <h1>Trades</h1>
+<section class="trades">
+    <div class="centering-container">
+        <div class="h1-container">
+            <h1>Trades</h1>
+        </div>
+
+        <div class="trade-container">
+            <div class="container" style="flex: 1;">
+                <h2>Create a Trade</h2>
+                <form (ngSubmit)="onSubmit()" #tradeForm="ngForm">
+    
+                <!-- User Selection -->
+                <div class="form-group margin-top">
+                    <label for="user2">Select a user to trade with</label>
+                    <select 
+                        id="user2" 
+                        name="user2" 
+                        class="user-select"
+                        [(ngModel)]="formInput.user2" 
+                        (ngModelChange)="onUserSelectionChange($event)"
+                        required>
+                        <option [ngValue]="null" disabled selected>Select a user</option>
+                        <option *ngFor="let user of leagueUsers" [ngValue]="user">{{ user.username }}</option>
+                    </select>
+                </div>
+            
+                <!-- Stocks Offered by User 1 -->
+                <div class="form-group margin-top">
+                    <label for="stocks1">Your Stocks</label>
+                    <div class="stock-list">
+                        <button 
+                            type="button" 
+                            *ngFor="let stock of currentUsersStocks" 
+                            (click)="toggleStockSelection(formInput.stocks1, stock)"
+                            class="stock-button"
+                            [ngClass]="{ 'selected': formInput.stocks1.includes(stock) }">
+                            {{ stock.ticker_symbol }}
+                        </button>
+                    </div>
+                </div>
+            
+                <!-- Stocks Offered by User 2 -->
+                <div class="form-group margin-top">
+                    <label for="stocks2">{{ formInput.user2 ? formInput.user2.username + "'s Stocks" : 'Selected User\'s Stocks' }}</label>
+                    <div class="stock-list">
+                        <button 
+                            type="button" 
+                            *ngFor="let stock of selectedUserStocks" 
+                            (click)="toggleStockSelection(formInput.stocks2, stock)"
+                            class="stock-button"
+                            [ngClass]="{ 'selected': formInput.stocks2.includes(stock) }">
+                            {{ stock.ticker_symbol }}
+                        </button>
+                    </div>
+                </div>
+                
+                    <!-- Submit Button -->
+                    <button type="submit" class="submit-button margin-top" [disabled]="!tradeForm.form.valid">Submit Trade</button>
+                </form>
+            </div>
+    
+            <div class="container" style="flex: 2;">
+                <h2>Incoming Trades</h2>
+                <ul *ngIf="currentUsersTrades && currentUsersTrades.length > 0; else noTrades" class="trades-list">
+                    <li *ngFor="let trade of currentUsersTrades" class="trade-item">
+                        <div>
+                            <p>{{ trade.user1.username }}</p>
+                            <div 
+                                [ngClass]="{'trade-confirmed': trade.user1_confirmed, 'trade-not-confirmed': !trade.user1_confirmed}"
+                                class="confirmation-status">
+                            </div>
+                            <p *ngFor="let stock of trade.stocks1">
+                                {{ stock.ticker_symbol }}
+                            </p>
+                        </div>
+                        <div class="center-column">
+                            <p>Trades for</p>
+                            <p>{{ trade.created_at | date: 'MMMM d, yyyy, h:mm a' }}</p>
+                            <button (click)="confirmTrade(trade.id)" class="btn">
+                                Confirm Trade
+                            </button>
+                        </div>
+                        <div>
+                            <p>{{ trade.user2.username }}</p>
+                            <div 
+                                [ngClass]="{'trade-confirmed': trade.user2_confirmed, 'trade-not-confirmed': !trade.user2_confirmed}"
+                                class="confirmation-status">
+                            </div>
+                            <p *ngFor="let stock of trade.stocks2">
+                                {{ stock.ticker_symbol }}
+                            </p>
+                        </div>
+                    </li>
+                </ul>
+                <ng-template #noTrades>
+                    <p>No Trades Found</p>
+                </ng-template>
+            </div>
+        </div>
+        
+    </div>
 </section>

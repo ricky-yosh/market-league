@@ -1,1 +1,194 @@
 @import "../../../styles/variables";
+
+.trades {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    border-radius: 10px;
+    background-color: lighten($market-league-dark-blue, 33%);
+    margin: 0px;
+    padding: 0.5em 1.2em 0.5em 1.2em;
+
+    // scrolling ability
+    overflow-y: auto;
+    scrollbar-color: transparent transparent;
+    scrollbar-width: none;
+    max-height: 91vh;
+}
+
+h1 {
+    padding-left: 0.5em;
+    padding-top: 0.2em;
+    padding-bottom: 0.5em;
+    font-size: 1.8em;
+}
+
+.container {
+    background-color: $market-league-white;
+    padding: 1em 0.4em 1em 1em;
+    border-radius: 10px;
+    max-height: fit-content;
+}
+
+.centering-container {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.h1-container {
+    width: 100%;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.user-select {
+    width: calc(100% - 20px);
+    padding: 8px;
+    margin: 0 auto;
+    display: block;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.user-select:focus {
+    border-color: $market-league-gold;
+    outline: none;
+}
+
+.margin-top {
+    margin-top: 2em;
+}
+
+.submit-button {
+    width: 100%;
+    padding: 10px;
+    background-color: $market-league-gold;
+    color: $market-league-purple;
+    font-weight: bold;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.submit-button:disabled {
+    background-color: #ccc;
+    color: $market-league-white;
+    cursor: not-allowed;
+}
+
+.submit-button:hover:not(:disabled) {
+    background-color: lighten($market-league-gold, 20%);
+}
+
+.stock-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    max-height: 15em;
+    overflow-y: auto;
+    scrollbar-color: $scrollbar-grey transparent;
+}
+
+.stock-button {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: $market-league-white;
+    color: $market-league-black;
+    transition: background-color 0.3s, border-color 0.3s;
+    width: 100%;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.stock-button.selected {
+    background-color: $market-league-purple;
+    color: white;
+}
+
+.stock-button:hover {
+    background-color: lighten($market-league-purple, 20%);
+}
+
+.trade-item {
+    display: flex;
+    justify-content: space-between;
+    
+    padding: 1em 0;
+    padding-right: 0.7em !important;
+
+    font-size: 16px;
+    border-bottom: 1px solid darken($market-league-white, 10%);
+    width: 100%;
+}
+
+.confirmation-status {
+    width: 2.1em;
+    height: 0.6em;
+    display: inline-block;
+    border-radius: 5px;
+}
+
+.trade-confirmed {
+    background-color: $market-league-green;
+}
+
+.trade-not-confirmed {
+    background-color: $market-league-red;
+}
+
+.trades-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    max-height: 50em;
+    overflow-y: auto;
+    scrollbar-color: $scrollbar-grey transparent;
+}
+
+.trade-container {
+    display: flex;
+    gap: 1em;
+    max-height: 50%;
+    width: 100%;
+}
+.center-column {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.btn {
+    background: darken($market-league-gold, 1%);
+    border-color: $market-league-gold;
+    border-radius: 20px;
+
+    color: darken($market-league-purple, 10%);
+    padding: 0.7em 2em;
+    transition: background 0.3s;
+    font-weight: bold;
+    border-style: none;
+    margin-top: 1em;
+}
+
+.btn:hover {
+    background: lighten($market-league-gold, 20%);
+}
+
+@media (max-width: 60em) {
+    .trade-container {
+        flex-direction: column;
+    }
+}

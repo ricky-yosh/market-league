@@ -57,10 +57,43 @@ func (r *PortfolioRepository) CreatePortfolio(portfolio *models.Portfolio) error
 
 // UpdatePortfolio updates an existing portfolio in the database.
 func (r *PortfolioRepository) UpdatePortfolio(portfolio *models.Portfolio) error {
-	return r.db.Save(portfolio).Error
+	// Start a transaction
+	tx := r.db.Begin()
+
+	// Update the basic portfolio fields
+	if err := tx.Save(portfolio).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to update portfolio: %w", err)
+	}
+
+	// Update the Stocks association explicitly
+	if err := tx.Model(portfolio).Association("Stocks").Replace(portfolio.Stocks); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to update stocks for portfolio: %w", err)
+	}
+
+	// Commit the transaction
+	return tx.Commit().Error
 }
 
 // DeletePortfolio deletes a portfolio by its ID.
 func (r *PortfolioRepository) DeletePortfolio(portfolioID uint) error {
 	return r.db.Delete(&models.Portfolio{}, portfolioID).Error
+}
+
+// Helper Functions
+func (r *PortfolioRepository) UserExists(userID uint) (bool, error) {
+	var count int64
+	if err := r.db.Model(&models.User{}).Where("id = ?", userID).Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (r *PortfolioRepository) LeagueExists(leagueID uint) (bool, error) {
+	var count int64
+	if err := r.db.Model(&models.League{}).Where("id = ?", leagueID).Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }

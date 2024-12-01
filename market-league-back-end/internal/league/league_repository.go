@@ -90,3 +90,35 @@ func (r *LeagueRepository) GetLeagueDetails(leagueID uint) (*models.League, erro
 	err := r.db.Preload("Users").Where("id = ?", leagueID).First(&league).Error
 	return &league, err
 }
+
+// RemovePortfolioStocksByLeagueID removes stocks associated with portfolios in a league
+func (r *LeagueRepository) RemovePortfolioStocksByLeagueID(tx *gorm.DB, leagueID uint) error {
+	return tx.Exec(`
+        DELETE FROM portfolio_stocks
+        WHERE portfolio_id IN (SELECT id FROM portfolios WHERE league_id = ?)`, leagueID).Error
+}
+
+// RemovePortfoliosByLeagueID removes portfolios associated with a league
+func (r *LeagueRepository) RemovePortfoliosByLeagueID(tx *gorm.DB, leagueID uint) error {
+	return tx.Where("league_id = ?", leagueID).Delete(&models.Portfolio{}).Error
+}
+
+// RemoveTradesByLeagueID removes trades associated with a league
+func (r *LeagueRepository) RemoveTradesByLeagueID(tx *gorm.DB, leagueID uint) error {
+	return tx.Where("league_id = ?", leagueID).Delete(&models.Trade{}).Error
+}
+
+// RemoveLeaguePortfolioByLeagueID removes league portfolios for a specific league
+func (r *LeagueRepository) RemoveLeaguePortfolioByLeagueID(tx *gorm.DB, leagueID uint) error {
+	return tx.Exec("DELETE FROM league_portfolios WHERE league_id = ?", leagueID).Error
+}
+
+// RemoveUserLeaguesByLeagueID removes user-league associations for a league
+func (r *LeagueRepository) RemoveUserLeaguesByLeagueID(tx *gorm.DB, leagueID uint) error {
+	return tx.Exec("DELETE FROM user_leagues WHERE league_id = ?", leagueID).Error
+}
+
+// RemoveLeague removes the league itself
+func (r *LeagueRepository) RemoveLeague(tx *gorm.DB, leagueID uint) error {
+	return tx.Where("id = ?", leagueID).Delete(&models.League{}).Error
+}

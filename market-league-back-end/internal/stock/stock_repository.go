@@ -2,6 +2,7 @@ package stock
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/market-league/internal/models"
 	"gorm.io/gorm"
@@ -17,15 +18,6 @@ func NewStockRepository(db *gorm.DB) *StockRepository {
 	return &StockRepository{db: db}
 }
 
-// GetStockByID fetches a stock by its ID.
-func (r *StockRepository) GetStockByID(stockID uint) (*models.Stock, error) {
-	var stock models.Stock
-	if err := r.db.First(&stock, stockID).Error; err != nil {
-		return nil, fmt.Errorf("failed to find stock with ID %d: %w", stockID, err)
-	}
-	return &stock, nil
-}
-
 // GetStocksByIDs fetches multiple stocks by their IDs from the database.
 func (r *StockRepository) GetStocksByIDs(stockIDs []uint) ([]models.Stock, error) {
 	var stocks []models.Stock
@@ -35,41 +27,101 @@ func (r *StockRepository) GetStocksByIDs(stockIDs []uint) ([]models.Stock, error
 	return stocks, nil
 }
 
-// GetAllStocks fetches all stocks from the database.
+// CreateStock creates a new stock and its initial price history within a transaction
+func (r *StockRepository) CreateStock(stock *models.Stock) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// Create the stock
+		if err := tx.Create(stock).Error; err != nil {
+			return err
+		}
+
+		// Create the initial price history entry
+		priceHistory := models.PriceHistory{
+			StockID:   stock.ID,
+			Price:     stock.CurrentPrice,
+			Timestamp: time.Now(), // Assuming CreatedAt is set
+		}
+
+		if err := tx.Create(&priceHistory).Error; err != nil {
+			return err
+		}
+
+		// Optionally, associate the price history with the stock
+		stock.PriceHistories = append(stock.PriceHistories, priceHistory)
+
+		return nil
+	})
+}
+
+// New CreateMultipleStocks method
+func (r *StockRepository) CreateMultipleStocks(stocks []*models.Stock) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		for _, stock := range stocks {
+			if err := tx.Create(stock).Error; err != nil {
+				return err
+			}
+
+			priceHistory := models.PriceHistory{
+				StockID:   stock.ID,
+				Price:     stock.CurrentPrice,
+				Timestamp: time.Now(), // Ensure current time is used
+			}
+
+			if err := tx.Create(&priceHistory).Error; err != nil {
+				return err
+			}
+
+			stock.PriceHistories = append(stock.PriceHistories, priceHistory)
+		}
+		return nil
+	})
+}
+
+func (r *StockRepository) UpdateCurrentPrice(stockID uint, newPrice float64, timestamp *time.Time) error {
+	// Start a transaction
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var stock models.Stock
+		if err := tx.First(&stock, stockID).Error; err != nil {
+			return err
+		}
+
+		// Update the current price
+		stock.CurrentPrice = newPrice
+		if err := tx.Save(&stock).Error; err != nil {
+			return err
+		}
+
+		// Create a new PriceHistory entry
+		priceHistory := models.PriceHistory{
+			StockID: stock.ID,
+			Price:   newPrice,
+		}
+
+		if timestamp != nil {
+			priceHistory.Timestamp = *timestamp
+		}
+
+		if err := tx.Create(&priceHistory).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (r *StockRepository) GetStockWithHistory(stockID uint) (models.Stock, error) {
+	var stock models.Stock
+	if err := r.db.Preload("PriceHistories").First(&stock, stockID).Error; err != nil {
+		return models.Stock{}, err
+	}
+	return stock, nil
+}
+
+// GetAllStocks retrieves all stocks from the database.
 func (r *StockRepository) GetAllStocks() ([]models.Stock, error) {
 	var stocks []models.Stock
-	err := r.db.Find(&stocks).Error
-	if err != nil {
+	if err := r.db.Find(&stocks).Error; err != nil {
 		return nil, err
 	}
 	return stocks, nil
-}
-
-// CreateStock creates a new stock in the database.
-func (r *StockRepository) CreateStock(stock *models.Stock) error {
-	// Insert the new stock into the database
-	if err := r.db.Create(stock).Error; err != nil {
-		return fmt.Errorf("failed to create stock: %w", err)
-	}
-	return nil
-}
-
-// UpdateStockPriceHistory updates the price history of a stock.
-func (r *StockRepository) UpdateStockPriceHistory(stock *models.Stock) error {
-	return r.db.Model(stock).Update("price_history", stock.PriceHistory).Error
-}
-
-// UpdateStock updates an existing stock in the database.
-func (r *StockRepository) UpdateStock(stock *models.Stock) error {
-	return r.db.Save(stock).Error
-}
-
-// DeleteStock deletes a stock by its ID from the database.
-func (r *StockRepository) DeleteStock(stockID uint) error {
-	return r.db.Delete(&models.Stock{}, stockID).Error
-}
-
-// UpdateStockPrice updates the current price of a stock in the database.
-func (r *StockRepository) UpdateStockPrice(stock *models.Stock) error {
-	return r.db.Model(stock).Update("current_price", stock.CurrentPrice).Error
 }

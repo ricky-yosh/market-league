@@ -38,3 +38,10 @@ img {
     border-bottom: 4px solid;
     margin-bottom: -4px; // offset the border
 }
+
+@media (max-width: 40em) {
+    img {
+        content: url("/favicon.png");
+        width: 2.3em;
+    }
+}

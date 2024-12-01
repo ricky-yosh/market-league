@@ -1,0 +1,37 @@
+<section class="create-league">
+    <div class="centering-container flex-column">
+        <div class="h1-container">
+            <h1>
+                Create League
+            </h1>
+        </div>
+
+        <div class="container">
+            <form (ngSubmit)="onSubmit()" class="league-form">
+                <div class="form-field league-name-form-field">
+                    <input
+                        type="text"
+                        id="leagueName"
+                        [(ngModel)]="leagueName"
+                        name="leagueName"
+                        required
+                        placeholder="Enter league name"
+                    />
+                </div>
+
+                <div class="form-field" class="align-center">
+                    <label class="end-date-label" for="endDate">End Date:</label>
+                    <input
+                        type="date"
+                        id="endDate"
+                        [(ngModel)]="endDate"
+                        name="endDate"
+                        required
+                    />
+                </div>
+
+                <button type="submit" class="submit-button">Create League</button>
+            </form>
+        </div>
+    </div>
+</section>

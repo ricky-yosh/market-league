@@ -7,12 +7,11 @@ import (
 	"github.com/market-league/internal/auth"
 	"github.com/market-league/internal/db"
 	"github.com/market-league/internal/league"
+	league_portfolio "github.com/market-league/internal/leagueportfolio"
 	"github.com/market-league/internal/portfolio"
 	"github.com/market-league/internal/stock"
 	"github.com/market-league/internal/trade"
 	"github.com/market-league/internal/user"
-    // "github.com/market-league/internal/scheduler"
-    "github.com/market-league/internal/services"
 )
 
 func RegisterRoutes(router *gin.Engine) {
@@ -22,6 +21,7 @@ func RegisterRoutes(router *gin.Engine) {
 			"message": "Welcome to MarketLeague API!",
 		})
 	})
+
 	database := db.GetDB()
 
 	// Set up the authentication flow by initializing the repository, service, and handler layers
@@ -58,24 +58,10 @@ func RegisterRoutes(router *gin.Engine) {
 
 	stockRoutes := router.Group("/api/stocks")
 	{
-		stockRoutes.POST("/create-stock", stockHandler.CreateStock)                // Create a new stock
-		stockRoutes.POST("/create-stocks", stockHandler.CreateMultipleStocks)      // Create multiple stocks
-		stockRoutes.POST("/stock-price", stockHandler.GetPrice)                    // Fetch stock price by ID
-		stockRoutes.POST("/update-stock-price", stockHandler.UpdateStockPrice)     // Update stock price by ID
-		stockRoutes.POST("/price-history", stockHandler.GetPriceHistory)           // Fetch price history by ID
-		stockRoutes.POST("/update-price-history", stockHandler.UpdatePriceHistory) // Update price history by ID
-	}
-
-	// Trades routes
-	tradeRepo := trade.NewTradeRepository(database)
-	tradeService := trade.NewTradeService(tradeRepo, stockRepo)
-	tradeHandler := trade.NewTradeHandler(tradeService)
-
-	tradeRoutes := router.Group("/api/trades")
-	{
-		tradeRoutes.POST("/create-trade", tradeHandler.CreateTrade) // Create a new trade
-		tradeRoutes.POST("/confirm-trade", tradeHandler.ConfirmTrade)
-		tradeRoutes.POST("/get-trades", tradeHandler.GetTrades)
+		stockRoutes.POST("/create-stock", stockHandler.CreateStock)               // Create a new stock
+		stockRoutes.POST("/create-stocks", stockHandler.CreateMultipleStocks)     // Create multiple stocks
+		stockRoutes.POST("/get-stock-information", stockHandler.GetStockInfo)     // Get Stock information
+		stockRoutes.POST("/update-current-stock-price", stockHandler.UpdatePrice) // Update current stock and add it to history
 	}
 
 	userRepo := user.NewUserRepository(database)
@@ -88,30 +74,58 @@ func RegisterRoutes(router *gin.Engine) {
 		userRoutes.POST("/user-leagues", userHandler.GetUserLeagues)
 		userRoutes.POST("/user-trades", userHandler.GetUserTrades)
 		userRoutes.POST("/user-portfolios", userHandler.GetUserPortfolios)
-		// userRoutes.POST("/update-user", userHandler.GetUserByID)
+	}
+
+	// Trades routes
+	tradeRepo := trade.NewTradeRepository(database)
+	tradeService := trade.NewTradeService(tradeRepo, stockRepo, portfolioRepo, userRepo)
+	tradeHandler := trade.NewTradeHandler(tradeService)
+
+	tradeRoutes := router.Group("/api/trades")
+	{
+		tradeRoutes.POST("/create-trade", tradeHandler.CreateTrade) // Create a new trade
+		tradeRoutes.POST("/confirm-trade", tradeHandler.ConfirmTrade)
+		tradeRoutes.POST("/get-trades", tradeHandler.GetTrades)
 	}
 
 	// League routes
+	leaguePortfolioRepository := league_portfolio.NewLeaguePortfolioRepository(database)
+	leaguePortfolioService := league_portfolio.NewLeaguePortfolioService(leaguePortfolioRepository, stockRepo, portfolioRepo)
+	leaguePortfolioHandler := league_portfolio.NewLeaguePortfolioHandler(leaguePortfolioService)
+	leaguePortfolioRoutes := router.Group("/api/league-portfolio")
+	{
+		leaguePortfolioRoutes.POST("/draft-stock", leaguePortfolioHandler.DraftStock)
+		leaguePortfolioRoutes.POST("/get-league-portfolio-info", leaguePortfolioHandler.GetLeaguePortfolioInfo)
+	}
+
 	leagueRepo := league.NewLeagueRepository(database)
 	leagueService := league.NewLeagueService(leagueRepo, userRepo, portfolioRepo)
-	leagueHandler := league.NewLeagueHandler(leagueService, portfolioService)
+	leagueHandler := league.NewLeagueHandler(leagueService, portfolioService, leaguePortfolioService)
 
 	leagueRoutes := router.Group("/api/leagues")
 	{
 		leagueRoutes.POST("/create-league", leagueHandler.CreateLeague)         // Create League
+		leagueRoutes.POST("/remove-league", leagueHandler.RemoveLeague)         // Remove League
 		leagueRoutes.POST("/add-user-to-league", leagueHandler.AddUserToLeague) // Add Users to League
 		leagueRoutes.POST("/details", leagueHandler.GetLeagueDetails)           // Get League Details
 		leagueRoutes.POST("/leaderboard", leagueHandler.GetLeaderboard)         // Get League Leaderboard
 	}
 
-	// go scheduler.StartDailyTask()
-	router.GET("/api/services/stock-api", func(c *gin.Context) {
-		quote, err := services.GetTestStock()
-		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(200, quote)
-	})
-	
+	// Initialize the scheduler and start it
+	scheduler := &Scheduler{
+		db:           database,
+		StockService: stockService,
+		stockRepo:    stockRepo,
+	}
+	scheduler.StartDailyTask()
+
+	// router.GET("/api/services/stock-api", func(c *gin.Context) {
+	// 	quote, err := services.GetTestStock()
+	// 	if err != nil {
+	// 		c.JSON(500, gin.H{"error": err.Error()})
+	// 		return
+	// 	}
+	// 	c.JSON(200, quote)
+	// })
+
 }
