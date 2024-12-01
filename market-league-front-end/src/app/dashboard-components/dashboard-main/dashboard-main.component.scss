@@ -1,408 +1,286 @@
 @import '../../../styles/variables';
 
 .layout {
-    height: 100vh;
-    background-color: $market-league-purple;
+  height: 100vh;
+  background-color: $market-league-purple;
 }
 
 .sidebar {
-    padding-top: 1em;
-    width: 3em;
-    height: 92.5vh;
-    background-color: $market-league-purple;
-    color: white;
-    box-sizing: border-box;
-    overflow: hidden;
-    transition: width 0.3s ease; /* Smooth transition for expanding */
-}
+  padding-top: 1em;
+  width: 3em;
+  height: 92.5vh;
+  background-color: $market-league-purple;
+  color: white;
+  box-sizing: border-box;
+  overflow: hidden;
+  transition: width 0.3s ease;
 
-.sidebar:hover {
+  &:hover {
     width: 16em;
+
+    .leagues {
+      scrollbar-color: $scrollbar-grey transparent;
+    }
+
+    .full-name {
+      opacity: 1;
+      margin-left: 20px;
+    }
+
+    .first-letter {
+      margin-left: 0;
+    }
+
+    .leagues-header {
+      color: $market-league-white;
+      text-align: center;
+    }
+
+    .league-options {
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .user-text {
+      justify-content: center;
+    }
+
+    .logout-button {
+      color: $market-league-white;
+    }
+  }
 }
 
-.sidebar:hover .leagues {
-    scrollbar-color: $scrollbar-grey transparent;
-}
-
-/* Leagues list styling */
+/* League Styling */
 .leagues {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 65vh;
+  overflow-y: auto;
+  scrollbar-color: transparent transparent;
 
-    // scroll feature
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-    max-height: 65vh;
-    overflow-y: auto;
-    overflow-x: hidden;
-    scrollbar-color: transparent transparent;
+  li {
+    font-size: 1.1rem;
+    width: 100%;
+    padding: 0.6em 0.5em;
+    background-color: transparent;
+    transition: background-color 0.3s ease;
+
+    &:hover {
+      background-color: rgba($market-league-white, 0.2);
+    }
+  }
 }
 
 .league-item {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    white-space: nowrap;
-    flex-direction: row;
-}
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  white-space: nowrap;
 
-.league-item .first-letter {
+  .first-letter {
     font-size: 20px;
     font-weight: bold;
-}
+  }
 
-.league-item .full-name {
+  .full-name {
     margin-left: 10px;
-    opacity: 0; /* Initially hidden */
+    opacity: 0;
     transition: opacity 0.3s ease, margin-left 0.3s ease;
-
-    // Truncate css
     max-width: 15em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
 }
 
-/* On hover, show the full name */
-.sidebar:hover .full-name {
-    opacity: 1;
-    margin-left: 20px; /* Push the full name a bit for better effect */
-}
-
-.sidebar:hover .first-letter {
-    margin-left: 0;
-}
-
-.sidebar:hover .leagues-header {
-    color: $market-league-white;
-    width: 100%;
-    text-align: center;
-}
-
+/* Icons */
 .icons-list {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-}
-
-.sidebar-header {
-    text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
 }
 
 .logo {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 10px;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 10px;
 }
 
-.leagues {
-    list-style-type: none;
-    padding: 0;
-}
-
-.leagues li {
-    font-size: 1.1rem;
-    width: 100%;
-    box-sizing: border-box;
-    // display: inline-block;
-    padding: 0.6em 0.5em 0.6em 0.5em; /* Space around the content */
-    background-color: transparent; /* Initial background */
-    transition: background-color 0.3s ease; /* Smooth transition for the hover effect */
-}
-
-.leagues li:hover {
-    background-color: rgba($market-league-white, 0.2); /* Grey background on hover */
-}
-
-/* Main Content */
-.under-navbar {
-    flex: 1;
-    display: flex;
-    flex-direction: row;
-    box-sizing: border-box;
+.middle-icons {
+  display: flex;
 }
 
 /* Topbar */
 .topbar {
-    background-color: $market-league-purple;
-    color: white;
-    padding: 15px 20px 10px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 4vh;
-}
+  background-color: $market-league-purple;
+  color: white;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 4vh;
 
-.topbar a {
+  a {
     color: white;
     text-decoration: none;
     font-size: 1.2rem;
     padding: 5px 10px;
     border-radius: 4px;
+  }
 }
 
-  /* Content Area */
+/* Content Area */
 .content-area {
-    padding: 0px 1em 1em 0em;
-    flex: 1;
+  padding: 0px 1em 1em 0em;
+  flex: 1;
 }
 
-.topbar-icon {
-    display: inline-block;
-    padding: 0.3em 0.5em 0em 0.5em; /* Space around the content */
-    margin-bottom: 0.2em;
-    background-color: transparent; /* Initial background */
-    border-radius: 25%; /* Makes the element circular */
-    transition: background-color 0.3s ease; /* Smooth transition for the hover effect */
+/* Buttons */
+.topbar-icon,
+.sidebar-league,
+.logout-button {
+  display: inline-block;
+  padding: 0.5em 1.5em;
+  margin-bottom: 0.2em;
+  background-color: transparent;
+  border-radius: 15px;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: rgba($market-league-white, 0.2);
+  }
 }
 
-.topbar-icon:hover {
-    background-color: rgba($market-league-white, 0.2); /* Grey background on hover */
-}
-
-.sidebar-league {
-    display: inline-block;
-    padding: 0.3em 0.5em 0em 0.5em; /* Space around the content */
-    background-color: transparent; /* Initial background */
-    border-radius: 25%; /* Makes the element circular */
-    transition: background-color 0.3s ease; /* Smooth transition for the hover effect */
-}
-
-// Search
+/* Form */
 .form-field {
-    display: flex;
-    align-items: center;
-    padding-left: 0.5em;
-    background-color: $market-league-white;
-    border-radius: 40px;
-    margin-bottom: 0.3em;
-    height: 2.3em;
-}
+  display: flex;
+  align-items: center;
+  padding-left: 0.5em;
+  background-color: $market-league-white;
+  border-radius: 40px;
+  margin-bottom: 0.3em;
+  height: 2.3em;
 
-.search-input {
+  .search-input {
     flex-grow: 1;
     border: none;
     outline: none;
     padding: 5px;
     font-size: 1rem;
-    box-shadow: none;
     background-color: $market-league-white;
-}
+  }
 
-.search-button {
+  .search-button {
     background: none;
     border: none;
-    padding: 5px 5px 5px 5px;
-}
+    padding: 5px;
+  }
 
-.search-button:focus {
-    outline: none;
-}
-
-.search-icon {
+  .search-icon {
     width: 24px;
     height: 24px;
     color: $market-league-gold;
     padding-top: 0.2em;
+  }
 }
 
-.middle-icons {
-    display: flex;
-    flex-direction: row;
-}
-
-// Logo
+/* Responsive */
 .logo-image {
-    width: 17em;
+  width: 17em;
+
+  @media (max-width: 50em) {
+    content: url("/favicon.png");
+    width: 2.3em;
+  }
 }
 
-.league-options {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
+.hide-on-big-screen {
+  display: none;
 }
 
-.sidebar:hover .league-options {
-    justify-content: center;
-    gap: 10px;
+@media (max-width: 60em) {
+  .hide-on-small-screen {
+    display: none;
+  }
+
+  .hide-on-big-screen {
+    display: block;
+  }
 }
 
-.add-and-view-leagues {
-    width: 100%;
+/* Menu */
+.menu {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  opacity: 0.9;
+  visibility: hidden;
+  transition: visibility 0.5s ease-out;
+
+  &.show {
+    visibility: visible;
+  }
 }
 
-.separator-from-leagues-and-logout {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
-}
-
-.user-text {
-    display: flex;
-    margin-bottom: 1em;
-}
-
-.sidebar:hover .user-text {
-    justify-content: center;
-}
-
-.logout-button {
-    color: transparent;
-    white-space: nowrap;         /* Prevents text from wrapping to the next line */
-    overflow: hidden;            /* Hides any text that overflows */
-    text-overflow: ellipsis;     /* Adds an ellipsis (...) at the end of truncated text */
-}
-
-.sidebar:hover .logout-button {
-    color: $market-league-white;
-    transition: color 0.3s ease; /* Smooth transition for the hover effect */
-}
-
-
-.logout-button {
-    display: inline-block;
-    padding: 0.5em 1.5em; /* Space around the content */
-    margin-bottom: 0.2em;
-    background-color: transparent; /* Initial background */
-    border-radius: 15px; /* Makes the element circular */
-    transition: background-color 0.3s ease; /* Smooth transition for the hover effect */
-}
-
-.logout-button:hover {
-    background-color: rgba($market-league-white, 0.2); /* Grey background on hover */
-}
-
-
-@media (max-width: 50em) {
-    .logo-image {
-        content: url("/favicon.png");
-        width: 2.3em;
-    }
-}
-
-.selected {
-    background-color: red
-}
-
-/* Styling the menu button */
 .menu-btn {
-    z-index: 3;
-    right: 35px;
-    top: 35px;
-    cursor: pointer;
-    transition: all 0.5s ease-out;
-}
+  z-index: 3;
+  right: 35px;
+  top: 35px;
+  cursor: pointer;
+  transition: all 0.5s ease-out;
 
-/* Styling the hamburger lines */
-.menu-btn .btn-line {
+  .btn-line {
     width: 28px;
     height: 3px;
-    margin: 0 0 5px 0;
+    margin-bottom: 5px;
     background: $market-league-white;
     transition: all 0.5s ease-out;
-}
 
-/* Adding transform to the X */
-.menu-btn.close {
+    &:nth-child(2) {
+      opacity: 1;
+    }
+  }
+
+  &.close {
     transform: rotate(180deg) translate(0, 6px);
+
+    .btn-line:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    .btn-line:nth-child(2) {
+      opacity: 0;
+    }
+
+    .btn-line:nth-child(3) {
+      transform: rotate(-45deg) translate(7px, -6px);
+    }
+  }
 }
 
-/* Styling the three lines to make it an X */
-.menu-btn.close .btn-line:nth-child(1) {
-    transform: rotate(45deg) translate(5px, 5px);
-}
-
-.menu-btn.close .btn-line:nth-child(2) {
-    opacity: 0;
-}
-
-.menu-btn.close .btn-line:nth-child(3) {
-    transform: rotate(-45deg) translate(7px, -6px);
-}
-
-/* Styling the position of the menu icon */
-.menu {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    opacity: 0.9;
-    visibility: hidden;
-}
-
-.menu.show {
-    visibility: visible;
-}
-
-/* Styles for menu branding and nav items */
-.menu-nav {
-    display: none;
-}
-
-.menu-nav.show {
-    display: block;
-}
-
-.menu-branding {
-    display: none;
-    padding: 20px;
-}
-
-.menu-branding.show {
-    display: block;
-}
-
-/* Style for individual items */
-.nav-item {
-    color: white;
-    padding: 10px 20px;
-    cursor: pointer;
-    border-radius: 4px;
-}
-
-/* Hover effect */
-.nav-item:hover {
-    background-color: rgba($market-league-white, 0.2);
-}
-
-/* Show the menu when the 'show' class is added */
-.dropdown-menu-items.show {
-    display: block;
-}
-
+/* Dropdown Menu */
 .dropdown-menu-items {
-    display: none; /* Hidden by default */
-    position: absolute; /* Absolute positioning to position under the button */
-    top: 50px; /* Adjust this based on the height of your menu button */
-    right: 5px; /* Adjust based on your layout */
-    background-color: $market-league-purple;
-    border-radius: 4px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-    z-index: 1000; /* Keeps the menu above other elements */
-}
+  display: none;
+  position: absolute;
+  top: 50px;
+  right: 5px;
+  background-color: $market-league-purple;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
 
-.dropdown-menu-items ul {
+  &.show {
+    display: block;
+  }
+
+  ul {
     list-style: none;
     padding: 0;
     margin: 0;
     display: flex;
     flex-direction: column;
-}
-
-.hide-on-big-screen {
-    display: none;
-}
-
-@media(max-width: 60em) {
-    .hide-on-small-screen {
-        display: none;
-    }
-    
-    .hide-on-big-screen {
-        display: block;
-    }
+  }
 }
