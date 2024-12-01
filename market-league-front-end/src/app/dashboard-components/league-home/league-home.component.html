@@ -33,7 +33,10 @@
         <div class="flex-item scrollable-section" style="flex: 1;">
             <h2>Portfolio</h2>
             <ul *ngIf="userPortfolio && userPortfolio.length > 0; else noPortfolio">
-                <li *ngFor="let stock of userPortfolio">{{ stock.ticker_symbol }}</li>
+                <li *ngFor="let stock of userPortfolio" class="stock-row">
+                    <p>{{ stock.ticker_symbol }}</p>
+                    <p class="stock-current-price">{{ stock.current_price | currency:'USD':'symbol':'1.2-2' }}</p>
+                </li>
             </ul>
             <ng-template #noPortfolio>
                 <p>No Stocks Found</p>
