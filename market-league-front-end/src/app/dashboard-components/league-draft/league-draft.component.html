@@ -7,7 +7,26 @@
         </div>
 
         <div class="container">
-            <p>Container</p>
+            <h2>Available Stocks</h2>
+            <div class="stock-cards">
+                <div *ngFor="let stock of stocks" class="stock-card">
+                    <h2>{{ stock.ticker_symbol }}</h2>
+                    <p class="full-company-name">{{ stock.company_name }}</p>
+                    <p class="stock-price">{{ stock.current_price | currency:'USD':'symbol':'1.2-2' }}</p>
+                    <button (click)="draftStock(stock)" class="draft-button">Draft</button>
+                </div>
+            </div>
+
+            <h2>Your current stocks</h2>
+            <div class="portfolio-stock-cards">
+                <div *ngFor="let stock of userPortfolioStocks" class="stock-card">
+                    <h2>{{ stock.ticker_symbol }}</h2>
+                    <p class="full-company-name">{{ stock.company_name }}</p>
+                    <p class="stock-price">{{ stock.current_price | currency:'USD':'symbol':'1.2-2' }}</p>
+                    <button (click)="draftStock(stock)" class="draft-button">Draft</button>
+                </div>
+            </div>
+
         </div>
     </div>
 </section>
