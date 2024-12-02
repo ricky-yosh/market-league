@@ -9,6 +9,7 @@ import { Stock } from '../../models/stock.model';
 import { Portfolio } from '../../models/portfolio.model';
 import { Trade } from '../../models/trade.model';
 import { devLog } from '../../../environments/development/devlog';
+import { LeaguePortfolio } from '../../models/league-portfolio';
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +24,9 @@ export class LeagueService {
   private removeLeagueUrl = `${this.baseUrl}/api/leagues/remove-league`;
   private createTradeUrl = `${this.baseUrl}/api/trades/create-trade`;
   private confirmTradeUrl = `${this.baseUrl}/api/trades/confirm-trade`;
-
+  private getLeaguePortfolioInfoUrl = `${this.baseUrl}/api/league-portfolio/get-league-portfolio-info`;
+  private draftStockUrl = `${this.baseUrl}/api/league-portfolio/draft-stock`;
+  
   // BehaviorSubject for managing the selected league
   private selectedLeagueSource = new BehaviorSubject<League | null>(this.getStoredLeague());
   selectedLeague$ = this.selectedLeagueSource.asObservable();
@@ -44,8 +47,13 @@ export class LeagueService {
 
   // Method to fetch the user's portfolio for a specific league
   getUserPortfolio(userId: number, leagueId: number): Observable<Portfolio> {
+    const payload = {
+      user_id: userId,
+      league_id: leagueId
+    }
+    devLog("Payload: ", payload)
     // Send a POST request with the user ID and league ID as the request payload
-    return this.http.post<Portfolio>(this.findUserPortfolioUrl, { user_id: userId, league_id: leagueId });
+    return this.http.post<Portfolio>(this.findUserPortfolioUrl, payload);
   }
 
   // Method to set the selected league
@@ -126,6 +134,26 @@ export class LeagueService {
 
     devLog("Payload: ", payload)
     return this.http.post<any>(this.confirmTradeUrl, payload); // Send POST request to create a trade
+  }
+
+  getLeaguePortfolioInfo(leagueId: number): Observable<LeaguePortfolio> {
+    const payload = {
+      league_id: leagueId
+    }
+
+    devLog("Payload: ", payload)
+    return this.http.post<LeaguePortfolio>(this.getLeaguePortfolioInfoUrl, payload);
+  }
+
+  draftStock(leagueId: number, userId: number, stockId: number): Observable<any> {
+    const payload = {
+      league_id: leagueId,
+      user_id: userId,
+      stock_id: stockId
+    }
+
+    devLog("Payload: ", payload)
+    return this.http.post<any>(this.draftStockUrl, payload);
   }
 
 }

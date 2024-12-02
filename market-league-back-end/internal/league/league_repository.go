@@ -108,6 +108,11 @@ func (r *LeagueRepository) RemoveTradesByLeagueID(tx *gorm.DB, leagueID uint) er
 	return tx.Where("league_id = ?", leagueID).Delete(&models.Trade{}).Error
 }
 
+// RemoveLeaguePortfolioByLeagueID removes league portfolios for a specific league
+func (r *LeagueRepository) RemoveLeaguePortfolioByLeagueID(tx *gorm.DB, leagueID uint) error {
+	return tx.Exec("DELETE FROM league_portfolios WHERE league_id = ?", leagueID).Error
+}
+
 // RemoveUserLeaguesByLeagueID removes user-league associations for a league
 func (r *LeagueRepository) RemoveUserLeaguesByLeagueID(tx *gorm.DB, leagueID uint) error {
 	return tx.Exec("DELETE FROM user_leagues WHERE league_id = ?", leagueID).Error

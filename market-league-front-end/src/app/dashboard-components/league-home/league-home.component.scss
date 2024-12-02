@@ -108,3 +108,12 @@ h2 {
     justify-content: space-between;
     align-items: center;
 }
+
+.stock-row {
+    display: flex;
+    justify-content: space-between;
+}
+
+.stock-current-price {
+    padding-right: 1rem;
+}

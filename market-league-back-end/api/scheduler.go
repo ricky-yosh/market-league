@@ -37,29 +37,29 @@ func (s *Scheduler) StartDailyTask() {
 
 			// need to get from DB
 			companies, err := s.stockRepo.GetAllStocks()
-            // log.Println(len(companies))
-            firstElement := companies[0]
-            log.Println("First element:", firstElement)
-    
+			// log.Println(len(companies))
+			firstElement := companies[0]
+			log.Println("First element:", firstElement)
+
 			if err != nil {
 				log.Printf("Error with GetAllStocks call: %v", err)
 			}
-            
+
 			// Max 30 API/sc
 			for _, company := range companies {
-                log.Println(company.TickerSymbol)
+				log.Println(company.TickerSymbol)
 				quote, err := services.GetTestStock(company.TickerSymbol)
 				if err != nil {
 					log.Printf("Error fetching stock data: %v", err)
 				} else {
 					// log.Printf("Fetched stock data: %s: %f", company.TickerSymbol, *quote.C)
-                    
+
 					err := s.StockService.UpdateStockPrice(company.ID, float64(*quote.C), &now)
 					if err != nil {
-					    log.Printf("Failed to update stock price for company %s with quote %f: %v", company.TickerSymbol, *quote.C, err)
+						log.Printf("Failed to update stock price for company %s with quote %f: %v", company.TickerSymbol, *quote.C, err)
 					}
 				}
-				time.Sleep(1 * time.Second)
+				time.Sleep(2 * time.Second)
 			}
 			// Calculate time for the next execution
 			now = time.Now().In(location)
