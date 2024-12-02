@@ -7,7 +7,7 @@ import { VerifyUserService } from '../../user-verification/verify-user.service';
 import { League } from '../../models/league.model';
 import { devLog } from '../../../environments/development/devlog';
 import { Stock } from '../../models/stock.model';
-import { EMPTY, Observable, catchError, of, tap } from 'rxjs';
+import { EMPTY, Observable, catchError, map, of, tap } from 'rxjs';
 import { Trade } from '../../models/trade.model';
 import { guard } from '../../utils/guard';
 
@@ -166,12 +166,13 @@ export class LeagueTradesComponent {
   // Load the user's trades for a specific league
   private loadUserTrades(userId: number, leagueId: number | null): Observable<Trade[]> {
     guard(leagueId != null, "LeagueId is Null");
-
+  
     const receivingTrade: boolean = true;
     const sendingTrade: boolean = false;
     return this.leagueService.getTrades(userId, leagueId, receivingTrade, sendingTrade).pipe(
-      tap((response) => {
-        devLog('User trades fetched successfully:', response);
+      map((trades: Trade[]) => trades.filter(trade => trade.status === "pending")), // Filter the trades
+      tap((filteredTrades) => {
+        devLog('Pending user trades fetched successfully:', filteredTrades);
       }),
       catchError((error) => {
         console.error('Failed to fetch user trades:', error);
@@ -179,6 +180,7 @@ export class LeagueTradesComponent {
       })
     );
   }
+  
 
   confirmTrade(tradeId: number): void {
     let currentUserId = this.currentUser?.id
