@@ -26,10 +26,10 @@ func (s *Scheduler) StartDailyTask() {
 			}
 
 			now := time.Now().In(location)
-			nextRun := time.Date(now.Year(), now.Month(), now.Day(), 18, 0, 0, 0, now.Location()) // Set to 9:31 AM in New York
+			nextRun := time.Date(now.Year(), now.Month(), now.Day(), 21, 10, 0, 0, now.Location()) // Set to 9:31 AM in New York
 
 			if now.After(nextRun) {
-				nextRun = nextRun.Add(24 * time.Hour)
+				nextRun = nextRun.Add(5 * time.Minute)
 			}
 
 			// Wait until the next scheduled time
@@ -59,11 +59,11 @@ func (s *Scheduler) StartDailyTask() {
 					    log.Printf("Failed to update stock price for company %s with quote %f: %v", company.TickerSymbol, *quote.C, err)
 					}
 				}
-				time.Sleep(40 * time.Millisecond)
+				time.Sleep(1 * time.Second)
 			}
 			// Calculate time for the next execution
 			now = time.Now().In(location)
-			nextRun = time.Date(now.Year(), now.Month(), now.Day(), 18, 0, 0, 0, location).Add(24 * time.Hour)
+			nextRun = time.Date(now.Year(), now.Month(), now.Day(), 21, 10, 0, 0, location).Add(5 * time.Minute)
 			time.Sleep(time.Until(nextRun))
 		}
 	}()
