@@ -18,53 +18,59 @@ type Scheduler struct {
 
 func (s *Scheduler) StartDailyTask() {
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Scheduler recovered from panic: %v", r)
+			}
+		}()
+
 		for {
+			// Load the timezone
 			location, err := time.LoadLocation("America/Chicago")
 			if err != nil {
 				log.Printf("Error loading time location: %v", err)
 				return
 			}
 
+			// Get the current time
 			now := time.Now().In(location)
-			nextRun := time.Date(now.Year(), now.Month(), now.Day(), 21, 10, 0, 0, now.Location()) // Set to 9:31 AM in New York
 
-			if now.After(nextRun) {
-				nextRun = nextRun.Add(5 * time.Minute)
-			}
+			// Calculate the next run time (rounded to the next 5-minute interval)
+			nextRun := now.Truncate(5 * time.Minute).Add(5 * time.Minute)
+
+			log.Printf("Current time: %s, Next run at: %s", now.Format("15:04:05"), nextRun.Format("15:04:05"))
 
 			// Wait until the next scheduled time
 			time.Sleep(time.Until(nextRun))
 
-			// need to get from DB
+			// Fetch companies from the database
 			companies, err := s.stockRepo.GetAllStocks()
-			// log.Println(len(companies))
-			firstElement := companies[0]
-			log.Println("First element:", firstElement)
-
 			if err != nil {
-				log.Printf("Error with GetAllStocks call: %v", err)
+				log.Printf("Error fetching stocks from database: %v", err)
+				continue
 			}
 
-			// Max 30 API/sc
+			log.Printf("Total companies to process: %d", len(companies))
+
+			// Process each company
 			for _, company := range companies {
-				log.Println(company.TickerSymbol)
 				quote, err := services.GetTestStock(company.TickerSymbol)
 				if err != nil {
-					log.Printf("Error fetching stock data: %v", err)
-				} else {
-					// log.Printf("Fetched stock data: %s: %f", company.TickerSymbol, *quote.C)
-
-					err := s.StockService.UpdateStockPrice(company.ID, float64(*quote.C), &now)
-					if err != nil {
-						log.Printf("Failed to update stock price for company %s with quote %f: %v", company.TickerSymbol, *quote.C, err)
-					}
+					log.Printf("Error fetching stock data for %s: %v", company.TickerSymbol, err)
+					continue
 				}
-				time.Sleep(2 * time.Second)
+
+				log.Printf("Fetched stock data for %s: Current Price: %.2f", company.TickerSymbol, *quote.C)
+
+				// Update stock price in the database
+				updated_time := time.Now().In(location)
+				err = s.StockService.UpdateStockPrice(company.ID, float64(*quote.C), &updated_time)
+				if err != nil {
+					log.Printf("Failed to update stock price for %s: %v", company.TickerSymbol, err)
+				}
 			}
-			// Calculate time for the next execution
-			now = time.Now().In(location)
-			nextRun = time.Date(now.Year(), now.Month(), now.Day(), 21, 10, 0, 0, location).Add(5 * time.Minute)
-			time.Sleep(time.Until(nextRun))
+
+			log.Printf("Task completed. Waiting for the next interval.")
 		}
 	}()
 }
