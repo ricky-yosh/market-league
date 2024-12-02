@@ -175,9 +175,8 @@ type GetStockInfoRequest struct {
 }
 
 type GetStockInfoResponse struct {
-	Success bool      `json:"success"`
-	Message string    `json:"message,omitempty"`
-	Stock   StockInfo `json:"stock,omitempty"`
+	Success bool   `json:"success"`
+	Message string `json:"message,omitempty"`
 }
 
 type StockInfo struct {
@@ -232,8 +231,5 @@ func (h *StockHandler) GetStockInfo(c *gin.Context) {
 		}(stock.PriceHistories),
 	}
 
-	c.JSON(http.StatusOK, GetStockInfoResponse{
-		Success: true,
-		Stock:   stockInfo,
-	})
+	c.JSON(http.StatusOK, stockInfo)
 }

@@ -1,13 +1,14 @@
 <section class="settings">
     <div class="centering-container flex-column">
         <div class="h1-container">
-            <h1>
-                Settings
-            </h1>
+            <h1>{{ selectedStock?.ticker_symbol ? selectedStock?.ticker_symbol : 'Select a Stock' }}</h1>
         </div>
 
         <div class="container">
-            <p>Container</p>
+            <div class="flex-row">
+                <h2>{{ selectedStock?.company_name ? selectedStock?.company_name : 'Select a Stock' }}</h2>
+                <button (click)="returnToDraft()" class="return-to-draft-button">Return to Draft</button>
+            </div>
         </div>
     </div>
 </section>
