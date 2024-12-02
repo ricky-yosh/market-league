@@ -1,6 +1,6 @@
-# Database Diagram v2.0
+# Database Diagram v3.1
 
-title: "Database Diagram v2.0" {
+title: "Database Diagram v3.1" {
   shape: text
   near: top-center
   style: {
@@ -19,18 +19,20 @@ Leagues
 Trades
 Portfolios
 User_Leagues
-Leaderboards
 Trade_Player_1_Stocks
 Trade_Player_2_Stocks
+PriceHistory
+League_Portfolio
+League_Portfolio_Stocks
 
 Users: {
   shape: sql_table
 
   id: int {constraint: primary_key}
   username: varchar
-  password: varchar
   email: varchar
-  balance: numeric
+  password: varchar
+  leagues: jsonb
 }
 
 Stocks: {
@@ -40,7 +42,16 @@ Stocks: {
   ticker_symbol: text
   company_name: text
   current_price: numeric
-  price_history: jsonb
+  price_histories: jsonb
+}
+
+PriceHistory: {
+  shape: sql_table
+
+  id: int {constraint: primary_key}
+  stock_id: int {constraint: foreign_key}
+  price: numeric
+  timestamp: timestamp
 }
 
 Portfolios: {
@@ -49,15 +60,9 @@ Portfolios: {
   id: int {constraint: primary_key}
   user_id: int {constraint: foreign_key}
   league_id: int {constraint: foreign_key}
+  stocks: jsonb
   created_at: timestamp
   total_value: numeric
-}
-
-Portfolio_Stocks: {
-  shape: sql_table
-
-  portfolio_id: int {constraint: foreign_key}
-  stock_id: int {constraint: foreign_key}
 }
 
 Trades: {
@@ -65,14 +70,35 @@ Trades: {
 
   id: int {constraint: primary_key}
   league_id: int {constraint: foreign_key}
-  player1_id: int {constraint: foreign_key}
-  player2_id: int {constraint: foreign_key}
-  player1_portfolio_id: int {constraint: foreign_key}
-  player2_portfolio_id: int {constraint: foreign_key}
-  player1_confirmed: int {constraint: foreign_key}
-  player2_confirmed: int {constraint: foreign_key}
+  user1_id: int {constraint: foreign_key}
+  user2_id: int {constraint: foreign_key}
+  portfolio1_id: int {constraint: foreign_key}
+  portfolio2_id: int {constraint: foreign_key}
+  stocks1: jsonb
+  stocks2: jsonb
+  user1_confirmed: boolean
+  user2_confirmed: boolean
+  status: varchar
   created_at: timestamp
-  confirmed_at: timestamp
+  updated_at: timestamp
+}
+
+Leagues: {
+  shape: sql_table
+
+  id: int {constraint: primary_key}
+  league_name: varchar
+  start_date: date
+  end_date: date
+}
+
+League_Portfolio: {
+  shape: sql_table
+
+  id: int {constraint: primary_key}
+  league_id: int {constraint: foreign_key}
+  stocks: jsonb
+  created_at: timestamp
 }
 
 Trade_Player_1_Stocks: {
@@ -89,29 +115,25 @@ Trade_Player_2_Stocks: {
   stock_id: int {constraint: foreign_key}
 }
 
-Leagues: {
+Portfolio_Stocks: {
   shape: sql_table
 
-  id: int {constraint: primary_key}
-  league_name: varchar
-  start_date: date
-  end_date: date
+  stock_id: int {constraint: foreign_key}
+  portfolio_id: int {constraint: foreign_key}
 }
 
-User_Leagues: {
+User_leagues: {
   shape: sql_table
 
-  user_id: int {constraint: foreign_key}
-  league_id: int {constraint: foreign_key}
+  stock_id: int {constraint: foreign_key}
+  portfolio_id: int {constraint: foreign_key}
 }
 
-Leaderboards: {
+League_Portfolio_Stocks: {
   shape: sql_table
 
-  id: int {constraint: primary_key}
-  league_id: int {constraint: foreign_key}
-  rankings: jsonb
-  last_updated: timestamp
+  league_portfolio_id: int {constraint: foreign_key}
+  stock_id: int {constraint: foreign_key}
 }
 
 # ####################
@@ -119,13 +141,15 @@ Leaderboards: {
 # ####################
 
 # Define relationships between tables
-Stocks -> Portfolio_Stocks: "One-to-Many"
-Stocks -> Trades: "One-to-Many"
+Stocks -> Portfolio_Stocks: "Many-to-Many"
+Stocks -> Trades: "Many-to-Many"
 Users -> Trades: "One-to-Many"
-Trades -> Trade_Player_1_Stocks: ""
-Trades -> Trade_Player_2_Stocks: ""
+Trades -> Trade_Player_1_Stocks: "One-to-Many"
+Trades -> Trade_Player_2_Stocks: "One-to-Many"
 Users -> Portfolios: "One-to-Many"
 Users -> User_Leagues: "Many-to-Many"
 Leagues -> User_Leagues: "Many-to-Many"
-Leagues -> Leaderboards: "One-to-One"
 Portfolios -> Portfolio_Stocks: "One-to-Many"
+Leagues -> League_Portfolio: "One-to-Many"
+Stocks -> PriceHistory: "One-to-Many"
+League_Portfolio -> League_Portfolio_Stocks: "One-to-Many"

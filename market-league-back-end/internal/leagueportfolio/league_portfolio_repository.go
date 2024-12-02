@@ -42,9 +42,6 @@ func (r *LeaguePortfolioRepository) AddStocksToLeaguePortfolio(portfolioID uint,
 		return err
 	}
 
-	fmt.Println("Stocks: ", stocks)
-	fmt.Println("Portfolio: ", stocks)
-
 	// Add stocks one by one to avoid bulk association issues
 	for _, stock := range stocks {
 		if err := r.db.Model(&portfolio).Association("Stocks").Append(&stock); err != nil {
