@@ -26,10 +26,10 @@ func (s *Scheduler) StartDailyTask() {
 			}
 
 			now := time.Now().In(location)
-			nextRun := time.Date(now.Year(), now.Month(), now.Day(), 10, 0, 0, 0, now.Location()) // Set to 9:31 AM in New York
+			nextRun := time.Date(now.Year(), now.Month(), now.Day(), 21, 10, 0, 0, now.Location()) // Set to 9:31 AM in New York
 
 			if now.After(nextRun) {
-				nextRun = nextRun.Add(2 * time.Minute)
+				nextRun = nextRun.Add(5 * time.Minute)
 			}
 
 			// Wait until the next scheduled time
@@ -63,7 +63,7 @@ func (s *Scheduler) StartDailyTask() {
 			}
 			// Calculate time for the next execution
 			now = time.Now().In(location)
-			nextRun = time.Date(now.Year(), now.Month(), now.Day(), 18, 0, 0, 0, location).Add(24 * time.Hour)
+			nextRun = time.Date(now.Year(), now.Month(), now.Day(), 21, 10, 0, 0, location).Add(5 * time.Minute)
 			time.Sleep(time.Until(nextRun))
 		}
 	}()
