@@ -16,12 +16,15 @@ export class StockService {
 
   constructor(private http: HttpClient) {}
 
+  private readonly selected_stock = '';
+
   setStock(stock: Stock): void {
-    this.selectedStock = stock;
+    localStorage.setItem(this.selected_stock, JSON.stringify(stock));
   }
 
-  getStock(): Stock | null {
-    return this.selectedStock;
+  getStock(): Stock {
+    const stockData = localStorage.getItem(this.selected_stock);
+    return stockData ? JSON.parse(stockData) : null;
   }
 
   getStockDetails(stockId: number): Observable<StockWithHistory> {
