@@ -21,6 +21,9 @@ export class StockChartComponent {
 
       const prices = this.stockData.price_histories.map((history: any) => history.price);
 
+      const minPrice = Math.min(...prices); // Find the lowest price
+      const adjustedMin = minPrice / 2; // Set the Y-axis minimum to half of the lowest price
+
       this.chartOptions = {
         xAxis: {
           type: 'category',
@@ -32,7 +35,10 @@ export class StockChartComponent {
         yAxis: {
           type: 'value',
           axisLine: { lineStyle: { color: '#ccc' } },
-          axisLabel: { formatter: '${value}' },
+          axisLabel: {
+            formatter: (value: number) => `$${value.toFixed(2)}`, // Format to 2 decimal places
+          },
+          min: adjustedMin, // Apply the adjusted minimum value
         },
         grid: {
           left: '5%',
@@ -47,18 +53,26 @@ export class StockChartComponent {
             smooth: false, // Disable smooth lines to make them jagged
             lineStyle: {
               width: 2,
-              color: '#4CAF50',
+              color: '#4CAF50', // Green line
             },
             itemStyle: {
-              color: '#4CAF50',
+              color: '#4CAF50', // Green data points
             },
             areaStyle: {
-              color: 'rgba(76, 175, 80, 0.2)',
+              color: 'rgba(76, 175, 80, 0.2)', // Greenish transparent area
             },
           },
         ],
         tooltip: {
           trigger: 'axis',
+          formatter: (params: any) => {
+            const point = params[0];
+            return `<div>${point.axisValue}</div>
+                    <strong>$${point.data.toFixed(2)}</strong>`;
+          }, // Bold styling with green dot and dollar formatting
+          textStyle: {
+            fontSize: 12,
+          },
         },
         dataZoom: [
           {
@@ -86,6 +100,7 @@ export class StockChartComponent {
           top: 'bottom',
         },
       };
+      
       
     }
   }
