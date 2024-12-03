@@ -10,8 +10,8 @@ import { NgxEchartsModule } from 'ngx-echarts';
 })
 export class StockChartComponent {
   @Input() stockData: any;
-
   chartOptions: any;
+  echartsInstance: any;
 
   ngOnChanges(): void {
     if (this.stockData?.price_histories) {
@@ -20,9 +20,6 @@ export class StockChartComponent {
       );
 
       const prices = this.stockData.price_histories.map((history: any) => history.price);
-
-      const minPrice = Math.min(...prices); // Find the lowest price
-      const adjustedMin = minPrice / 2; // Set the Y-axis minimum to half of the lowest price
 
       this.chartOptions = {
         xAxis: {
@@ -34,11 +31,12 @@ export class StockChartComponent {
         },
         yAxis: {
           type: 'value',
+          scale: true, // Ensures the axis doesn't include zero automatically
           axisLine: { lineStyle: { color: '#ccc' } },
           axisLabel: {
-            formatter: (value: number) => `$${value.toFixed(2)}`, // Format to 2 decimal places
+            formatter: (value: number) => `$${value.toFixed(2)}`,
           },
-          min: adjustedMin, // Apply the adjusted minimum value
+          // Remove min: 'dataMin' to prevent automatic adjustment
         },
         grid: {
           left: '5%',
@@ -48,18 +46,19 @@ export class StockChartComponent {
         },
         series: [
           {
+            name: this.stockData.company_name, // Added name property
             data: prices,
             type: 'line',
-            smooth: false, // Disable smooth lines to make them jagged
+            smooth: false,
             lineStyle: {
               width: 2,
-              color: '#4CAF50', // Green line
+              color: '#4CAF50',
             },
             itemStyle: {
-              color: '#4CAF50', // Green data points
+              color: '#4CAF50',
             },
             areaStyle: {
-              color: 'rgba(76, 175, 80, 0.2)', // Greenish transparent area
+              color: 'rgba(76, 175, 80, 0.2)',
             },
           },
         ],
@@ -67,9 +66,8 @@ export class StockChartComponent {
           trigger: 'axis',
           formatter: (params: any) => {
             const point = params[0];
-            return `<div>${point.axisValue}</div>
-                    <strong>$${point.data.toFixed(2)}</strong>`;
-          }, // Bold styling with green dot and dollar formatting
+            return `<div>${point.axisValue}</div><strong>$${point.data.toFixed(2)}</strong>`;
+          },
           textStyle: {
             fontSize: 12,
           },
@@ -93,15 +91,53 @@ export class StockChartComponent {
             fontSize: 18,
             fontWeight: 'bold',
           },
-        },
-        legend: {
-          show: true,
-          data: [this.stockData.company_name],
-          top: 'bottom',
-        },
+        }
       };
-      
-      
+    }
+  }
+
+  onChartInit(ec: any): void {
+    this.echartsInstance = ec;
+    this.echartsInstance.on('dataZoom', this.handleDataZoom.bind(this));
+  }
+
+  handleDataZoom(params: any): void {
+    if (params.batch && params.batch.length > 0) {
+      const { start, end } = params.batch[0];
+      this.updateYAxisMin(start, end);
+    }
+  }
+
+  updateYAxisMin(startPercent: number, endPercent: number): void {
+    if (this.stockData?.price_histories) {
+      const prices = this.stockData.price_histories.map((history: any) => history.price);
+      const totalPoints = prices.length;
+
+      const startIndex = Math.floor((startPercent / 100) * totalPoints);
+      const endIndex = Math.ceil((endPercent / 100) * totalPoints);
+
+      const visiblePrices = prices.slice(startIndex, endIndex);
+
+      if (visiblePrices.length > 0) {
+        const minVisiblePrice = Math.min(...visiblePrices);
+        const adjustedMin = minVisiblePrice / 2;
+
+        // Ensure adjustedMin is not negative
+        const finalMin = adjustedMin < 0 ? 0 : adjustedMin;
+
+        // Update the entire yAxis configuration
+        this.echartsInstance.setOption({
+          yAxis: {
+            type: 'value',
+            scale: true,
+            axisLine: { lineStyle: { color: '#ccc' } },
+            axisLabel: {
+              formatter: (value: number) => `$${value.toFixed(2)}`,
+            },
+            min: finalMin,
+          },
+        });
+      }
     }
   }
 }
