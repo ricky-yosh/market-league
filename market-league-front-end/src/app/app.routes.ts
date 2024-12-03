@@ -12,6 +12,7 @@ import { CreateLeagueComponent } from './dashboard-components/create-league/crea
 import { RemoveLeagueComponent } from './dashboard-components/remove-league/remove-league.component';
 import { SettingsComponent } from './dashboard-components/settings/settings.component';
 import { LeagueDraftComponent } from './dashboard-components/league-draft/league-draft.component';
+import { StockDetailsComponent } from './dashboard-components/stock-details/stock-details.component';
 
 export const routes: Routes = [
     { path: '', component: HomeComponent },
@@ -30,6 +31,7 @@ export const routes: Routes = [
             { path: 'create-league', component: CreateLeagueComponent },
             { path: 'remove-league', component: RemoveLeagueComponent },
             { path: 'settings', component: SettingsComponent },
+            { path: 'stock-details', component: StockDetailsComponent },
         ]
     },
 ];
