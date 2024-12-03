@@ -17,6 +17,7 @@ COPY --from=builder /app/main .
 # Downloads
 RUN apk add --no-cache postgresql-client
 RUN apk add --no-cache bash
+RUN apk add --no-cache tzdata
 
 COPY wait-for-postgres.sh /app/wait-for-postgres.sh
 RUN chmod +x /app/wait-for-postgres.sh

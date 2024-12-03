@@ -10,6 +10,8 @@ import { User } from '../../models/user.model';
 import { devLog } from '../../../environments/development/devlog';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
 import { Portfolio } from '../../models/portfolio.model';
+import { Router } from '@angular/router';
+import { StockService } from '../services/stock.service';
 
 @Component({
   selector: 'app-league-draft',
@@ -26,8 +28,10 @@ export class LeagueDraftComponent {
   userPortfolioStocks: Stock[] = []
 
   constructor(
+    private router: Router,
     private leagueService: LeagueService,
     private userService: VerifyUserService,
+    private stockService: StockService,
   ) {}
 
   ngOnInit(): void {
@@ -96,6 +100,11 @@ export class LeagueDraftComponent {
         console.error('Error fetching league portfolio info:', error);
       }
     });
+  }
+
+  stockDetails(stock: Stock) {
+    this.stockService.setStock(stock);
+    this.router.navigate(['dashboard/stock-details']);
   }
 
 }

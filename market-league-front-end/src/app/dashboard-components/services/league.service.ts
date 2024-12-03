@@ -44,7 +44,7 @@ export class LeagueService {
       map((league: League) => league.users || []) // Ensure 'users' is not null or undefined, return empty array if it is
     );
   }
-
+  
   // Method to fetch the user's portfolio for a specific league
   getUserPortfolio(userId: number, leagueId: number): Observable<Portfolio> {
     const payload = {
@@ -58,7 +58,7 @@ export class LeagueService {
 
   // Method to set the selected league
   setSelectedLeague(league: League | null): void {
-    console.log(league);
+    devLog("Selected League: ", league);
     this.selectedLeagueSource.next(league); // Set the selected league as the full League object
     if (league) {
       // Store the entire league object as a JSON string in localStorage
