@@ -4,11 +4,12 @@ import { Stock } from '../../models/stock.model';
 import { StockService } from '../services/stock.service';
 import { StockWithHistory } from '../../models/stock-with-history';
 import { devLog } from '../../../environments/development/devlog';
+import { StockChartComponent } from './stock-chart/stock-chart.component';
 
 @Component({
   selector: 'app-stock-details',
   standalone: true,
-  imports: [],
+  imports: [StockChartComponent],
   templateUrl: './stock-details.component.html',
   styleUrl: './stock-details.component.scss'
 })
