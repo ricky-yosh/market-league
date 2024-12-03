@@ -154,6 +154,11 @@ func (s *LeagueService) RemoveLeague(leagueID uint) error {
 		return err
 	}
 
+	if err := s.repo.RemoveLeaguePortfolioStocksByLeagueID(tx, leagueID); err != nil {
+		tx.Rollback()
+		return err
+	}
+
 	if err := s.repo.RemoveLeaguePortfolioByLeagueID(tx, leagueID); err != nil {
 		tx.Rollback()
 		return err
