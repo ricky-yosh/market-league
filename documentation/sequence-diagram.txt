@@ -1,0 +1,75 @@
+---
+config:
+  theme: mc
+title: Sequence Diagram v3.0
+---
+sequenceDiagram
+    participant User
+    participant Player
+    participant League
+    participant Stocks
+    participant Portfolio
+    participant Charts
+    participant Trade
+    participant Finnhub_API as "Finnhub API"
+    User->>Player: login
+    activate Player
+    User->>Player: sign up
+    Player->>Player: create_player()
+    rect rgba(220, 138, 120, 0.4)
+    note right of Stocks: Stock Market Loop
+        Stocks->>Finnhub_API: get_stock_info(stock)
+        activate Stocks
+        Finnhub_API-->>Stocks: stock_info
+    end
+    rect rgba(221, 120, 120, 0.3)
+    note right of Player: Creating League
+        activate League
+        Player->>League: create_league(player_id, league_id)
+        League->>League: db.create_league()
+        
+        League->>Stocks: display_stocks(stock_id)
+
+        Stocks->>Charts: display_charts(stock_id)
+        activate Charts
+        Charts-->>Stocks: stock_charts
+        deactivate Charts
+
+        Stocks-->>League: stock_info
+    end
+    rect rgba(234, 118, 203, 0.2)
+    note right of Player: Selecting Stocks
+        Player->>League: select_stock(stock_id)
+        League->>Stocks: get_stock_info(stock_id)
+        Stocks->>Portfolio: update_portfolio
+        activate Portfolio
+        Portfolio->>Stocks: update_stock_owner(player_id, stock_id)
+        Stocks->>League: update league
+        League->>Player: reflect changes
+    end
+    rect rgba(136, 57, 239, 0.2)
+    note right of Player: Trading Stocks
+        Player->>League: trade(user, [stock_id])
+        League->>Stocks: get_stock_info
+        
+        Stocks->>Trade: create_trade
+        activate Trade
+        Trade-->>Stocks: trade_information
+        Stocks-->>League: confirm trade created
+        League->>Player: request trade confirmation
+        Player->>League: confirm_trade(trade_id)
+        League->>Trade: confirm_second_player()
+        Trade->>Trade: check both players are confirmed
+        Trade->>Portfolio: swap stocks
+        deactivate Trade
+        Portfolio->>Stocks: change_ownership(player_id)
+        deactivate Portfolio
+        Stocks-->>League: confirm_change(stock_id)
+        deactivate Stocks
+        League->>Player: display_trades()
+    end
+    Player->>League: close_league()
+    deactivate League
+    League->>Player: show closed league
+    Player->>User: logout
+    deactivate Player

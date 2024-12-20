@@ -1,0 +1,70 @@
+---
+config:
+  theme: mc
+title: Class Diagram v3.0
+---
+classDiagram
+    class User {
+        + int userID
+        + string username
+        + string password
+        + string email
+        + list<number> leagueIDs
+        + number portfolioID
+        + viewPortfolio() Portfolio
+        + tradeStocks(stock Stock, action string) Trade
+        + joinLeague(league League) void
+    }
+    class Stock {
+        + int stockID
+        + string tickerSymbol
+        + string companyName
+        + float currentPrice
+        + list<float> priceHistory
+        + getPrice() float
+        + getPriceHistory() list<float>
+    }
+    class Portfolio {
+        + int portfolioID
+        + int userID
+        + list<Stock> stocksOwned
+        + float totalValue
+        + addStock(stock Stock) void
+        + removeStock(stock Stock) void
+        + getPortfolioValue() float
+    }
+    class Trade {
+        + int tradeID
+        + int userID
+        + int stockID
+        + string tradeType
+        + int quantity
+        + float tradePrice
+        + datetime tradeDate
+        + executeTrade() void
+        + calculateTradeValue() float
+    }
+    class League {
+        + int leagueID
+        + string leagueName
+        + date startDate
+        + date endDate
+        + list<User> users
+        + createLeague() void
+        + joinLeague(user User) void
+        + viewLeaderboard() Leaderboard
+    }
+    class Leaderboard {
+        + int leaderboardID
+        + int leagueID
+        + dict<User, int> rankings
+        + datetime lastUpdated
+        + updateRankings() void
+        + viewLeaderboard() dict<User, int>
+    }
+    User "1..*" --> "1..*" Portfolio
+    Portfolio "1..*" --> "1..*" Stock
+    User "1..*" --> "1..*" Trade
+    Stock "1..*" --> "1..*" Trade
+    User "0..*" --> "0..*" League
+    League "1..1" --> "1..1" Leaderboard
