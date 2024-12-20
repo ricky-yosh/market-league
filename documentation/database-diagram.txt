@@ -1,0 +1,93 @@
+---
+config:
+  theme: mc
+title: Database Diagram v3.2
+---
+erDiagram
+    USERS {
+        int id PK
+        string username
+        string email
+        string password
+        jsonb leagues
+    }
+    STOCKS {
+        int id PK
+        string ticker_symbol
+        string company_name
+        numeric current_price
+        jsonb price_histories
+    }
+    PRICEHISTORY {
+        int id PK
+        int stock_id FK
+        numeric price
+        timestamp timestamp
+    }
+    PORTFOLIOS {
+        int id PK
+        int user_id FK
+        int league_id FK
+        jsonb stocks
+        timestamp created_at
+        numeric total_value
+    }
+    TRADES {
+        int id PK
+        int league_id FK
+        int user1_id FK
+        int user2_id FK
+        int portfolio1_id FK
+        int portfolio2_id FK
+        jsonb stocks1
+        jsonb stocks2
+        boolean user1_confirmed
+        boolean user2_confirmed
+        string status
+        timestamp created_at
+        timestamp updated_at
+    }
+    LEAGUES {
+        int id PK
+        string league_name
+        date start_date
+        date end_date
+    }
+    LEAGUE_PORTFOLIO {
+        int id PK
+        int league_id FK
+        jsonb stocks
+        timestamp created_at
+    }
+    TRADE_PLAYER_1_STOCKS {
+        int trade_id FK
+        int stock_id FK
+    }
+    TRADE_PLAYER_2_STOCKS {
+        int trade_id FK
+        int stock_id FK
+    }
+    PORTFOLIO_STOCKS {
+        int stock_id FK
+        int portfolio_id FK
+    }
+    USER_LEAGUES {
+        int stock_id FK
+        int portfolio_id FK
+    }
+    LEAGUE_PORTFOLIO_STOCKS {
+        int league_portfolio_id FK
+        int stock_id FK
+    }
+    STOCKS ||--o{ PORTFOLIO_STOCKS : "Many-to-Many"
+    STOCKS ||--o{ TRADES : "Many-to-Many"
+    USERS ||--o{ TRADES : "One-to-Many"
+    TRADES ||--o{ TRADE_PLAYER_1_STOCKS : "One-to-Many"
+    TRADES ||--o{ TRADE_PLAYER_2_STOCKS : "One-to-Many"
+    USERS ||--o{ PORTFOLIOS : "One-to-Many"
+    USERS ||--o{ USER_LEAGUES : "Many-to-Many"
+    LEAGUES ||--o{ USER_LEAGUES : "Many-to-Many"
+    PORTFOLIOS ||--o{ PORTFOLIO_STOCKS : "One-to-Many"
+    LEAGUES ||--o{ LEAGUE_PORTFOLIO : "One-to-Many"
+    STOCKS ||--o{ PRICEHISTORY : "One-to-Many"
+    LEAGUE_PORTFOLIO ||--o{ LEAGUE_PORTFOLIO_STOCKS : "One-to-Many"
