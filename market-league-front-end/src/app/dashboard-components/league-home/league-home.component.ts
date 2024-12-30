@@ -11,6 +11,8 @@ import { EMPTY, Observable, catchError, map, of, switchMap, tap } from 'rxjs';
 import { Trade } from '../../models/trade.model';
 import { devLog } from '../../../environments/development/devlog';
 import { Router } from '@angular/router';
+import { PortfolioService } from '../services/portfolio.service';
+import { TradeService } from '../services/trade.service';
 
 @Component({
   selector: 'app-league-home',
@@ -29,6 +31,8 @@ export class LeagueHomeComponent implements OnInit {
 
   constructor(
     private leagueService: LeagueService,
+    private portfolioService: PortfolioService,
+    private tradeService: TradeService,
     private userService: VerifyUserService,
     private cd: ChangeDetectorRef,
     private router: Router
@@ -98,7 +102,7 @@ export class LeagueHomeComponent implements OnInit {
 
   // Load the user's portfolio for a specific league
   private loadUserPortfolio(userId: number, leagueId: number): Observable<Stock[]> {
-    return this.leagueService.getUserPortfolio(userId, leagueId).pipe(
+    return this.portfolioService.getUserPortfolio(userId, leagueId).pipe(
       map((response: Portfolio) => {
         devLog('User portfolio fetched successfully:', response.stocks);
         return response.stocks;
@@ -126,7 +130,7 @@ export class LeagueHomeComponent implements OnInit {
 
   // Load the user's trades for a specific league
   private loadUserTrades(userId: number, leagueId: number): Observable<Trade[]> {
-    return this.leagueService.getTrades(userId, leagueId).pipe(
+    return this.tradeService.getTrades(userId, leagueId).pipe(
       tap((response) => {
         devLog('User trades fetched successfully:', response);
       }),

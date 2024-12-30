@@ -7,9 +7,12 @@ import { VerifyUserService } from '../../user-verification/verify-user.service';
 import { League } from '../../models/league.model';
 import { devLog } from '../../../environments/development/devlog';
 import { Stock } from '../../models/stock.model';
-import { EMPTY, Observable, catchError, map, of, tap } from 'rxjs';
+import { Observable, catchError, map, of, tap } from 'rxjs';
 import { Trade } from '../../models/trade.model';
 import { guard } from '../../utils/guard';
+import { PortfolioService } from '../services/portfolio.service';
+import { TradeService } from '../services/trade.service';
+import { DraftService } from '../services/draft.service';
 
 @Component({
   selector: 'app-league-trades',
@@ -34,6 +37,8 @@ export class LeagueTradesComponent {
 
   constructor(
     private leagueService: LeagueService,
+    private portfolioService: PortfolioService,
+    private tradeService: TradeService,
     private userService: VerifyUserService
   ) {}
 
@@ -56,7 +61,7 @@ export class LeagueTradesComponent {
       stocks1_ids.length > 0 &&
       stocks2_ids.length > 0) {
       
-      this.leagueService.createTrade(league_id, user1_id, user2_id, stocks1_ids, stocks2_ids).subscribe(response => {
+      this.tradeService.createTrade(league_id, user1_id, user2_id, stocks1_ids, stocks2_ids).subscribe(response => {
         devLog('Trade successfully created:', response);
         alert('Trade successfully created!');
         this.confirmTrade(response.id);
@@ -97,7 +102,7 @@ export class LeagueTradesComponent {
     devLog("selectedUserId & selectedLeagueId: ", selectedUserId, selectedLeagueId);
     
     // Fetch user's portfolio for the selected league
-    this.leagueService.getUserPortfolio(selectedUserId, selectedLeagueId).subscribe(portfolio => {
+    this.portfolioService.getUserPortfolio(selectedUserId, selectedLeagueId).subscribe(portfolio => {
       devLog("selectedUserId's Portfolio: ", portfolio);
       this.selectedUserStocks = portfolio.stocks;
     });
@@ -149,7 +154,7 @@ export class LeagueTradesComponent {
     devLog("currentUserId & selectedLeagueId: ", currentUserId, selectedLeagueId);
     
     // Fetch user's portfolio for the selected league
-    this.leagueService.getUserPortfolio(currentUserId, selectedLeagueId).subscribe(portfolio => {
+    this.portfolioService.getUserPortfolio(currentUserId, selectedLeagueId).subscribe(portfolio => {
       devLog("currentUserId's Portfolio: ", portfolio);
       this.currentUsersStocks = portfolio.stocks;
       this.removeCurrentPlayerFromTradeList();
@@ -169,7 +174,7 @@ export class LeagueTradesComponent {
   
     const receivingTrade: boolean = true;
     const sendingTrade: boolean = false;
-    return this.leagueService.getTrades(userId, leagueId, receivingTrade, sendingTrade).pipe(
+    return this.tradeService.getTrades(userId, leagueId, receivingTrade, sendingTrade).pipe(
       map((trades: Trade[]) => trades.filter(trade => trade.status === "pending")), // Filter the trades
       tap((filteredTrades) => {
         devLog('Pending user trades fetched successfully:', filteredTrades);
@@ -187,7 +192,7 @@ export class LeagueTradesComponent {
     guard(tradeId != null, "tradeId is null");
     guard(currentUserId != null, "UserID is null!")
 
-    this.leagueService.confirmTradeForUser(tradeId, currentUserId).subscribe(response => {
+    this.tradeService.confirmTradeForUser(tradeId, currentUserId).subscribe(response => {
       devLog('Trade successfully confirmed:', response);
       alert('Trade successfully confirmed!');
     });

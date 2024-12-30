@@ -5,13 +5,15 @@ import { LeagueService } from '../services/league.service';
 import { LeaguePortfolio } from '../../models/league-portfolio';
 import { League } from '../../models/league.model';
 import { guard } from '../../utils/guard';
-import { catchError, EMPTY, map, Observable, of, tap } from 'rxjs';
+import { catchError, EMPTY, map} from 'rxjs';
 import { User } from '../../models/user.model';
 import { devLog } from '../../../environments/development/devlog';
 import { VerifyUserService } from '../../user-verification/verify-user.service';
 import { Portfolio } from '../../models/portfolio.model';
 import { Router } from '@angular/router';
 import { StockService } from '../services/stock.service';
+import { PortfolioService } from '../services/portfolio.service';
+import { DraftService } from '../services/draft.service';
 
 @Component({
   selector: 'app-league-draft',
@@ -30,6 +32,8 @@ export class LeagueDraftComponent {
   constructor(
     private router: Router,
     private leagueService: LeagueService,
+    private draftService: DraftService,
+    private portfolioService: PortfolioService,
     private userService: VerifyUserService,
     private stockService: StockService,
   ) {}
@@ -48,7 +52,7 @@ export class LeagueDraftComponent {
     guard(league != null, "LeagueId cannot be null!")
 
     const leagueId = league.id
-    this.leagueService.getLeaguePortfolioInfo(leagueId).subscribe({
+    this.draftService.getLeaguePortfolioInfo(leagueId).subscribe({
       next: (data: LeaguePortfolio) => {
         this.stocks = data.stocks || []; // Assuming 'stocks' is a property in the response
       },
@@ -74,7 +78,7 @@ export class LeagueDraftComponent {
 
   // Load the user's portfolio for a specific league
   private loadUserPortfolio(userId: number, leagueId: number): void {
-    this.leagueService.getUserPortfolio(userId, leagueId).pipe(
+    this.portfolioService.getUserPortfolio(userId, leagueId).pipe(
       map((response: Portfolio) => {
         devLog('User portfolio fetched successfully:', response);
         this.userPortfolio = response;
@@ -91,8 +95,8 @@ export class LeagueDraftComponent {
     guard(this.user != null, "User cannot be null!");
     guard(this.currentLeague != null, "User cannot be null!");
 
-    this.leagueService.draftStock(this.currentLeague.id, this.user.id, stock.id).subscribe({
-      next: (data: LeaguePortfolio) => {
+    this.draftService.draftStock(this.currentLeague.id, this.user.id, stock.id).subscribe({
+      next: () => {
         this.getLeaguePortfolioInfo(this.currentLeague)
         this.userPortfolioStocks.push(stock)
       },
