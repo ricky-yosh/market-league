@@ -15,13 +15,7 @@ import (
 )
 
 func RegisterRoutes(router *gin.Engine) {
-	// Test route
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Welcome to MarketLeague API!",
-		})
-	})
-
+	// Shared database instance
 	database := db.GetDB()
 
 	// Set up the authentication flow by initializing the repository, service, and handler layers
@@ -118,14 +112,5 @@ func RegisterRoutes(router *gin.Engine) {
 		stockRepo:    stockRepo,
 	}
 	scheduler.StartDailyTask()
-
-	// router.GET("/api/services/stock-api", func(c *gin.Context) {
-	// 	quote, err := services.GetTestStock()
-	// 	if err != nil {
-	// 		c.JSON(500, gin.H{"error": err.Error()})
-	// 		return
-	// 	}
-	// 	c.JSON(200, quote)
-	// })
 
 }
