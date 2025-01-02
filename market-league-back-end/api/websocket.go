@@ -18,7 +18,7 @@ import (
 
 // Handle Dependencies
 type WebSocketHandler struct {
-	portfolioHandler       *portfolio.PortfolioHandler
+	portfolioHandler       portfolio.PortfolioHandlerInterface
 	stockHandler           *stock.StockHandler
 	userHandler            *user.UserHandler
 	tradeHandler           *trade.TradeHandler
@@ -27,7 +27,7 @@ type WebSocketHandler struct {
 }
 
 func NewWebSocketHandler(
-	portfolioHandler *portfolio.PortfolioHandler,
+	portfolioHandler portfolio.PortfolioHandlerInterface,
 	stockHandler *stock.StockHandler,
 	userHandler *user.UserHandler,
 	tradeHandler *trade.TradeHandler,
