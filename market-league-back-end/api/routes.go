@@ -31,79 +31,49 @@ func RegisterRoutes(router *gin.Engine) {
 		authRoutes.GET("/user-from-token", authHandler.GetUserFromToken) // New endpoint to get user from JWT
 	}
 
-	// Portfolio routes
+	// * DEPENDENCIES *
+
+	// Initialize Portfolio Dependencies
 	portfolioRepo := portfolio.NewPortfolioRepository(database)
 	portfolioService := portfolio.NewPortfolioService(portfolioRepo)
 	portfolioHandler := portfolio.NewPortfolioHandler(portfolioService)
 
-	portfolioRoutes := router.Group("/api/portfolio")
-	{
-		portfolioRoutes.POST("/create-portfolio", portfolioHandler.CreatePortfolio)      // Create a portfolio
-		portfolioRoutes.POST("/portfolio-with-id", portfolioHandler.GetPortfolioWithID)  // Fetch a portfolio by ID
-		portfolioRoutes.POST("/league-portfolio", portfolioHandler.GetLeaguePortfolio)   // Fetch user's portfolio in a league
-		portfolioRoutes.POST("/add-stock", portfolioHandler.AddStockToPortfolio)         // Add a stock to a portfolio
-		portfolioRoutes.POST("/remove-stock", portfolioHandler.RemoveStockFromPortfolio) // Remove a stock from a portfolio
-	}
-
-	// Stocks routes
+	// Initialize Stock Dependencies
 	stockRepo := stock.NewStockRepository(database)
 	stockService := stock.NewStockService(stockRepo)
 	stockHandler := stock.NewStockHandler(stockService)
 
-	stockRoutes := router.Group("/api/stocks")
-	{
-		stockRoutes.POST("/create-stock", stockHandler.CreateStock)               // Create a new stock
-		stockRoutes.POST("/create-stocks", stockHandler.CreateMultipleStocks)     // Create multiple stocks
-		stockRoutes.POST("/get-stock-information", stockHandler.GetStockInfo)     // Get Stock information
-		stockRoutes.POST("/update-current-stock-price", stockHandler.UpdatePrice) // Update current stock and add it to history
-	}
-
+	// Initialize User Dependencies
 	userRepo := user.NewUserRepository(database)
 	userService := user.NewUserService(userRepo)
 	userHandler := user.NewUserHandler(userService)
 
-	userRoutes := router.Group("/api/users")
-	{
-		userRoutes.POST("/user-info", userHandler.GetUserByID)
-		userRoutes.POST("/user-leagues", userHandler.GetUserLeagues)
-		userRoutes.POST("/user-trades", userHandler.GetUserTrades)
-		userRoutes.POST("/user-portfolios", userHandler.GetUserPortfolios)
-	}
-
-	// Trades routes
+	// Initialize Trade Dependencies
 	tradeRepo := trade.NewTradeRepository(database)
 	tradeService := trade.NewTradeService(tradeRepo, stockRepo, portfolioRepo, userRepo)
 	tradeHandler := trade.NewTradeHandler(tradeService)
 
-	tradeRoutes := router.Group("/api/trades")
-	{
-		tradeRoutes.POST("/create-trade", tradeHandler.CreateTrade) // Create a new trade
-		tradeRoutes.POST("/confirm-trade", tradeHandler.ConfirmTrade)
-		tradeRoutes.POST("/get-trades", tradeHandler.GetTrades)
-	}
-
-	// League routes
+	// Initialize LeaguePortfolio Dependencies
 	leaguePortfolioRepository := league_portfolio.NewLeaguePortfolioRepository(database)
 	leaguePortfolioService := league_portfolio.NewLeaguePortfolioService(leaguePortfolioRepository, stockRepo, portfolioRepo)
 	leaguePortfolioHandler := league_portfolio.NewLeaguePortfolioHandler(leaguePortfolioService)
-	leaguePortfolioRoutes := router.Group("/api/league-portfolio")
-	{
-		leaguePortfolioRoutes.POST("/draft-stock", leaguePortfolioHandler.DraftStock)
-		leaguePortfolioRoutes.POST("/get-league-portfolio-info", leaguePortfolioHandler.GetLeaguePortfolioInfo)
-	}
 
+	// Initialize League Dependencies
 	leagueRepo := league.NewLeagueRepository(database)
 	leagueService := league.NewLeagueService(leagueRepo, userRepo, portfolioRepo)
 	leagueHandler := league.NewLeagueHandler(leagueService, portfolioService, leaguePortfolioService)
 
-	leagueRoutes := router.Group("/api/leagues")
-	{
-		leagueRoutes.POST("/create-league", leagueHandler.CreateLeague)         // Create League
-		leagueRoutes.POST("/remove-league", leagueHandler.RemoveLeague)         // Remove League
-		leagueRoutes.POST("/add-user-to-league", leagueHandler.AddUserToLeague) // Add Users to League
-		leagueRoutes.POST("/details", leagueHandler.GetLeagueDetails)           // Get League Details
-		leagueRoutes.POST("/leaderboard", leagueHandler.GetLeaderboard)         // Get League Leaderboard
-	}
+	webSocketHandler := NewWebSocketHandler(
+		portfolioHandler,
+		stockHandler,
+		userHandler,
+		tradeHandler,
+		leaguePortfolioHandler,
+		leagueHandler,
+	)
+
+	// WebSocket endpoint
+	router.GET("/ws", webSocketHandler.HandleWebSocket) // Route for WebSocket connection
 
 	// Initialize the scheduler and start it
 	scheduler := &Scheduler{
