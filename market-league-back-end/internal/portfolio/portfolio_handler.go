@@ -17,6 +17,9 @@ type PortfolioHandlerInterface interface {
 	RemoveStockFromPortfolio(conn *websocket.Conn, rawData json.RawMessage) error
 }
 
+// Compile-time check
+var _ PortfolioHandlerInterface = (*PortfolioHandler)(nil)
+
 // PortfolioHandler defines the HTTP handler for portfolio-related operations.
 type PortfolioHandler struct {
 	service *PortfolioService
@@ -26,6 +29,8 @@ type PortfolioHandler struct {
 func NewPortfolioHandler(service *PortfolioService) *PortfolioHandler {
 	return &PortfolioHandler{service: service}
 }
+
+// * Implementation of Interface
 
 // GetPortfolio handles fetching a portfolio by its ID.
 func (h *PortfolioHandler) GetPortfolioWithID(conn *websocket.Conn, rawData json.RawMessage) error {
@@ -44,7 +49,7 @@ func (h *PortfolioHandler) GetPortfolioWithID(conn *websocket.Conn, rawData json
 	portfolio, err := h.service.GetPortfolioWithID(request.PortfolioID)
 	if err != nil {
 		ws.SendError(conn, err.Error())
-		return fmt.Errorf("failed to create portfolio: %v", err)
+		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
 	}
 
 	// Step 4: Marshal the portfolio into JSON
@@ -84,7 +89,7 @@ func (h *PortfolioHandler) GetLeaguePortfolio(conn *websocket.Conn, rawData json
 	portfolio, err := h.service.GetLeaguePortfolio(request.UserID, request.LeagueID)
 	if err != nil {
 		ws.SendError(conn, err.Error())
-		return fmt.Errorf("failed to create portfolio: %v", err)
+		return fmt.Errorf("failed to retrieve User's Portfolio from a specific league: %v", err)
 	}
 
 	// Step 4: Marshal the portfolio into JSON
@@ -163,7 +168,7 @@ func (h *PortfolioHandler) AddStockToPortfolio(conn *websocket.Conn, rawData jso
 	// Step 3: Process business logic (reuse the service layer)
 	if err := h.service.AddStockToPortfolio(request.PortfolioID, request.StockID); err != nil {
 		ws.SendError(conn, err.Error())
-		return fmt.Errorf("failed to create portfolio: %v", err)
+		return fmt.Errorf("failed to add stock to portfolio: %v", err)
 	}
 
 	// Step 4: Send success response (no data, just confirmation)
@@ -195,7 +200,7 @@ func (h *PortfolioHandler) RemoveStockFromPortfolio(conn *websocket.Conn, rawDat
 	// Step 3: Process business logic (reuse the service layer)
 	if err := h.service.RemoveStockFromPortfolio(request.PortfolioID, request.StockID); err != nil {
 		ws.SendError(conn, err.Error())
-		return fmt.Errorf("failed to create portfolio: %v", err)
+		return fmt.Errorf("failed to remove a stock from a portfolio: %v", err)
 	}
 
 	// Step 4: Send success response (no data, just confirmation)
