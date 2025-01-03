@@ -13,3 +13,9 @@ type PriceHistory struct {
 	Price     float64   `gorm:"not null" json:"price"`
 	Timestamp time.Time `gorm:"not null;default:CURRENT_TIMESTAMP" json:"timestamp"`
 }
+
+type PriceHistoryDTO struct {
+	ID        uint      `json:"id"`
+	Price     float64   `json:"price"`
+	Timestamp time.Time `json:"timestamp"`
+}

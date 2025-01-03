@@ -206,7 +206,7 @@ func (h *PortfolioHandler) RemoveStockFromPortfolio(conn *websocket.Conn, rawDat
 	// Step 4: Send success response (no data, just confirmation)
 	response := ws.WebsocketMessage{
 		Type: ws.MessageType_LeaguePortfolio_DraftStock,
-		Data: json.RawMessage(`{"message": "Stock added successfully"}`), // Simple JSON message
+		Data: json.RawMessage(`{"message": "Stock removed successfully"}`), // Simple JSON message
 	}
 	if err := conn.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)

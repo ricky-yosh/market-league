@@ -19,7 +19,7 @@ import (
 // Handle Dependencies
 type WebSocketHandler struct {
 	portfolioHandler       portfolio.PortfolioHandlerInterface
-	stockHandler           *stock.StockHandler
+	stockHandler           stock.StockHandlerInterface
 	userHandler            *user.UserHandler
 	tradeHandler           *trade.TradeHandler
 	leaguePortfolioHandler *leagueportfolio.LeaguePortfolioHandler
@@ -28,7 +28,7 @@ type WebSocketHandler struct {
 
 func NewWebSocketHandler(
 	portfolioHandler portfolio.PortfolioHandlerInterface,
-	stockHandler *stock.StockHandler,
+	stockHandler stock.StockHandlerInterface,
 	userHandler *user.UserHandler,
 	tradeHandler *trade.TradeHandler,
 	leaguePortfolioHandler *leagueportfolio.LeaguePortfolioHandler,
@@ -65,10 +65,10 @@ func (h *WebSocketHandler) routeTransmission(conn *websocket.Conn, message ws.We
 		return h.stockHandler.CreateStock(conn, message.Data)
 	case ws.MessageType_Stock_CreateMultipleStocks:
 		return h.stockHandler.CreateMultipleStocks(conn, message.Data)
+	case ws.MessageType_Stock_UpdateCurrentStockPrice:
+		return h.stockHandler.UpdatePrice(conn, message.Data)
 	case ws.MessageType_Stock_GetStockInformation:
 		return h.stockHandler.GetStockInfo(conn, message.Data)
-	case ws.MessageType_Stock_UpdateCurrentStockPrice:
-		return h.stockHandler.GetUserPortfolios(conn, message.Data)
 
 	// User Routes
 	case ws.MessageType_User_UserInfo:
