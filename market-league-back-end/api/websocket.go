@@ -154,7 +154,7 @@ func (h *WebSocketHandler) HandleWebSocket(c *gin.Context) {
 		// Route the message
 		err = h.routeTransmission(conn, message) // Pass dependencies via handler
 		if err != nil {
-			log.Println(message)
+			log.Println("Error with transmission: \"" + message.Type + "\" " + err.Error())
 		}
 	}
 }
