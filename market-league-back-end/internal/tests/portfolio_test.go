@@ -19,8 +19,8 @@ func TestAddStockToPortfolio_Integration(t *testing.T) {
 	db := testutils.SetupTestDB()
 
 	// Step 2: Seed test data
-	db.Create(&models.Portfolio{ID: 1, Name: "Tech Portfolio"})
-	db.Create(&models.Stock{ID: 101, Symbol: "AAPL"})
+	// db.Create(&models.Portfolio{ID: 1, Name: "Tech Portfolio"})
+	// db.Create(&models.Stock{ID: 101, Symbol: "AAPL"})
 
 	// Step 3: Setup repository, service, and handler
 	portfolioRepo := portfolio.NewPortfolioRepository(db)

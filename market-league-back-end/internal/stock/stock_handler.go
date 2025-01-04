@@ -44,21 +44,21 @@ func (h *StockHandler) CreateStock(conn *websocket.Conn, rawData json.RawMessage
 
 	// Step 2: Parse data from WebSocket JSON payload
 	if err := json.Unmarshal(rawData, &request); err != nil {
-		ws.SendError(conn, "Invalid input: "+err.Error())
+		ws.SendError(conn, ws.MessageType_Stock_CreateStock, "Invalid input: "+err.Error())
 		return fmt.Errorf("invalid input: %v", err)
 	}
 
 	// Step 3: Process business logic (reuse the service layer)
 	stock, err := h.StockService.CreateStock(request.TickerSymbol, request.CompanyName, request.CurrentPrice)
 	if err != nil {
-		ws.SendError(conn, err.Error())
+		ws.SendError(conn, ws.MessageType_Stock_CreateStock, err.Error())
 		return fmt.Errorf("failed to create portfolio: %v", err)
 	}
 
 	// Step 4: Marshal the portfolio into JSON
 	stockJSON, err := json.Marshal(stock)
 	if err != nil {
-		ws.SendError(conn, "Failed to serialize portfolio")
+		ws.SendError(conn, ws.MessageType_Stock_CreateStock, "Failed to serialize portfolio")
 		return fmt.Errorf("serialization error: %v", err)
 	}
 
@@ -85,7 +85,7 @@ func (h *StockHandler) CreateMultipleStocks(conn *websocket.Conn, rawData json.R
 
 	// Step 2: Parse data from WebSocket JSON payload
 	if err := json.Unmarshal(rawData, &request); err != nil {
-		ws.SendError(conn, "Invalid input: "+err.Error())
+		ws.SendError(conn, ws.MessageType_Stock_CreateMultipleStocks, "Invalid input: "+err.Error())
 		return fmt.Errorf("invalid input: %v", err)
 	}
 
@@ -103,7 +103,7 @@ func (h *StockHandler) CreateMultipleStocks(conn *websocket.Conn, rawData json.R
 	// Step 4: Process business logic (reuse the service layer)
 	err := h.StockService.CreateMultipleStocks(stocksPointer)
 	if err != nil {
-		ws.SendError(conn, err.Error())
+		ws.SendError(conn, ws.MessageType_Stock_CreateMultipleStocks, err.Error())
 		return fmt.Errorf("failed to create portfolio: %v", err)
 	}
 
@@ -113,7 +113,7 @@ func (h *StockHandler) CreateMultipleStocks(conn *websocket.Conn, rawData json.R
 	// Step 6: Marshal the portfolio into JSON
 	stockJSON, err := json.Marshal(stocks)
 	if err != nil {
-		ws.SendError(conn, "Failed to serialize portfolio")
+		ws.SendError(conn, ws.MessageType_Stock_CreateMultipleStocks, "Failed to serialize portfolio")
 		return fmt.Errorf("serialization error: %v", err)
 	}
 
@@ -140,13 +140,13 @@ func (h *StockHandler) UpdatePrice(conn *websocket.Conn, rawData json.RawMessage
 
 	// Step 2: Parse data from WebSocket JSON payload
 	if err := json.Unmarshal(rawData, &request); err != nil {
-		ws.SendError(conn, "Invalid input: "+err.Error())
+		ws.SendError(conn, ws.MessageType_Stock_UpdateCurrentStockPrice, "Invalid input: "+err.Error())
 		return fmt.Errorf("invalid input: %v", err)
 	}
 
 	// Step 3: Process business logic (reuse the service layer)
 	if err := h.StockService.UpdateStockPrice(request.StockID, request.NewPrice, request.Timestamp); err != nil {
-		ws.SendError(conn, err.Error())
+		ws.SendError(conn, ws.MessageType_Stock_UpdateCurrentStockPrice, err.Error())
 		return fmt.Errorf("failed to create portfolio: %v", err)
 	}
 
@@ -171,14 +171,14 @@ func (h *StockHandler) GetStockInfo(conn *websocket.Conn, rawData json.RawMessag
 
 	// Step 2: Parse data from WebSocket JSON payload
 	if err := json.Unmarshal(rawData, &request); err != nil {
-		ws.SendError(conn, "Invalid input: "+err.Error())
+		ws.SendError(conn, ws.MessageType_Stock_GetStockInformation, "Invalid input: "+err.Error())
 		return fmt.Errorf("invalid input: %v", err)
 	}
 
 	// Step 3: Process business logic (reuse the service layer)
 	stock, err := h.StockService.GetStockInfo(request.StockID)
 	if err != nil {
-		ws.SendError(conn, err.Error())
+		ws.SendError(conn, ws.MessageType_Stock_GetStockInformation, err.Error())
 		return fmt.Errorf("failed to create portfolio: %v", err)
 	}
 
@@ -194,7 +194,7 @@ func (h *StockHandler) GetStockInfo(conn *websocket.Conn, rawData json.RawMessag
 	// Step 5: Map models.Stock to StockInfo DTO
 	stockJSON, err := json.Marshal(stockInfo)
 	if err != nil {
-		ws.SendError(conn, "Failed to serialize portfolio")
+		ws.SendError(conn, ws.MessageType_Stock_GetStockInformation, "Failed to serialize portfolio")
 		return fmt.Errorf("serialization error: %v", err)
 	}
 

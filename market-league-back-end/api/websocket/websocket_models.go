@@ -2,9 +2,9 @@ package ws
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
 
@@ -53,16 +53,27 @@ const (
 	MessageType_Error = "MessageType_Error"
 )
 
-func SendError(conn *websocket.Conn, errorMsg string) {
+func SendError(conn *websocket.Conn, messageType string, errorMsg string) {
+	// Construct the error response using gin.H
+	errorData := gin.H{
+		"type":    MessageType_Error, // Include the error type
+		"message": errorMsg,          // Include the error message
+	}
+
+	// Marshal the error data into JSON bytes
+	errorJSON, err := json.Marshal(errorData)
+	if err != nil {
+		log.Println("Failed to serialize error data:", err)
+		return
+	}
 	// Create an error response using the Transmission struct
 	errorResponse := WebsocketMessage{
-		Type: MessageType_Error,                              // Message type is 'error'
-		Data: json.RawMessage(fmt.Sprintf(`"%s"`, errorMsg)), // Encodes the error message as JSON
+		Type: messageType, // Message type is 'error'
+		Data: errorJSON,   // Encodes the error message as JSON
 	}
 
 	// Write the error response back to the client
-	err := conn.WriteJSON(errorResponse)
-	if err != nil {
+	if err := conn.WriteJSON(errorResponse); err != nil {
 		log.Println("Failed to send error message:", err)
 	}
 }

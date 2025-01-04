@@ -20,19 +20,19 @@ import (
 type WebSocketHandler struct {
 	portfolioHandler       portfolio.PortfolioHandlerInterface
 	stockHandler           stock.StockHandlerInterface
-	userHandler            *user.UserHandler
-	tradeHandler           *trade.TradeHandler
-	leaguePortfolioHandler *leagueportfolio.LeaguePortfolioHandler
-	leagueHandler          *league.LeagueHandler
+	userHandler            user.UserHandlerInterface
+	tradeHandler           trade.TradeHandlerInterface
+	leaguePortfolioHandler leagueportfolio.LeaguePortfolioHandlerInterface
+	leagueHandler          league.LeagueHandlerInterface
 }
 
 func NewWebSocketHandler(
 	portfolioHandler portfolio.PortfolioHandlerInterface,
 	stockHandler stock.StockHandlerInterface,
-	userHandler *user.UserHandler,
-	tradeHandler *trade.TradeHandler,
-	leaguePortfolioHandler *leagueportfolio.LeaguePortfolioHandler,
-	leagueHandler *league.LeagueHandler,
+	userHandler user.UserHandlerInterface,
+	tradeHandler trade.TradeHandlerInterface,
+	leaguePortfolioHandler leagueportfolio.LeaguePortfolioHandlerInterface,
+	leagueHandler league.LeagueHandlerInterface,
 ) *WebSocketHandler {
 	return &WebSocketHandler{
 		portfolioHandler:       portfolioHandler,
@@ -109,7 +109,7 @@ func (h *WebSocketHandler) routeTransmission(conn *websocket.Conn, message ws.We
 	// Error or Unknown Message Type
 	default:
 		log.Println("Unknown message type:", message.Type)
-		ws.SendError(conn, "Unknown message type")
+		ws.SendError(conn, ws.MessageType_Error, "Unknown message type")
 		return nil
 	}
 }
@@ -147,14 +147,14 @@ func (h *WebSocketHandler) HandleWebSocket(c *gin.Context) {
 		var message ws.WebsocketMessage
 		err = json.Unmarshal(transmissionRaw, &message)
 		if err != nil {
-			ws.SendError(conn, "Invalid JSON format")
+			ws.SendError(conn, ws.MessageType_Error, "Invalid JSON format")
 			continue
 		}
 
 		// Route the message
 		err = h.routeTransmission(conn, message) // Pass dependencies via handler
 		if err != nil {
-			ws.SendError(conn, err.Error())
+			log.Println(message)
 		}
 	}
 }

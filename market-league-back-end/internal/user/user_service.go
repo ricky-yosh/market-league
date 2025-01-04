@@ -16,8 +16,8 @@ func NewUserService(repo *UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
-// GetUserInfo represents the aggregated information for a user.
-type GetUserInfo struct {
+// UserInfo represents the aggregated information for a user.
+type UserInfo struct {
 	UserID     uint               `json:"user_id"`
 	Username   string             `json:"username"`
 	Email      string             `json:"email"`
@@ -27,7 +27,7 @@ type GetUserInfo struct {
 }
 
 // GetUserByID fetches user information based on filter criteria.
-func (s *UserService) GetUserByID(userID uint) (*GetUserInfo, error) {
+func (s *UserService) GetUserByID(userID uint) (*UserInfo, error) {
 	// Fetch the user details (username, email, etc.)
 	user, err := s.repo.GetUserByID(userID)
 	if err != nil {
@@ -35,7 +35,7 @@ func (s *UserService) GetUserByID(userID uint) (*GetUserInfo, error) {
 	}
 
 	// Prepare the GetUserInfo response
-	userInfo := &GetUserInfo{
+	userInfo := &UserInfo{
 		UserID:   user.ID,
 		Username: user.Username,
 		Email:    user.Email,

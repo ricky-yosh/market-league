@@ -1,13 +1,28 @@
 package league
 
 import (
-	"net/http"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	ws "github.com/market-league/api/websocket"
 	league_portfolio "github.com/market-league/internal/leagueportfolio"
 	"github.com/market-league/internal/portfolio"
 )
+
+// LeagueHandler Interface
+type LeagueHandlerInterface interface {
+	CreateLeague(conn *websocket.Conn, rawData json.RawMessage) error
+	AddUserToLeague(conn *websocket.Conn, rawData json.RawMessage) error
+	GetLeagueDetails(conn *websocket.Conn, rawData json.RawMessage) error
+	GetLeaderboard(conn *websocket.Conn, rawData json.RawMessage) error
+	RemoveLeague(conn *websocket.Conn, rawData json.RawMessage) error
+}
+
+// Compile-time check
+var _ LeagueHandlerInterface = (*LeagueHandler)(nil)
 
 // LeagueHandler defines the HTTP handler for league-related operations.
 type LeagueHandler struct {
@@ -17,9 +32,11 @@ type LeagueHandler struct {
 }
 
 // NewLeagueHandler creates a new instance of LeagueHandler.
-func NewLeagueHandler(service *LeagueService,
+func NewLeagueHandler(
+	service *LeagueService,
 	portfolioService *portfolio.PortfolioService,
-	leaguePortfolioService *league_portfolio.LeaguePortfolioService) *LeagueHandler {
+	leaguePortfolioService *league_portfolio.LeaguePortfolioService,
+) *LeagueHandler {
 	return &LeagueHandler{
 		service:                service,
 		portfolioService:       portfolioService,
@@ -27,161 +44,237 @@ func NewLeagueHandler(service *LeagueService,
 	}
 }
 
+// * Implementation of Interface
+
 // CreateLeague handles the creation of a new league.
-func (h *LeagueHandler) CreateLeague(c *gin.Context) {
-	var leagueRequest struct {
+func (h *LeagueHandler) CreateLeague(conn *websocket.Conn, rawData json.RawMessage) error {
+	// Step 1: Parse the WebSocket message
+	var request struct {
 		LeagueName string `json:"league_name" binding:"required"`
 		OwnerUser  uint   `json:"owner_user" binding:"required"`
 		EndDate    string `json:"end_date" binding:"required"`
 	}
 
-	if err := c.ShouldBindJSON(&leagueRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	// Step 2: Parse data from WebSocket JSON payload
+	if err := json.Unmarshal(rawData, &request); err != nil {
+		ws.SendError(conn, ws.MessageType_League_CreateLeague, "Invalid input: "+err.Error())
+		return fmt.Errorf("invalid input: %v", err)
 	}
 
-	// Set the start date to the current date and time
-	startDate := time.Now().Format(time.RFC3339)
+	// Step 3: Process business logic (reuse the service layer)
 
-	// Pass the values to the service to create the league
-	league, err := h.service.CreateLeague(leagueRequest.LeagueName, leagueRequest.OwnerUser, startDate, leagueRequest.EndDate)
+	// Step 3a: Pass the values to the service to create the league
+	startDate := time.Now().Format(time.RFC3339) // Set the start date to the current date and time
+	league, err := h.service.CreateLeague(request.LeagueName, request.OwnerUser, startDate, request.EndDate)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create league"})
-		return
+		ws.SendError(conn, ws.MessageType_League_CreateLeague, err.Error())
+		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
 	}
 
-	// Create a portfolio for the user in the league
-	portfolio, err := h.portfolioService.CreatePortfolio(leagueRequest.OwnerUser, league.ID)
+	// Step 3b: Create a portfolio for the user in the league
+	portfolio, err := h.portfolioService.CreatePortfolio(request.OwnerUser, league.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		ws.SendError(conn, ws.MessageType_League_CreateLeague, err.Error())
+		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
 	}
 
-	// Create a league portfolio using the new LeaguePortfolioService
+	// Step 3c: Create a league portfolio using the new LeaguePortfolioService
 	leaguePortfolio, err := h.leaguePortfolioService.CreateLeaguePortfolio(league.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		ws.SendError(conn, ws.MessageType_League_CreateLeague, err.Error())
+		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
 	}
 
-	// Construct response with sanitized user details
-	response := gin.H{
-		"message":         "League successfully created",
+	// Step 5: Send success response back via WebSocket
+
+	// Step 5a: Construct response with sanitized user details
+	data := gin.H{
 		"league":          league,
 		"userPortfolio":   portfolio,
 		"leaguePortfolio": leaguePortfolio,
 	}
+	dataJSON, err := json.Marshal(data) // Marshal the payload into JSON bytes
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_League_CreateLeague, "Failed to serialize response")
+		return fmt.Errorf("serialization error: %v", err)
+	}
 
-	c.JSON(http.StatusCreated, response)
+	// Step 5b: Construct response with sanitized user details
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_League_CreateLeague,
+		Data: json.RawMessage(dataJSON), // Use marshaled JSON bytes
+	}
+	if err := conn.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
+
 }
 
 // AddUserToLeague handles adding a user to a league.
-func (h *LeagueHandler) AddUserToLeague(c *gin.Context) {
+func (h *LeagueHandler) AddUserToLeague(conn *websocket.Conn, rawData json.RawMessage) error {
+	// Step 1: Parse the WebSocket message
 	var request struct {
 		UserID   uint `json:"user_id" binding:"required"`
 		LeagueID uint `json:"league_id" binding:"required"`
 	}
 
-	// Bind JSON input to the request struct
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-		return
+	// Step 2: Parse data from WebSocket JSON payload
+	if err := json.Unmarshal(rawData, &request); err != nil {
+		ws.SendError(conn, ws.MessageType_League_AddUserToLeague, "Invalid input: "+err.Error())
+		return fmt.Errorf("invalid input: %v", err)
 	}
 
-	// Call the service to add the user to the league
-	err := h.service.AddUserToLeague(request.UserID, request.LeagueID)
-	if err != nil {
-		if err.Error() == "user already in league" {
-			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	// Step 3: Process business logic (reuse the service layer)
+
+	// Step 3a: Process business logic (reuse the service layer)
+	if err := h.service.AddUserToLeague(request.UserID, request.LeagueID); err != nil {
+		ws.SendError(conn, ws.MessageType_League_AddUserToLeague, err.Error())
+		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
 	}
 
-	// Create a portfolio for the user in the league
+	// Step 3b: Process business logic (reuse the service layer)
 	portfolio, err := h.portfolioService.CreatePortfolio(request.UserID, request.LeagueID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		ws.SendError(conn, ws.MessageType_League_AddUserToLeague, err.Error())
+		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
 	}
 
-	// Return success response with portfolio details
-	c.JSON(http.StatusOK, gin.H{
-		"message":   "User successfully added to league",
-		"portfolio": portfolio,
-	})
+	// Step 4: Marshal the portfolio into JSON
+	portfolioJSON, err := json.Marshal(portfolio)
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_League_AddUserToLeague, "Failed to serialize portfolio")
+		return fmt.Errorf("serialization error: %v", err)
+	}
+
+	// Step 5: Send success response back via WebSocket
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_League_AddUserToLeague,
+		Data: json.RawMessage(portfolioJSON), // Use marshaled JSON bytes
+	}
+	if err := conn.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
+
 }
 
 // GetLeagueDetails handles fetching the details of a specific league.
-func (h *LeagueHandler) GetLeagueDetails(c *gin.Context) {
-
+func (h *LeagueHandler) GetLeagueDetails(conn *websocket.Conn, rawData json.RawMessage) error {
+	// Step 1: Parse the WebSocket message
 	var request struct {
 		LeagueID uint `json:"league_id" binding:"required"`
 	}
 
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	// Step 2: Parse data from WebSocket JSON payload
+	if err := json.Unmarshal(rawData, &request); err != nil {
+		ws.SendError(conn, ws.MessageType_League_GetDetails, "Invalid input: "+err.Error())
+		return fmt.Errorf("invalid input: %v", err)
 	}
 
+	// Step 3: Process business logic (reuse the service layer)
 	league, users, err := h.service.GetLeagueDetails(request.LeagueID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch league details"})
-		return
+		ws.SendError(conn, ws.MessageType_League_GetDetails, err.Error())
+		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
 	}
 
-	// Construct response with sanitized user details
-	response := gin.H{
+	// Step 4: Marshal the portfolio into JSON
+	data := gin.H{
 		"id":          league.ID,
 		"league_name": league.LeagueName,
 		"start_date":  league.StartDate,
 		"end_date":    league.EndDate,
 		"users":       users,
 	}
+	// Construct response with sanitized user details
+	dataJSON, err := json.Marshal(data)
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_League_GetDetails, "Failed to serialize portfolio")
+		return fmt.Errorf("serialization error: %v", err)
+	}
 
-	c.JSON(http.StatusOK, response)
+	// Step 5: Send success response back via WebSocket
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_League_GetDetails,
+		Data: json.RawMessage(dataJSON), // Use marshaled JSON bytes
+	}
+	if err := conn.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
 }
 
 // GetLeaderboard handles fetching the leaderboard for a specific league.
-func (h *LeagueHandler) GetLeaderboard(c *gin.Context) {
+func (h *LeagueHandler) GetLeaderboard(conn *websocket.Conn, rawData json.RawMessage) error {
+	// Step 1: Parse the WebSocket message
 	var request struct {
 		LeagueID uint `json:"league_id" binding:"required"`
 	}
 
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	// Step 2: Parse data from WebSocket JSON payload
+	if err := json.Unmarshal(rawData, &request); err != nil {
+		ws.SendError(conn, ws.MessageType_League_GetLeaderboard, "Invalid input: "+err.Error())
+		return fmt.Errorf("invalid input: %v", err)
 	}
 
-	// Pass the LeagueID and the PortfolioService to the service method
+	// Step 3: Process business logic (reuse the service layer)
 	leaderboard, err := h.service.GetLeaderboard(request.LeagueID, h.portfolioService)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch leaderboard"})
-		return
+		ws.SendError(conn, ws.MessageType_League_GetLeaderboard, err.Error())
+		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
 	}
 
-	c.JSON(http.StatusOK, leaderboard)
+	// Step 4: Marshal the portfolio into JSON
+	leaderboardJSON, err := json.Marshal(leaderboard)
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_League_GetLeaderboard, "Failed to serialize portfolio")
+		return fmt.Errorf("serialization error: %v", err)
+	}
+
+	// Step 5: Send success response back via WebSocket
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_League_GetLeaderboard,
+		Data: json.RawMessage(leaderboardJSON), // Use marshaled JSON bytes
+	}
+	if err := conn.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
+
 }
 
 // RemoveLeague handles the removal of a league and all associated records
-func (h *LeagueHandler) RemoveLeague(c *gin.Context) {
+func (h *LeagueHandler) RemoveLeague(conn *websocket.Conn, rawData json.RawMessage) error {
+	// Step 1: Parse the WebSocket message
 	var request struct {
 		LeagueID uint `json:"league_id" binding:"required"`
 	}
 
-	// Bind JSON input to the request struct
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-		return
+	// Step 2: Parse data from WebSocket JSON payload
+	if err := json.Unmarshal(rawData, &request); err != nil {
+		ws.SendError(conn, ws.MessageType_League_RemoveLeague, "Invalid input: "+err.Error())
+		return fmt.Errorf("invalid input: %v", err)
 	}
 
-	// Call the service to remove the league
+	// Step 3: Process business logic (reuse the service layer)
 	if err := h.service.RemoveLeague(request.LeagueID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		ws.SendError(conn, ws.MessageType_League_RemoveLeague, err.Error())
+		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
 	}
 
-	// Return success response
-	c.JSON(http.StatusOK, gin.H{"message": "League and associated data removed successfully"})
+	// Step 4: Send success response (no data, just confirmation)
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_League_RemoveLeague,
+		Data: json.RawMessage(`{"message": "League removed successfully"}`), // Simple JSON message
+	}
+	if err := conn.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
 }

@@ -41,27 +41,27 @@ func (h *PortfolioHandler) GetPortfolioWithID(conn *websocket.Conn, rawData json
 
 	// Step 2: Parse data from WebSocket JSON payload
 	if err := json.Unmarshal(rawData, &request); err != nil {
-		ws.SendError(conn, "Invalid input: "+err.Error())
+		ws.SendError(conn, ws.MessageType_Portfolio_PortfolioWithID, "Invalid input: "+err.Error())
 		return fmt.Errorf("invalid input: %v", err)
 	}
 
 	// Step 3: Process business logic (reuse the service layer)
 	portfolio, err := h.service.GetPortfolioWithID(request.PortfolioID)
 	if err != nil {
-		ws.SendError(conn, err.Error())
+		ws.SendError(conn, ws.MessageType_Portfolio_PortfolioWithID, err.Error())
 		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
 	}
 
 	// Step 4: Marshal the portfolio into JSON
 	portfolioJSON, err := json.Marshal(portfolio)
 	if err != nil {
-		ws.SendError(conn, "Failed to serialize portfolio")
+		ws.SendError(conn, ws.MessageType_Portfolio_PortfolioWithID, "Failed to serialize portfolio")
 		return fmt.Errorf("serialization error: %v", err)
 	}
 
 	// Step 5: Send success response back via WebSocket
 	response := ws.WebsocketMessage{
-		Type: ws.MessageType_LeaguePortfolio_DraftStock,
+		Type: ws.MessageType_Portfolio_PortfolioWithID,
 		Data: json.RawMessage(portfolioJSON), // Use marshaled JSON bytes
 	}
 	if err := conn.WriteJSON(response); err != nil {
@@ -81,27 +81,27 @@ func (h *PortfolioHandler) GetLeaguePortfolio(conn *websocket.Conn, rawData json
 
 	// Step 2: Parse data from WebSocket JSON payload
 	if err := json.Unmarshal(rawData, &request); err != nil {
-		ws.SendError(conn, "Invalid input: "+err.Error())
+		ws.SendError(conn, ws.MessageType_Portfolio_LeaguePortfolio, "Invalid input: "+err.Error())
 		return fmt.Errorf("invalid input: %v", err)
 	}
 
 	// Step 3: Process business logic (reuse the service layer)
 	portfolio, err := h.service.GetLeaguePortfolio(request.UserID, request.LeagueID)
 	if err != nil {
-		ws.SendError(conn, err.Error())
+		ws.SendError(conn, ws.MessageType_Portfolio_LeaguePortfolio, err.Error())
 		return fmt.Errorf("failed to retrieve User's Portfolio from a specific league: %v", err)
 	}
 
 	// Step 4: Marshal the portfolio into JSON
 	portfolioJSON, err := json.Marshal(portfolio)
 	if err != nil {
-		ws.SendError(conn, "Failed to serialize portfolio")
+		ws.SendError(conn, ws.MessageType_Portfolio_LeaguePortfolio, "Failed to serialize portfolio")
 		return fmt.Errorf("serialization error: %v", err)
 	}
 
 	// Step 5: Send success response back via WebSocket
 	response := ws.WebsocketMessage{
-		Type: ws.MessageType_LeaguePortfolio_DraftStock,
+		Type: ws.MessageType_Portfolio_LeaguePortfolio,
 		Data: json.RawMessage(portfolioJSON), // Use marshaled JSON bytes
 	}
 	if err := conn.WriteJSON(response); err != nil {
@@ -121,27 +121,27 @@ func (h *PortfolioHandler) CreatePortfolio(conn *websocket.Conn, rawData json.Ra
 
 	// Step 2: Parse data from WebSocket JSON payload
 	if err := json.Unmarshal(rawData, &request); err != nil {
-		ws.SendError(conn, "Invalid input: "+err.Error())
+		ws.SendError(conn, ws.MessageType_Portfolio_CreatePortfolio, "Invalid input: "+err.Error())
 		return fmt.Errorf("invalid input: %v", err)
 	}
 
 	// Step 3: Process business logic (reuse the service layer)
 	portfolio, err := h.service.CreatePortfolio(request.UserID, request.LeagueID)
 	if err != nil {
-		ws.SendError(conn, err.Error())
+		ws.SendError(conn, ws.MessageType_Portfolio_CreatePortfolio, err.Error())
 		return fmt.Errorf("failed to create portfolio: %v", err)
 	}
 
 	// Step 4: Marshal the portfolio into JSON
 	portfolioJSON, err := json.Marshal(portfolio)
 	if err != nil {
-		ws.SendError(conn, "Failed to serialize portfolio")
+		ws.SendError(conn, ws.MessageType_Portfolio_CreatePortfolio, "Failed to serialize portfolio")
 		return fmt.Errorf("serialization error: %v", err)
 	}
 
 	// Step 5: Send success response back via WebSocket
 	response := ws.WebsocketMessage{
-		Type: ws.MessageType_LeaguePortfolio_DraftStock,
+		Type: ws.MessageType_Portfolio_CreatePortfolio,
 		Data: json.RawMessage(portfolioJSON), // Use marshaled JSON bytes
 	}
 	if err := conn.WriteJSON(response); err != nil {
@@ -161,19 +161,19 @@ func (h *PortfolioHandler) AddStockToPortfolio(conn *websocket.Conn, rawData jso
 
 	// Step 2: Parse data from WebSocket JSON payload
 	if err := json.Unmarshal(rawData, &request); err != nil {
-		ws.SendError(conn, "Invalid input: "+err.Error())
+		ws.SendError(conn, ws.MessageType_Portfolio_AddStock, "Invalid input: "+err.Error())
 		return fmt.Errorf("invalid input: %v", err)
 	}
 
 	// Step 3: Process business logic (reuse the service layer)
 	if err := h.service.AddStockToPortfolio(request.PortfolioID, request.StockID); err != nil {
-		ws.SendError(conn, err.Error())
+		ws.SendError(conn, ws.MessageType_Portfolio_AddStock, err.Error())
 		return fmt.Errorf("failed to add stock to portfolio: %v", err)
 	}
 
 	// Step 4: Send success response (no data, just confirmation)
 	response := ws.WebsocketMessage{
-		Type: ws.MessageType_LeaguePortfolio_DraftStock,
+		Type: ws.MessageType_Portfolio_AddStock,
 		Data: json.RawMessage(`{"message": "Stock added successfully"}`), // Simple JSON message
 	}
 	if err := conn.WriteJSON(response); err != nil {
@@ -193,19 +193,19 @@ func (h *PortfolioHandler) RemoveStockFromPortfolio(conn *websocket.Conn, rawDat
 
 	// Step 2: Parse data from WebSocket JSON payload
 	if err := json.Unmarshal(rawData, &request); err != nil {
-		ws.SendError(conn, "Invalid input: "+err.Error())
+		ws.SendError(conn, ws.MessageType_Portfolio_RemoveStock, "Invalid input: "+err.Error())
 		return fmt.Errorf("invalid input: %v", err)
 	}
 
 	// Step 3: Process business logic (reuse the service layer)
 	if err := h.service.RemoveStockFromPortfolio(request.PortfolioID, request.StockID); err != nil {
-		ws.SendError(conn, err.Error())
+		ws.SendError(conn, ws.MessageType_Portfolio_RemoveStock, err.Error())
 		return fmt.Errorf("failed to remove a stock from a portfolio: %v", err)
 	}
 
 	// Step 4: Send success response (no data, just confirmation)
 	response := ws.WebsocketMessage{
-		Type: ws.MessageType_LeaguePortfolio_DraftStock,
+		Type: ws.MessageType_Portfolio_RemoveStock,
 		Data: json.RawMessage(`{"message": "Stock removed successfully"}`), // Simple JSON message
 	}
 	if err := conn.WriteJSON(response); err != nil {

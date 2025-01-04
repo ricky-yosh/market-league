@@ -1,109 +1,189 @@
 package user
 
 import (
-	"net/http"
+	"encoding/json"
+	"fmt"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	ws "github.com/market-league/api/websocket"
 )
+
+// UserHandler Interface
+type UserHandlerInterface interface {
+	GetUserByID(conn *websocket.Conn, rawData json.RawMessage) error
+	GetUserLeagues(conn *websocket.Conn, rawData json.RawMessage) error
+	GetUserTrades(conn *websocket.Conn, rawData json.RawMessage) error
+	GetUserPortfolios(conn *websocket.Conn, rawData json.RawMessage) error
+}
+
+// Compile-time check
+var _ UserHandlerInterface = (*UserHandler)(nil)
 
 // UserHandler defines the HTTP handler for user-related operations.
 type UserHandler struct {
-	service *UserService
+	UserService *UserService
 }
 
 // NewUserHandler creates a new instance of UserHandler.
 func NewUserHandler(service *UserService) *UserHandler {
-	return &UserHandler{service: service}
+	return &UserHandler{UserService: service}
 }
 
+// * Implementation of Interface
+
 // GetUserByID fetches user information based on filter criteria.
-func (h *UserHandler) GetUserByID(c *gin.Context) {
+func (h *UserHandler) GetUserByID(conn *websocket.Conn, rawData json.RawMessage) error {
+	// Step 1: Parse the WebSocket message
 	var request struct {
 		UserID uint `json:"user_id" binding:"required"` // User ID to fetch information for
 	}
 
-	// Bind the JSON request data to the struct
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	// Step 2: Parse data from WebSocket JSON payload
+	if err := json.Unmarshal(rawData, &request); err != nil {
+		ws.SendError(conn, ws.MessageType_User_UserInfo, "Invalid input: "+err.Error())
+		return fmt.Errorf("invalid input: %v", err)
 	}
 
-	// Call the service to get the user info based on the filter criteria
-	userInfo, err := h.service.GetUserByID(request.UserID)
+	// Step 3: Process business logic (reuse the service layer)
+	userInfo, err := h.UserService.GetUserByID(request.UserID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user information"})
-		return
+		ws.SendError(conn, ws.MessageType_User_UserInfo, err.Error())
+		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
 	}
 
-	c.JSON(http.StatusOK, userInfo)
+	// Step 4: Marshal the portfolio into JSON
+	userInfoJSON, err := json.Marshal(userInfo)
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_User_UserInfo, "Failed to serialize portfolio")
+		return fmt.Errorf("serialization error: %v", err)
+	}
+
+	// Step 5: Send success response back via WebSocket
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_User_UserInfo,
+		Data: json.RawMessage(userInfoJSON), // Use marshaled JSON bytes
+	}
+	if err := conn.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
 }
 
 // GetUserLeagues handles requests to retrieve leagues that a user is a member of.
-func (h *UserHandler) GetUserLeagues(c *gin.Context) {
+func (h *UserHandler) GetUserLeagues(conn *websocket.Conn, rawData json.RawMessage) error {
+	// Step 1: Parse the WebSocket message
 	var request struct {
 		UserID uint `json:"user_id" binding:"required"`
 	}
 
-	// Bind the incoming JSON to the request struct
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-		return
+	// Step 2: Parse data from WebSocket JSON payload
+	if err := json.Unmarshal(rawData, &request); err != nil {
+		ws.SendError(conn, ws.MessageType_User_UserLeagues, "Invalid input: "+err.Error())
+		return fmt.Errorf("invalid input: %v", err)
 	}
 
-	// Call the service to get user leagues
-	leagues, err := h.service.GetUserLeagues(request.UserID)
+	// Step 3: Process business logic (reuse the service layer)
+	leagues, err := h.UserService.GetUserLeagues(request.UserID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		ws.SendError(conn, ws.MessageType_User_UserLeagues, err.Error())
+		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
 	}
 
-	// Respond with the list of leagues
-	c.JSON(http.StatusOK, gin.H{"leagues": leagues})
+	// Step 4: Marshal the portfolio into JSON
+	leaguesJSON, err := json.Marshal(leagues)
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_User_UserLeagues, "Failed to serialize portfolio")
+		return fmt.Errorf("serialization error: %v", err)
+	}
+
+	// Step 5: Send success response back via WebSocket
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_User_UserLeagues,
+		Data: json.RawMessage(leaguesJSON), // Use marshaled JSON bytes
+	}
+	if err := conn.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
 }
 
 // GetUserTrades handles requests to retrieve trades that a user is involved in within a specific league.
-func (h *UserHandler) GetUserTrades(c *gin.Context) {
+func (h *UserHandler) GetUserTrades(conn *websocket.Conn, rawData json.RawMessage) error {
+	// Step 1: Parse the WebSocket message
 	var request struct {
 		UserID   uint `json:"user_id" binding:"required"`
 		LeagueID uint `json:"league_id" binding:"required"`
 	}
 
-	// Bind the incoming JSON to the request struct
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-		return
+	// Step 2: Parse data from WebSocket JSON payload
+	if err := json.Unmarshal(rawData, &request); err != nil {
+		ws.SendError(conn, ws.MessageType_User_UserTrades, "Invalid input: "+err.Error())
+		return fmt.Errorf("invalid input: %v", err)
 	}
 
-	// Call the service to get user trades for the specified league
-	trades, err := h.service.GetUserTrades(request.UserID, request.LeagueID)
+	// Step 3: Process business logic (reuse the service layer)
+	trades, err := h.UserService.GetUserTrades(request.UserID, request.LeagueID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		ws.SendError(conn, ws.MessageType_User_UserTrades, err.Error())
+		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
 	}
 
-	// Respond with the list of trades
-	c.JSON(http.StatusOK, gin.H{"trades": trades})
+	// Step 4: Marshal the portfolio into JSON
+	portfolioJSON, err := json.Marshal(trades)
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_User_UserTrades, "Failed to serialize portfolio")
+		return fmt.Errorf("serialization error: %v", err)
+	}
+
+	// Step 5: Send success response back via WebSocket
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_User_UserTrades,
+		Data: json.RawMessage(portfolioJSON), // Use marshaled JSON bytes
+	}
+	if err := conn.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
 }
 
 // GetUserPortfolios handles requests to retrieve portfolios that a user is associated with.
-func (h *UserHandler) GetUserPortfolios(c *gin.Context) {
+func (h *UserHandler) GetUserPortfolios(conn *websocket.Conn, rawData json.RawMessage) error {
+	// Step 1: Parse the WebSocket message
 	var request struct {
 		UserID uint `json:"user_id" binding:"required"`
 	}
 
-	// Bind the incoming JSON to the request struct
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-		return
+	// Step 2: Parse data from WebSocket JSON payload
+	if err := json.Unmarshal(rawData, &request); err != nil {
+		ws.SendError(conn, ws.MessageType_User_UserPortfolios, "Invalid input: "+err.Error())
+		return fmt.Errorf("invalid input: %v", err)
 	}
 
-	// Call the service to get user portfolios
-	portfolios, err := h.service.GetUserPortfolios(request.UserID)
+	// Step 3: Process business logic (reuse the service layer)
+	portfolios, err := h.UserService.GetUserPortfolios(request.UserID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		ws.SendError(conn, ws.MessageType_User_UserPortfolios, err.Error())
+		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
 	}
 
-	// Respond with the list of portfolios
-	c.JSON(http.StatusOK, gin.H{"portfolios": portfolios})
+	// Step 4: Marshal the portfolio into JSON
+	portfolioJSON, err := json.Marshal(portfolios)
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_User_UserPortfolios, "Failed to serialize portfolio")
+		return fmt.Errorf("serialization error: %v", err)
+	}
+
+	// Step 5: Send success response back via WebSocket
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_User_UserPortfolios,
+		Data: json.RawMessage(portfolioJSON), // Use marshaled JSON bytes
+	}
+	if err := conn.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
 }
