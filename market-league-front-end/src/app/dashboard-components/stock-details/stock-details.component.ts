@@ -2,9 +2,9 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { Stock } from '../../models/stock.model';
 import { StockService } from '../services/stock.service';
-import { StockWithHistory } from '../../models/stock-with-history';
-import { devLog } from '../../../environments/development/devlog';
+import { StockWithHistory } from '../../models/stock-with-history.model';
 import { StockChartComponent } from './stock-chart/stock-chart.component';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-stock-details',
@@ -17,14 +17,30 @@ export class StockDetailsComponent {
   selectedStock: Stock | null = null;
   stockDetails: StockWithHistory | null = null
 
+  private subscription!: Subscription;
+
   constructor(
     private router: Router,
     private stockService: StockService,
   ) {}
   
   ngOnInit() {
+    
+    // * Subscribe to the observables to listen for changes
+    
+    this.subscription = this.stockService.selectedStockDetails$.subscribe((stockDetails) => {
+      this.stockDetails = stockDetails;
+    });
+
+    // * Get Starting Values for Dashboard
+
     this.selectedStock = this.stockService.getStock();
     this.loadStockDetails(this.selectedStock);
+  }
+
+  ngOnDestroy(): void {
+    // Unsubscribe to avoid memory leaks
+    this.subscription.unsubscribe();
   }
 
   returnToDraft() {
@@ -36,16 +52,8 @@ export class StockDetailsComponent {
       this.stockDetails = null;
       return
     }
-    
     const stockId = stock.id
-    this.stockService.getStockDetails(stockId).subscribe({
-      next: (stockDetails) => {
-        this.stockDetails = stockDetails;
-      },
-      error: (error) => {
-        devLog('Failed to fetch stock details from stockId:', error);
-      }
-    });
+    this.stockService.getStockDetails(stockId)
   }
 
 }

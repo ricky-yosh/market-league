@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -46,6 +47,7 @@ func NewWebSocketHandler(
 
 func (h *WebSocketHandler) routeTransmission(conn *websocket.Conn, message ws.WebsocketMessage) error {
 	// Route the message based on its type
+	fmt.Printf("Message: %s", message)
 	switch message.Type {
 
 	// Portfolio Routes

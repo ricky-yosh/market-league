@@ -1,4 +1,4 @@
-import { PriceHistory } from "./price-history";
+import { PriceHistory } from "./price-history.model";
 
 export interface StockWithHistory {
     id: number;
