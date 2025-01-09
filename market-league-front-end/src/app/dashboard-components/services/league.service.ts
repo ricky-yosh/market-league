@@ -38,36 +38,35 @@ export class LeagueService {
     private webSocketService: WebSocketService,
     private verifyUserService: VerifyUserService
   ) {
-    this.webSocketService.getMessages().subscribe(() => {
-      devLog("Websocket Message");
-      // switch (message.type) {
-      //   case WebSocketMessageTypes.MessageType_League_CreateLeague:
-      //     devLog("Received CreateLeague Response: " + message.data);
-      //     this.handleCreateLeagueResponse(message.data);
-      //     break;
-      //   case WebSocketMessageTypes.MessageType_League_RemoveLeague:
-      //     devLog("Received RemoveLeague Response: " + message.data);
-      //     this.handleRemoveLeagueResponse(message.data);
-      //     break;
-      //   case WebSocketMessageTypes.MessageType_League_AddUserToLeague:
-      //     devLog("Received AddUserToLeague Response: " + message.data);
-      //     this.handleAddUserToLeagueResponse(message.data);
-      //     break;
-      //   case WebSocketMessageTypes.MessageType_League_GetDetails:
-      //     devLog("Received GetLeagueDetails Response: " + message.data);
-      //     this.handleGetLeagueDetailsResponse(message.data);
-      //     break;
-      //   case WebSocketMessageTypes.MessageType_League_GetLeaderboard:
-      //     devLog("Received GetLeaderboard Response: " + message.data);
-      //     this.handleGetLeaderboardResponse(message.data);
-      //     break;
-      //   case WebSocketMessageTypes.MessageType_User_UserLeagues:
-      //     devLog("Received GetUserLeagues Response: " + message.data);
-      //     this.handleGetUserLeaguesResponse(message.data);
-      //     break;
-      //   default:
-      //     // devLog("League Service unable to route Websocket Message properly! " + message.data);
-      // }
+    this.webSocketService.getMessages().subscribe((message) => {
+      switch (message.type) {
+        case WebSocketMessageTypes.MessageType_League_CreateLeague:
+          devLog("Received CreateLeague Response: " + message.data);
+          this.handleCreateLeagueResponse(message.data);
+          break;
+        case WebSocketMessageTypes.MessageType_League_RemoveLeague:
+          devLog("Received RemoveLeague Response: " + message.data);
+          this.handleRemoveLeagueResponse(message.data);
+          break;
+        case WebSocketMessageTypes.MessageType_League_AddUserToLeague:
+          devLog("Received AddUserToLeague Response: " + message.data);
+          this.handleAddUserToLeagueResponse(message.data);
+          break;
+        case WebSocketMessageTypes.MessageType_League_GetDetails:
+          devLog("Received GetLeagueDetails Response: " + message.data);
+          this.handleGetLeagueDetailsResponse(message.data);
+          break;
+        case WebSocketMessageTypes.MessageType_League_GetLeaderboard:
+          devLog("Received GetLeaderboard Response: " + message.data);
+          this.handleGetLeaderboardResponse(message.data);
+          break;
+        case WebSocketMessageTypes.MessageType_User_UserLeagues:
+          devLog("Received GetUserLeagues Response: " + message.data);
+          this.handleGetUserLeaguesResponse(message.data);
+          break;
+        default:
+          // devLog("League Service unable to route Websocket Message properly! " + message.data);
+      }
     });
   }
 
@@ -110,7 +109,7 @@ export class LeagueService {
       devLog("Error occurred: " + responseData.message)
       return
     }
-    this.handleGetLeagueDetailsResponse(responseData);
+    this.handleSuccessfulGetLeagueDetailsResponse(responseData);
   }
   
   handleGetLeaderboardResponse(responseData: any): void {

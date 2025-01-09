@@ -45,10 +45,6 @@ export class WebSocketService {
 
   // Listen for messages
   getMessages(): Observable<any> {
-    this.socket.onmessage = (event) => {
-      console.log("Raw WebSocket message received:", event.data);
-      this.messageSubject.next(event.data); // Emit the message
-    };
     return this.messageSubject.asObservable();
   }
 
