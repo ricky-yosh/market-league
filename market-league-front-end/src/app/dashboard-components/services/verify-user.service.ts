@@ -28,6 +28,7 @@ export class VerifyUserService {
   getUserFromToken(): Observable<User> {
     const token = localStorage.getItem('token');
     if (!token) {
+      this.router.navigate(['/logged-out']);
       throw new Error('No token found');
     }
 
