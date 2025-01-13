@@ -10,16 +10,29 @@ import { devLog } from '../../../environments/development/devlog';
 })
 export class WebSocketService {
   private socket!: WebSocket;
-  private messageSubject = new Subject<any>(); // Observable for incoming messages
+  private messageSubject = new Subject<any>();
   private websocket_URL = environment.websocket_url;
+  private messageQueue: string[] = [];
+  private isConnected = false;
+
+  constructor() {}
 
   connect(): void {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-      const websocketUrlWithEndpoint = this.websocket_URL + "/ws";
+      const websocketUrlWithEndpoint = `${this.websocket_URL}/ws`;
       devLog("Websocket url: ", websocketUrlWithEndpoint);
       this.socket = new WebSocket(websocketUrlWithEndpoint);
 
-      this.socket.onopen = () => console.log('WebSocket connected');
+      this.socket.onopen = () => {
+          console.log('WebSocket connected');
+          this.isConnected = true;
+
+          // Flush the message queue
+          while (this.messageQueue.length > 0) {
+            const message = this.messageQueue.shift(); // Remove the first message
+            if (message) this.socket.send(message); // Send it through WebSocket
+          }
+        };
       this.socket.onmessage = (event) => {
         try {
           const parsedData = JSON.parse(event.data);
@@ -29,7 +42,10 @@ export class WebSocketService {
           console.error("Failed to parse WebSocket message:", error, event.data);
         }
       };
-      this.socket.onclose = () => console.log('WebSocket disconnected');
+      this.socket.onclose = () => {
+        console.log('WebSocket disconnected');
+        this.isConnected = false;
+      };
       this.socket.onerror = (error) => console.error('WebSocket error:', error);
     }
   }
@@ -50,10 +66,13 @@ export class WebSocketService {
 
   // Send messages to the backend
   sendMessage(message: WebSocketTransmission): void {
+    const messageString = JSON.stringify(message);
+
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(message));
     } else {
-      console.error('WebSocket is not connected.');
+      console.warn('WebSocket is not connected! Queuing message.');
+      this.messageQueue.push(messageString); // Queue the message if WebSocket is not ready
     }
   }
   
