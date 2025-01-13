@@ -3,6 +3,7 @@ import { environment } from '../../../environments/environment';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, catchError, Observable, tap, throwError } from 'rxjs';
 import { User } from '../../models/user.model';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +17,10 @@ export class VerifyUserService {
 
   public currentUser$ = this.currentUserSubject.asObservable(); // Expose observable
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+  ) {}
 
   // * Getters
 
@@ -37,6 +41,7 @@ export class VerifyUserService {
       }),
       catchError((error) => {
         console.error('Error fetching user:', error);
+        this.router.navigate(['/logged-out']);
         return throwError(() => new Error('Failed to fetch user.'));
       })
     );

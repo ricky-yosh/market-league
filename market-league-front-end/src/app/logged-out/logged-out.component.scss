@@ -1,0 +1,47 @@
+@import '../../styles/variables';
+
+.background {
+    background-color: $market-league-purple;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.notification-box {
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 4rem;
+    background-color: $market-league-white;
+    max-width: fit-content;
+    border-radius: 20px;
+}
+
+h1 {
+    margin: 1rem;
+    text-align: center;
+}
+
+p {
+    margin: 1rem;
+    text-align: center;
+}
+
+.btn {
+    background: darken($market-league-gold, 1%);
+    border-color: $market-league-gold;
+    border-radius: 20px;
+
+    color: darken($market-league-purple, 10%);
+    padding: 1em 5em;
+    text-decoration: none;
+    transition: background 0.3s;
+    font-weight: bold;
+
+    font-size: 1.4em;
+}
+
+.btn:hover {
+    background: lighten($market-league-gold, 20%);
+}
