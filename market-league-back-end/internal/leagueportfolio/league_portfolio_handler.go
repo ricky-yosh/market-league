@@ -1,10 +1,21 @@
 package leagueportfolio
 
 import (
-	"net/http"
+	"encoding/json"
+	"fmt"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	ws "github.com/market-league/api/websocket"
 )
+
+// LeaguePortfolioHandler Interface
+type LeaguePortfolioHandlerInterface interface {
+	DraftStock(conn *websocket.Conn, rawData json.RawMessage) error
+	GetLeaguePortfolioInfo(conn *websocket.Conn, rawData json.RawMessage) error
+}
+
+// Compile-time check
+var _ LeaguePortfolioHandlerInterface = (*LeaguePortfolioHandler)(nil)
 
 type LeaguePortfolioHandler struct {
 	leaguePortfolioService *LeaguePortfolioService
@@ -16,45 +27,76 @@ func NewLeaguePortfolioHandler(leaguePortfolioService *LeaguePortfolioService) *
 	}
 }
 
-func (h *LeaguePortfolioHandler) DraftStock(c *gin.Context) {
+// * Implementation of Interface
+
+// DraftStock handles the drafting of a stock by transferring it from the LeaguePortfolio to a user's portfolio
+func (h *LeaguePortfolioHandler) DraftStock(conn *websocket.Conn, rawData json.RawMessage) error {
+	// Step 1: Parse the WebSocket message
 	var request struct {
 		LeagueID uint `json:"league_id" binding:"required"`
 		UserID   uint `json:"user_id" binding:"required"`
 		StockID  uint `json:"stock_id" binding:"required"`
 	}
 
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-		return
+	// Step 2: Parse data from WebSocket JSON payload
+	if err := json.Unmarshal(rawData, &request); err != nil {
+		ws.SendError(conn, ws.MessageType_LeaguePortfolio_DraftStock, "Invalid input: "+err.Error())
+		return fmt.Errorf("invalid input: %v", err)
 	}
 
-	err := h.leaguePortfolioService.DraftStock(request.LeagueID, request.UserID, request.StockID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	// Step 3: Process business logic (reuse the service layer)
+	if err := h.leaguePortfolioService.DraftStock(request.LeagueID, request.UserID, request.StockID); err != nil {
+		ws.SendError(conn, ws.MessageType_LeaguePortfolio_DraftStock, err.Error())
+		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Stock drafted successfully"})
+	// Step 4: Send success response (no data, just confirmation)
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_LeaguePortfolio_DraftStock,
+		Data: json.RawMessage(`{"message": "Stock price updated successfully"}`), // Simple JSON message
+	}
+	if err := conn.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
 }
 
-func (h *LeaguePortfolioHandler) GetLeaguePortfolioInfo(c *gin.Context) {
+// GetLeaguePortfolioInfo handles retrieving the League's LeaguePortfolio
+func (h *LeaguePortfolioHandler) GetLeaguePortfolioInfo(conn *websocket.Conn, rawData json.RawMessage) error {
+	// Step 1: Parse the WebSocket message
 	var request struct {
 		LeaguePortfolioID uint `json:"league_id" binding:"required"`
 	}
 
-	// Bind the incoming JSON request to the struct
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-		return
+	// Step 2: Parse data from WebSocket JSON payload
+	if err := json.Unmarshal(rawData, &request); err != nil {
+		ws.SendError(conn, ws.MessageType_LeaguePortfolio_GetLeaguePortfolioInfo, "Invalid input: "+err.Error())
+		return fmt.Errorf("invalid input: %v", err)
 	}
 
-	// Call the service layer to get the stocks
+	// Step 3: Process business logic (reuse the service layer)
 	leaguePortfolio, err := h.leaguePortfolioService.GetLeaguePortfolioInfo(request.LeaguePortfolioID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		ws.SendError(conn, ws.MessageType_LeaguePortfolio_GetLeaguePortfolioInfo, err.Error())
+		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
 	}
 
-	// Respond with the stocks
-	c.JSON(http.StatusOK, leaguePortfolio)
+	// Step 4: Marshal the portfolio into JSON
+	leaguePortfolioJSON, err := json.Marshal(leaguePortfolio)
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_LeaguePortfolio_GetLeaguePortfolioInfo, "Failed to serialize portfolio")
+		return fmt.Errorf("serialization error: %v", err)
+	}
+
+	// Step 5: Send success response back via WebSocket
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_LeaguePortfolio_GetLeaguePortfolioInfo,
+		Data: json.RawMessage(leaguePortfolioJSON), // Use marshaled JSON bytes
+	}
+	if err := conn.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
 }

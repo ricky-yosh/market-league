@@ -8,7 +8,7 @@
             <div class="available-stocks-selection">
                 <h2>Available Stocks</h2>
                 <div class="stock-cards">
-                    <div *ngFor="let stock of stocks" class="stock-card">
+                    <div *ngFor="let stock of leagueStocks" class="stock-card">
                         <div class="flex-row">
                             <h2>{{ stock.ticker_symbol }}</h2>
                             <button (click)="stockDetails(stock)" class="stock-details-button">&#9432;</button>
@@ -23,7 +23,7 @@
             <div class="stocks-in-portfolio">
                 <h2>Your current stocks</h2>
                 <div class="portfolio-stock-cards">
-                    <div *ngFor="let stock of userPortfolioStocks" class="stock-card">
+                    <div *ngFor="let stock of userPortfolio ? userPortfolio.stocks : []" class="stock-card">
                         <h2>{{ stock.ticker_symbol }}</h2>
                         <p class="full-company-name">{{ stock.company_name }}</p>
                         <p class="stock-price">{{ stock.current_price | currency:'USD':'symbol':'1.2-2' }}</p>

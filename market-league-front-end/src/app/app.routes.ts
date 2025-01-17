@@ -13,6 +13,7 @@ import { RemoveLeagueComponent } from './dashboard-components/remove-league/remo
 import { SettingsComponent } from './dashboard-components/settings/settings.component';
 import { LeagueDraftComponent } from './dashboard-components/league-draft/league-draft.component';
 import { StockDetailsComponent } from './dashboard-components/stock-details/stock-details.component';
+import { LoggedOutComponent } from './logged-out/logged-out.component';
 
 export const routes: Routes = [
     { path: '', component: HomeComponent },
@@ -20,6 +21,7 @@ export const routes: Routes = [
     { path: 'login', component: LoginComponent },
     { path: 'about', component: AboutComponent},
     { path: 'sign-up', component: SignUpComponent},
+    { path: 'logged-out', component: LoggedOutComponent },
     { path: 'dashboard', component: DashboardMainComponent,
         children: [
             { path: '', component: LeagueHomeComponent },

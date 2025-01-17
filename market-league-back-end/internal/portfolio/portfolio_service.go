@@ -83,6 +83,7 @@ func (s *PortfolioService) CreatePortfolio(userID, leagueID uint) (*models.Portf
 	if err == nil && existingPortfolio != 0 {
 		return nil, fmt.Errorf("user already has a portfolio in this league")
 	}
+	fmt.Printf("Creating Portfolio... Disregard error above. Error is a check to see if user already has a portfolio.\n")
 
 	// Step 4: Create a new portfolio
 	portfolio := &models.Portfolio{

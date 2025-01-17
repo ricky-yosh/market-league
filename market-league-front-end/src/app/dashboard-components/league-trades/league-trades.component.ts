@@ -3,13 +3,15 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LeagueService } from '../services/league.service';
 import { User } from '../../models/user.model';
-import { VerifyUserService } from '../../user-verification/verify-user.service';
+import { VerifyUserService } from '../services/verify-user.service';
 import { League } from '../../models/league.model';
 import { devLog } from '../../../environments/development/devlog';
 import { Stock } from '../../models/stock.model';
-import { EMPTY, Observable, catchError, map, of, tap } from 'rxjs';
+import { Observable, Subscription, catchError, map, of, tap } from 'rxjs';
 import { Trade } from '../../models/trade.model';
 import { guard } from '../../utils/guard';
+import { PortfolioService } from '../services/portfolio.service';
+import { TradeService } from '../services/trade.service';
 
 @Component({
   selector: 'app-league-trades',
@@ -22,9 +24,7 @@ export class LeagueTradesComponent {
   currentUsersStocks: Stock[] = [];
   leagueUsers: User[] = [];
   selectedUserStocks: Stock[] = [];
-  currentUser: User | null = null;
-  currentLeague: League | null = null;
-  currentUsersTrades: Trade[] | null = null;
+  currentUserTrades: Trade[] | null = null;
 
   formInput: { user2: User | null; stocks1: Stock[]; stocks2: Stock[] } = {
     user2: null,
@@ -32,48 +32,55 @@ export class LeagueTradesComponent {
     stocks2: []
   };
 
+  private subscription!: Subscription;
+
   constructor(
+    private portfolioService: PortfolioService,
+    private tradeService: TradeService,
     private leagueService: LeagueService,
-    private userService: VerifyUserService
+    private verifyUserService: VerifyUserService,
   ) {}
 
   ngOnInit() {
-    this.populateLeagueUsers();
-    this.loadUser();
-    this.getCurrentLeague();
+
+    // * Subscribe to the observables to listen for changes
+
+    // User's Portfolio
+    this.subscription = this.portfolioService.userPortfolio$.subscribe((portfolio) => {
+      this.currentUsersStocks = portfolio.stocks;
+    });
+    this.subscription = this.tradeService.leagueTrades$.subscribe((leagueTrades) => {
+      const filteredCurrentUserFromTrades = leagueTrades.filter(trade => trade.user2 == this.verifyUserService.getCurrentUserValue());
+      this.currentUserTrades = filteredCurrentUserFromTrades;
+    });
+    
+    // * Get Starting Values for Dashboard
+    
+    // Get all the users in the league
+    this.loadLeagueUsers();
   }
 
+  ngOnDestroy(): void {
+    // Unsubscribe to avoid memory leaks
+    this.subscription.unsubscribe();
+  }
+
+  // * Form Functions
+
   onSubmit() {
-    const league_id = this.currentLeague?.id;
-    const user1_id = this.currentUser?.id;
     const user2_id = this.formInput.user2?.id;
     const stocks1_ids = this.formInput.stocks1.map((stock: Stock) => stock.id);
     const stocks2_ids = this.formInput.stocks2.map((stock: Stock) => stock.id);
 
-    if (league_id &&
-      user1_id &&
-      user2_id &&
-      stocks1_ids.length > 0 &&
-      stocks2_ids.length > 0) {
+    if (user2_id &&
+        stocks1_ids.length > 0 &&
+        stocks2_ids.length > 0) {
       
-      this.leagueService.createTrade(league_id, user1_id, user2_id, stocks1_ids, stocks2_ids).subscribe(response => {
-        devLog('Trade successfully created:', response);
-        alert('Trade successfully created!');
-        this.confirmTrade(response.id);
-        this.resetForm();
-      });
+      this.tradeService.createTrade(user2_id, stocks1_ids, stocks2_ids)
+      this.resetForm();
     } else {
       alert('Please complete the form before submitting.');
     }
-  }
-
-  resetForm() {
-    this.formInput = {
-      user2: null,
-      stocks1: [],
-      stocks2: []
-    };
-    this.selectedUserStocks = [];
   }
 
   toggleStockSelection(stockList: Stock[], stock: Stock) {
@@ -85,112 +92,36 @@ export class LeagueTradesComponent {
     }
   }
 
-  onUserSelectionChange(selectedUser: User | null) {
-  
-    if (!selectedUser || !this.currentLeague) {
-      return; // if user or league is null, return early
-    }
-  
-    const selectedUserId = selectedUser.id;
-    const selectedLeagueId = this.currentLeague.id;
-  
-    devLog("selectedUserId & selectedLeagueId: ", selectedUserId, selectedLeagueId);
-    
+  onUserSelectionChange(): void {
     // Fetch user's portfolio for the selected league
-    this.leagueService.getUserPortfolio(selectedUserId, selectedLeagueId).subscribe(portfolio => {
-      devLog("selectedUserId's Portfolio: ", portfolio);
-      this.selectedUserStocks = portfolio.stocks;
-    });
+    this.portfolioService.getCurrentUserPortfolio();
   }
 
-  populateLeagueUsers() {
-    // Fetching the selected league from the service.
-    const selectedLeague = this.leagueService.getStoredLeague();
-    if (selectedLeague) {
-      const leagueId = selectedLeague.id;
-      this.leagueService.getLeagueMembers(leagueId).subscribe(users => {
-        this.leagueUsers = users;
-      });
-    } else {
-      console.warn('No league selected');
-    }
+  confirmTrade(tradeId: number): void {
+    guard(tradeId != null, "tradeId is null");
+
+    this.tradeService.confirmTradeForUser(tradeId);
+    alert('Trade successfully confirmed!');
   }
-
-  private loadUser(): void {
-    this.userService.getUserFromToken().subscribe({
-      next: (user: User) => {
-        devLog('User fetched successfully:', user);
-        this.currentUser = user;
-        this.getCurrentUsersPortfolio(); // load portfolio for logged in user
-        this.loadUserTrades(user.id, this.currentLeague?.id ? this.currentLeague?.id : null).subscribe(userTrades => {
-          this.currentUsersTrades = userTrades;
-        })
-      },
-      error: (error) => {
-        devLog('Failed to fetch user from token:', error);
-      }
-    });
-  }
-
-  private getCurrentLeague(): void {
-    this.currentLeague = this.leagueService.getStoredLeague();
-  }
-
-  private getCurrentUsersPortfolio() {
-
-    devLog("Current User: ", this.currentUser)
-    if (!this.currentUser || !this.currentLeague) {
-      return; // if user or league is null, return early
-    }
   
-    const currentUserId = this.currentUser.id;
-    const selectedLeagueId = this.currentLeague.id;
-  
-    devLog("currentUserId & selectedLeagueId: ", currentUserId, selectedLeagueId);
-    
-    // Fetch user's portfolio for the selected league
-    this.leagueService.getUserPortfolio(currentUserId, selectedLeagueId).subscribe(portfolio => {
-      devLog("currentUserId's Portfolio: ", portfolio);
-      this.currentUsersStocks = portfolio.stocks;
-      this.removeCurrentPlayerFromTradeList();
-    });
-  }
+  // * Helper Functions
 
-  private removeCurrentPlayerFromTradeList() {
-    const currentUserId = this.currentUser?.id
-    if (currentUserId != null) {
-      this.leagueUsers = this.leagueUsers.filter(user => user.id !== currentUserId);
-    }
+  private resetForm() {
+    this.formInput = {
+      user2: null,
+      stocks1: [],
+      stocks2: []
+    };
+    this.selectedUserStocks = [];
   }
 
   // Load the user's trades for a specific league
-  private loadUserTrades(userId: number, leagueId: number | null): Observable<Trade[]> {
-    guard(leagueId != null, "LeagueId is Null");
-  
-    const receivingTrade: boolean = true;
-    const sendingTrade: boolean = false;
-    return this.leagueService.getTrades(userId, leagueId, receivingTrade, sendingTrade).pipe(
-      map((trades: Trade[]) => trades.filter(trade => trade.status === "pending")), // Filter the trades
-      tap((filteredTrades) => {
-        devLog('Pending user trades fetched successfully:', filteredTrades);
-      }),
-      catchError((error) => {
-        console.error('Failed to fetch user trades:', error);
-        return of([]);
-      })
-    );
-  }
-  
-
-  confirmTrade(tradeId: number): void {
-    let currentUserId = this.currentUser?.id
-    guard(tradeId != null, "tradeId is null");
-    guard(currentUserId != null, "UserID is null!")
-
-    this.leagueService.confirmTradeForUser(tradeId, currentUserId).subscribe(response => {
-      devLog('Trade successfully confirmed:', response);
-      alert('Trade successfully confirmed!');
-    });
+  private loadLeagueUsers(): void {
+    const selectedLeague = this.leagueService.getSelectedLeagueValue();
+    const leagueUsers = selectedLeague?.users;
+    guard(leagueUsers != null, "Selected League Users list is null!");
+    
+    this.leagueUsers = leagueUsers;
   }
 
 }

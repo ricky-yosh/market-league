@@ -1,12 +1,22 @@
 package trade
 
 import (
-	"errors"
-	"net/http"
+	"encoding/json"
+	"fmt"
 
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
+	"github.com/gorilla/websocket"
+	ws "github.com/market-league/api/websocket"
 )
+
+// UserHandler Interface
+type TradeHandlerInterface interface {
+	CreateTrade(conn *websocket.Conn, rawData json.RawMessage) error
+	ConfirmTrade(conn *websocket.Conn, rawData json.RawMessage) error
+	GetTrades(conn *websocket.Conn, rawData json.RawMessage) error
+}
+
+// Compile-time check
+var _ TradeHandlerInterface = (*TradeHandler)(nil)
 
 // TradeHandler handles HTTP requests for trades
 type TradeHandler struct {
@@ -20,8 +30,11 @@ func NewTradeHandler(tradeService *TradeService) *TradeHandler {
 	}
 }
 
+// * Implementation of Interface
+
 // CreateTradeHandler handles the creation of a new trade
-func (h *TradeHandler) CreateTrade(c *gin.Context) {
+func (h *TradeHandler) CreateTrade(conn *websocket.Conn, rawData json.RawMessage) error {
+	// Step 1: Parse the WebSocket message
 	var request struct {
 		LeagueID   uint   `json:"league_id"`
 		User1ID    uint   `json:"user1_id"`
@@ -30,21 +43,41 @@ func (h *TradeHandler) CreateTrade(c *gin.Context) {
 		Stocks2IDs []uint `json:"stocks2_ids"`
 	}
 
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	// Step 2: Parse data from WebSocket JSON payload
+	if err := json.Unmarshal(rawData, &request); err != nil {
+		ws.SendError(conn, ws.MessageType_Trade_CreateTrade, "Invalid input: "+err.Error())
+		return fmt.Errorf("invalid input: %v", err)
 	}
 
+	// Step 3: Process business logic (reuse the service layer)
 	trade, err := h.TradeService.CreateTrade(request.LeagueID, request.User1ID, request.User2ID, request.Stocks1IDs, request.Stocks2IDs)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		ws.SendError(conn, ws.MessageType_Trade_CreateTrade, err.Error())
+		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
 	}
 
-	c.JSON(http.StatusOK, trade)
+	// Step 4: Marshal the portfolio into JSON
+	portfolioJSON, err := json.Marshal(trade)
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_Trade_CreateTrade, "Failed to serialize portfolio")
+		return fmt.Errorf("serialization error: %v", err)
+	}
+
+	// Step 5: Send success response back via WebSocket
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_Trade_CreateTrade,
+		Data: json.RawMessage(portfolioJSON), // Use marshaled JSON bytes
+	}
+	if err := conn.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
 }
 
-func (h *TradeHandler) GetTrades(c *gin.Context) {
+// GetTrades handles the retrieval of all trades for a given League with the option of specifying a user
+func (h *TradeHandler) GetTrades(conn *websocket.Conn, rawData json.RawMessage) error {
+	// Step 1: Parse the WebSocket message
 	var request struct {
 		UserID         *uint `json:"user_id"`         // Optional User ID
 		LeagueID       uint  `json:"league_id"`       // Required League ID
@@ -52,75 +85,67 @@ func (h *TradeHandler) GetTrades(c *gin.Context) {
 		SendingTrade   *bool `json:"sending_trade"`   // Optional: Filter for sending trades
 	}
 
-	// Parse the JSON request
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
-		return
+	// Step 2: Parse data from WebSocket JSON payload
+	if err := json.Unmarshal(rawData, &request); err != nil {
+		ws.SendError(conn, ws.MessageType_Trade_GetTrades, "Invalid input: "+err.Error())
+		return fmt.Errorf("invalid input: %v", err)
 	}
 
-	// Ensure LeagueID is always provided
-	if request.LeagueID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "league_id is required"})
-		return
-	}
-
-	// Call the service to fetch trades
+	// Step 3: Process business logic (reuse the service layer)
 	trades, err := h.TradeService.GetTrades(request.LeagueID, request.UserID, request.ReceivingTrade, request.SendingTrade)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		ws.SendError(conn, ws.MessageType_Trade_GetTrades, err.Error())
+		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
 	}
 
-	c.JSON(http.StatusOK, trades)
+	// Step 4: Marshal the portfolio into JSON
+	portfolioJSON, err := json.Marshal(trades)
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_Trade_GetTrades, "Failed to serialize portfolio")
+		return fmt.Errorf("serialization error: %v", err)
+	}
+
+	// Step 5: Send success response back via WebSocket
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_Trade_GetTrades,
+		Data: json.RawMessage(portfolioJSON), // Use marshaled JSON bytes
+	}
+	if err := conn.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
+
 }
 
 // ConfirmTrade handles the confirmation of a trade
-func (h *TradeHandler) ConfirmTrade(c *gin.Context) {
-	var req struct {
+func (h *TradeHandler) ConfirmTrade(conn *websocket.Conn, rawData json.RawMessage) error {
+	// Step 1: Parse the WebSocket message
+	var request struct {
 		TradeID uint `json:"trade_id" binding:"required"`
 		UserID  uint `json:"user_id" binding:"required"`
 	}
 
-	// ConfirmTradeResponse represents the response after confirming a trade
-	type ConfirmTradeResponse struct {
-		Success bool   `json:"success"`
-		Message string `json:"message"`
+	// Step 2: Parse data from WebSocket JSON payload
+	if err := json.Unmarshal(rawData, &request); err != nil {
+		ws.SendError(conn, ws.MessageType_Trade_ConfirmTrade, "Invalid input: "+err.Error())
+		return fmt.Errorf("invalid input: %v", err)
 	}
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, ConfirmTradeResponse{
-			Success: false,
-			Message: "Invalid request payload",
-		})
-		return
+	// Step 3: Process business logic (reuse the service layer)
+	if err := h.TradeService.ConfirmTrade(request.TradeID, request.UserID); err != nil {
+		ws.SendError(conn, ws.MessageType_Trade_ConfirmTrade, err.Error())
+		return fmt.Errorf("failed to confirm trade: %v", err)
 	}
 
-	// Call the service to confirm the trade
-	if err := h.TradeService.ConfirmTrade(req.TradeID, req.UserID); err != nil {
-		// Determine the appropriate status code based on the error
-		var statusCode int
-		switch {
-		case errors.Is(err, gorm.ErrRecordNotFound) || err.Error() == "trade not found":
-			statusCode = http.StatusNotFound
-		case err.Error() == "trade is already confirmed" ||
-			err.Error() == "user1 has already confirmed this trade" ||
-			err.Error() == "user2 has already confirmed this trade" ||
-			err.Error() == "user is not part of this trade":
-			statusCode = http.StatusBadRequest
-		default:
-			statusCode = http.StatusInternalServerError
-		}
-
-		c.JSON(statusCode, ConfirmTradeResponse{
-			Success: false,
-			Message: err.Error(),
-		})
-		return
+	// Step 4: Send success response (no data, just confirmation)
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_Trade_ConfirmTrade,
+		Data: json.RawMessage(`{"message": "Trade confirmed successfully"}`), // Simple JSON message
+	}
+	if err := conn.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
 	}
 
-	// Success response
-	c.JSON(http.StatusOK, ConfirmTradeResponse{
-		Success: true,
-		Message: "Trade confirmed successfully",
-	})
+	return nil
 }

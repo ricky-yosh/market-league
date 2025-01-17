@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
+import { WebSocketService } from './dashboard-components/services/websocket.service';
 
 @Component({
   selector: 'app-root',
@@ -11,7 +12,10 @@ import { filter } from 'rxjs';
 })
 export class AppComponent implements OnInit {
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private websocketService: WebSocketService,
+  ) {}
 
   ngOnInit() {
     // Subscribe to route changes and filter for NavigationEnd events
@@ -29,6 +33,13 @@ export class AppComponent implements OnInit {
           document.body.style.overflow = 'auto';
         }
       });
+    // Load Websocket
+    this.websocketService.connect();
+  }
+
+  ngOnDestroy(): void {
+    // Optionally close the connection when the app is destroyed
+    this.websocketService.closeSocketConnection();
   }
 
 }

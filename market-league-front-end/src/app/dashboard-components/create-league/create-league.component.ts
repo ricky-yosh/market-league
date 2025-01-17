@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { VerifyUserService } from '../../user-verification/verify-user.service';
+import { VerifyUserService } from '../services/verify-user.service';
 import { LeagueService } from '../services/league.service';
 import { devLog } from '../../../environments/development/devlog';
 import { FormsModule } from '@angular/forms';
@@ -50,15 +50,7 @@ export class CreateLeagueComponent {
 
 
     devLog('Create League Inputs\n---\nLeague Name: ', leagueName, "\nUsername: ", username, "\nEnd Date: ", endDate)
-    this.leagueService.createLeague(leagueName, username, endDate).subscribe({
-      next: (response) => {
-        // Assuming 'response' has a 'leagues' property that is an array of 'League' objects
-        devLog("League Created: ", response)
-      },
-      error: (error) => {
-        devLog('Failed to fetch user leagues:', error);
-      }
-    });
+    this.leagueService.createLeague(leagueName, username, endDate)
   }
   
 }
