@@ -7,7 +7,8 @@ import { User } from '../../models/user.model';
 import { League } from '../../models/league.model';
 import { Subscription } from 'rxjs';
 import { devLog } from '../../../environments/development/devlog';
-import { WebSocketService } from '../services/websocket.service';
+import { PortfolioService } from '../services/portfolio.service';
+import { TradeService } from '../services/trade.service';
 
 @Component({
   selector: 'app-dashboard-main',
@@ -18,17 +19,20 @@ import { WebSocketService } from '../services/websocket.service';
 })
 export class DashboardMainComponent {
 
-    leagues: League[] = [];
-    selectedLeague: League | null = null;
-    user: string = "User"
-    showMenu = false
+  leagues: League[] = [];
+  selectedLeague: League | null = null;
+  user: string = "User"
+  showMenu = false
 
-    private subscription!: Subscription;
+  private subscription!: Subscription;
 
   constructor(
     private router: Router,
     private userService: VerifyUserService,
     private leagueService: LeagueService,
+    private portfolioService: PortfolioService,
+    private tradeService: TradeService
+
   ) {}
 
   ngOnInit(): void {
@@ -93,6 +97,9 @@ export class DashboardMainComponent {
   }
 
   redirectToDashboard() {
+    this.loadLeagueMembers();
+    this.loadUserPortfolio();
+    this.loadTrades();
     this.router.navigate(['/dashboard']);
   }
   
@@ -118,6 +125,22 @@ export class DashboardMainComponent {
 
   redirectToSettings() {
     this.router.navigate(['dashboard/settings']);
+  }
+
+  // * Refresh Information
+  // Method to load members of a selected league
+  private loadLeagueMembers(): void {
+    this.leagueService.getLeagueMembers();
+  }
+
+  // Load the user's portfolio for a specific league
+  private loadUserPortfolio(): void {
+    this.portfolioService.getCurrentUserPortfolio();
+  }
+
+  // Load the user's trades for a specific league
+  private loadTrades(): void {
+    this.tradeService.getTrades();
   }
 
 }
