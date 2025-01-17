@@ -1,12 +1,14 @@
 import { CommonModule, NgFor, NgIf } from '@angular/common';
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
-import { VerifyUserService } from '../../user-verification/verify-user.service';
+import { VerifyUserService } from '../services/verify-user.service';
 import { LeagueService } from '../services/league.service';
-import { firstValueFrom } from 'rxjs';
 import { User } from '../../models/user.model';
 import { League } from '../../models/league.model';
-import { Leagues } from '../../models/leagues.model';
+import { Subscription } from 'rxjs';
+import { devLog } from '../../../environments/development/devlog';
+import { PortfolioService } from '../services/portfolio.service';
+import { TradeService } from '../services/trade.service';
 
 @Component({
   selector: 'app-dashboard-main',
@@ -17,28 +19,87 @@ import { Leagues } from '../../models/leagues.model';
 })
 export class DashboardMainComponent {
 
-    leagues: Leagues = { leagues: [] };
-    selectedLeague: League | null = null;
-    user: string = "User"
-    showMenu = false
+  leagues: League[] = [];
+  selectedLeague: League | null = null;
+  user: string = "User"
+  showMenu = false
+
+  private subscription!: Subscription;
 
   constructor(
     private router: Router,
     private userService: VerifyUserService,
-    private leagueService: LeagueService
+    private leagueService: LeagueService,
+    private portfolioService: PortfolioService,
+    private tradeService: TradeService
+
   ) {}
 
   ngOnInit(): void {
-    this.loadUserLeagues();
+    
+    // * Subscribe to the observables to listen for changes
+    
+    this.subscription = this.leagueService.userLeagues$.subscribe((leagues) => {
+      this.leagues = leagues;
+    });
+
+    // * Get Starting Values for Dashboard
+    
+    // Loads the user
     this.loadUser();
+    // Gets all of the user's leagues
+    this.loadUserLeagues();
   }
 
-  // Routing
+  ngOnDestroy(): void {
+    // Unsubscribe to avoid memory leaks
+    this.subscription.unsubscribe();
+  }
+
+  // * Template Methods
+
+  // Method to handle league selection
+  selectLeague(league: League) {
+    this.leagueService.setSelectedLeague(league)
+    this.redirectToDashboard();
+  }
+
+  // Method to hide/show side menu
+  toggleMenu() {
+    this.showMenu = !this.showMenu;
+  }
+
+  // * Helper Methods
+
+  // Method to load the leagues for the user
+  private loadUserLeagues(): void {
+    // Fetch leagues
+    this.leagueService.getUserLeagues();
+  }
+
+  // Method to load the user data asynchronously
+  private loadUser(): void {
+    this.userService.getUserFromToken().subscribe({
+      next: (user: User) => {
+        devLog('User fetched successfully:', user);
+        this.user = user.username;
+      },
+      error: (error) => {
+        console.error('Failed to fetch user from token:', error);
+      }
+    });
+  }
+
+  // * Routing
+
   redirectToHome() {
     this.router.navigate(['/home']);
   }
 
   redirectToDashboard() {
+    this.loadLeagueMembers();
+    this.loadUserPortfolio();
+    this.loadTrades();
     this.router.navigate(['/dashboard']);
   }
   
@@ -66,52 +127,20 @@ export class DashboardMainComponent {
     this.router.navigate(['dashboard/settings']);
   }
 
-  // Method to load the leagues for the user
-  private loadUserLeagues(): void {
-    // Step 1: Get the user from the token
-    this.userService.getUserFromToken().subscribe({
-      next: (user) => {
-        const userId = user.id;
-
-        // Step 2: Fetch leagues based on the user's ID
-        this.leagueService.getUserLeagues(userId).subscribe({
-          next: (response) => {
-            // Assuming 'response' has a 'leagues' property that is an array of 'League' objects
-            this.leagues = response;
-          },
-          error: (error) => {
-            console.error('Failed to fetch user leagues:', error);
-          }
-        });
-      },
-      error: (error) => {
-        console.error('Failed to fetch user from token:', error);
-      }
-    });
+  // * Refresh Information
+  // Method to load members of a selected league
+  private loadLeagueMembers(): void {
+    this.leagueService.getLeagueMembers();
   }
 
-
-  // Method to handle league selection
-  selectLeague(league: League) {
-    this.leagueService.setSelectedLeague(league)
-    this.redirectToDashboard();
+  // Load the user's portfolio for a specific league
+  private loadUserPortfolio(): void {
+    this.portfolioService.getCurrentUserPortfolio();
   }
 
-  // Method to load the user data asynchronously
-  private loadUser(): void {
-    this.userService.getUserFromToken().subscribe({
-      next: (user: User) => {
-        console.log('User fetched successfully:', user);
-        this.user = user.username;
-      },
-      error: (error) => {
-        console.error('Failed to fetch user from token:', error);
-      }
-    });
-  }
-
-  toggleMenu() {
-    this.showMenu = !this.showMenu;
+  // Load the user's trades for a specific league
+  private loadTrades(): void {
+    this.tradeService.getTrades();
   }
 
 }

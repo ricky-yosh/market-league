@@ -35,8 +35,19 @@ func (s *Scheduler) StartDailyTask() {
 			// Get the current time
 			now := time.Now().In(location)
 
-			// Calculate the next run time (rounded to the next 5-minute interval)
-			nextRun := now.Truncate(5 * time.Minute).Add(5 * time.Minute)
+			// Check if today is a weekday (Monday=1, Sunday=7)
+			if now.Weekday() == time.Saturday || now.Weekday() == time.Sunday {
+				log.Printf("Skipping task execution as today is a weekend: %s", now.Weekday())
+				// Sleep until the next day
+				time.Sleep(24 * time.Hour)
+				continue
+			}
+
+			// Calculate the next run time (set to the next day at 9:00 AM)
+			nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, location)
+			if now.After(nextRun) {
+				nextRun = nextRun.Add(24 * time.Hour)
+			}
 
 			log.Printf("Current time: %s, Next run at: %s", now.Format("15:04:05"), nextRun.Format("15:04:05"))
 

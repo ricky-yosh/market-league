@@ -1,37 +1,82 @@
 import { Injectable } from '@angular/core';
 import { Stock } from '../../models/stock.model';
-import { environment } from '../../../environments/environment';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { StockWithHistory } from '../../models/stock-with-history';
+import { StockWithHistory } from '../../models/stock-with-history.model';
+import { WebSocketMessageTypes } from './websocket-message-types';
+import { devLog } from '../../../environments/development/devlog';
+import { WebSocketService } from './websocket.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class StockService {
-  private baseUrl = environment.api_url;
-  private getStockDetailsURL = `${this.baseUrl}/api/stocks/get-stock-information`;
 
-  private selectedStock: Stock | null = null;
+  // * Observables
 
-  constructor(private http: HttpClient) {}
+  // User Portfolio
+  private selectedStockDetailsSubject = new Subject<StockWithHistory>();
+  selectedStockDetails$ = this.selectedStockDetailsSubject.asObservable();
 
-  private readonly selected_stock = '';
+  // * Constructor
+  
+  constructor(
+    private webSocketService: WebSocketService,
+  ) {
+    this.webSocketService.getMessages().subscribe((message) => {
+      switch (message.type) {
+        case WebSocketMessageTypes.MessageType_Stock_GetStockInformation:
+          devLog("Received GetStockInformation Response: " + message.data);
+          this.handleGetStockInformationResponse(message.data);
+          break;
+        default:
+          // devLog("Stock Service unable to route Websocket Message properly! " + message.data);
+      }
+    });
+  }
+
+  private readonly SELECTED_STOCK = "selected_stock";
+
+  // * Websocket Response Handler Functions
+
+  handleGetStockInformationResponse(responseData: any): void {
+    // Check for error message
+    const didErrorOccur = this.webSocketService.didErrorOccur(responseData);
+    if (didErrorOccur) {
+      devLog("Error occurred: " + responseData.message)
+      return
+    }
+    this.handleSuccessfulGetStockInformationResponse(responseData);
+  }
+
+  // * Helper Functions to Websocket Responses
+
+  handleSuccessfulGetStockInformationResponse(stockDetails: StockWithHistory): void {
+    this.selectedStockDetailsSubject.next(stockDetails);
+  }
+
+  // * Websocket Call Functions
+
+  getStockDetails(stockId: number): void {
+    const data = {
+      stock_id: stockId
+    };
+    const websocketMessage = {
+      type: WebSocketMessageTypes.MessageType_Stock_GetStockInformation,
+      data: data
+    };
+    this.webSocketService.sendMessage(websocketMessage);
+  }
+
+  // * Helper Functions
 
   setStock(stock: Stock): void {
-    localStorage.setItem(this.selected_stock, JSON.stringify(stock));
+    localStorage.setItem(this.SELECTED_STOCK, JSON.stringify(stock));
   }
 
   getStock(): Stock {
-    const stockData = localStorage.getItem(this.selected_stock);
+    const stockData = localStorage.getItem(this.SELECTED_STOCK);
     return stockData ? JSON.parse(stockData) : null;
-  }
-
-  getStockDetails(stockId: number): Observable<StockWithHistory> {
-    const payload = {
-      stock_id: stockId
-    };
-    return this.http.post<StockWithHistory>(this.getStockDetailsURL, payload);
   }
 
 }

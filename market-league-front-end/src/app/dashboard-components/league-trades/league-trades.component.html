@@ -17,7 +17,7 @@
                         name="user2" 
                         class="user-select"
                         [(ngModel)]="formInput.user2" 
-                        (ngModelChange)="onUserSelectionChange($event)"
+                        (ngModelChange)="onUserSelectionChange()"
                         required>
                         <option [ngValue]="null" disabled selected>Select a user</option>
                         <option *ngFor="let user of leagueUsers" [ngValue]="user">{{ user.username }}</option>
@@ -61,8 +61,8 @@
     
             <div class="container" style="flex: 2;">
                 <h2>Incoming Trades</h2>
-                <ul *ngIf="currentUsersTrades && currentUsersTrades.length > 0; else noTrades" class="trades-list">
-                    <li *ngFor="let trade of currentUsersTrades" class="trade-item">
+                <ul *ngIf="currentUserTrades && currentUserTrades.length > 0; else noTrades" class="trades-list">
+                    <li *ngFor="let trade of currentUserTrades" class="trade-item">
                         <div>
                             <p>{{ trade.user1.username }}</p>
                             <div 
