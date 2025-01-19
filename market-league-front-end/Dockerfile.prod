@@ -23,8 +23,9 @@ COPY --from=build /app/dist/market-league-front-end/browser /usr/share/nginx/htm
 # Copy the custom Nginx configuration file
 COPY ./nginx.conf /etc/nginx/nginx.conf
 
-# Expose port 80 for the web traffic
+# Expose ports for HTTP and HTTPS
 EXPOSE 80
+EXPOSE 443
 
 # Start Nginx server
 CMD ["nginx", "-g", "daemon off;"]
