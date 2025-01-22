@@ -20,6 +20,45 @@ JWT_KEY=secretkey
 ```
 Change `user`, `password`, and `database` to appropriate values.
 
+## Running MarketLeague for Production:
+Requirements:
+[Docker v27.2.0](https://www.docker.com/products/docker-desktop/)
+```sh
+docker compose -f docker-compose.prod.yml up --build -d
+```
+This will run the `docker-compose.prod.yml` and will run the prod environments for the Angular Frontend and Gin Backend. The `-d` flag will hide docker logs. If you want to see the logs on the production environment run:
+```sh
+docker compose -f docker-compose.prod.yml logs -f
+```
+
+### Ensuring that websockets are secure (wss) not insecure (ws)
+If you try and run the secure websockets (wss) it will not work unless the server is running on a secure connection (https). If you do not have a domain name you can use a self-signed certificate:
+```sh
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+-keyout ./ssl/nginx-selfsigned.key \
+-out ./ssl/nginx-selfsigned.crt
+```
+Make sure that the `/ssl` folder that is created is on the same level as the `docker-compose.prod.yml` files:
+```
+market-league
+├── README.md
+├── docker-compose.prod.yml
+├── market-league-back-end/
+├── market-league-front-end/
+├── ssl/
+└── ...
+```
+
+### .env
+We also need to make sure that an `.env` file exists on the server that is hosting the production version of the webapp.
+```
+POSTGRES_USER=user
+POSTGRES_PASSWORD=password
+POSTGRES_DB=database
+JWT_KEY=secretkey
+```
+Change `user`, `password`, and `database` to appropriate values.
+
 ## MarketLeague Roadmap
 Projected plan for features and presentations.
 ![MarketLeague Roadmap](./readme-images/marketleague-roadmap.png)
