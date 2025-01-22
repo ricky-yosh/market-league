@@ -17,11 +17,10 @@ func NewStockService(repo *StockRepository) *StockService {
 	return &StockService{StockRepo: repo}
 }
 
-func (s *StockService) CreateStock(tickerSymbol string, companyName string, currentPrice float64) (*models.Stock, error) {
+func (s *StockService) CreateStock(tickerSymbol string, companyName string) (*models.Stock, error) {
 	stock := &models.Stock{
 		TickerSymbol: tickerSymbol,
 		CompanyName:  companyName,
-		CurrentPrice: currentPrice,
 	}
 
 	err := s.StockRepo.CreateStock(stock)
