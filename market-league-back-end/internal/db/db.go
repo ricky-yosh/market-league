@@ -42,6 +42,7 @@ func InitDB() {
 		&models.LeaguePortfolio{},
 		&models.Trade{},
 		&models.User{},
+		&models.OwnershipHistory{},
 	)
 
 	if err != nil {
