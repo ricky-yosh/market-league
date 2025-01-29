@@ -69,3 +69,19 @@ func (s *StockService) GetStockInfo(stockID uint) (models.Stock, error) {
 
 	return stock, nil
 }
+
+func (s *StockService) GetAllStocks() ([]*models.Stock, error) {
+	// Fetch all stocks from the repository
+	stocks, err := s.StockRepo.GetAllStocks()
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert []models.Stock to []*models.Stock
+	var stocksPointers []*models.Stock
+	for i := range stocks {
+		stocksPointers = append(stocksPointers, &stocks[i])
+	}
+
+	return stocksPointers, nil
+}

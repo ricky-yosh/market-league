@@ -15,6 +15,7 @@ type StockHandlerInterface interface {
 	CreateStock(conn *websocket.Conn, rawData json.RawMessage) error
 	CreateMultipleStocks(conn *websocket.Conn, rawData json.RawMessage) error
 	UpdatePrice(conn *websocket.Conn, rawData json.RawMessage) error
+	GetAllStocks(conn *websocket.Conn, rawData json.RawMessage) error
 	GetStockInfo(conn *websocket.Conn, rawData json.RawMessage) error
 }
 
@@ -154,6 +155,34 @@ func (h *StockHandler) UpdatePrice(conn *websocket.Conn, rawData json.RawMessage
 	response := ws.WebsocketMessage{
 		Type: ws.MessageType_Stock_UpdateCurrentStockPrice,
 		Data: json.RawMessage(`{"message": "Stock price updated successfully"}`), // Simple JSON message
+	}
+	if err := conn.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
+}
+
+func (h *StockHandler) GetAllStocks(conn *websocket.Conn, rawData json.RawMessage) error {
+	// Step 1: Fetch all stocks using the service layer
+	stocks, err := h.StockService.GetAllStocks()
+	if err != nil {
+		// Send an error response if something goes wrong
+		ws.SendError(conn, ws.MessageType_Stock_GetAllStocks, "Failed to retrieve stocks: "+err.Error())
+		return fmt.Errorf("failed to retrieve stocks: %v", err)
+	}
+
+	// Step 2: Prepare the response
+	responseData, err := json.Marshal(stocks)
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_Stock_GetAllStocks, "Failed to serialize stock data: "+err.Error())
+		return fmt.Errorf("failed to serialize stock data: %v", err)
+	}
+
+	// Step 3: Send the list of stocks back to the client
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_Stock_GetAllStocks,
+		Data: json.RawMessage(responseData),
 	}
 	if err := conn.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)

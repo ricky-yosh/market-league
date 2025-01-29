@@ -9,11 +9,13 @@ import { Subscription } from 'rxjs';
 import { devLog } from '../../../environments/development/devlog';
 import { PortfolioService } from '../services/portfolio.service';
 import { TradeService } from '../services/trade.service';
+import { FormsModule } from '@angular/forms';
+import { StockService } from '../services/stock.service';
 
 @Component({
   selector: 'app-dashboard-main',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, NgFor, NgIf],
+  imports: [RouterOutlet, CommonModule, NgFor, NgIf, FormsModule],
   templateUrl: './dashboard-main.component.html',
   styleUrl: './dashboard-main.component.scss'
 })
@@ -24,6 +26,9 @@ export class DashboardMainComponent {
   user: string = "User"
   showMenu = false
 
+  searchQuery: string = ''; 
+  searchResults: { name: string; symbol: string }[] = [];
+
   private subscription!: Subscription;
 
   constructor(
@@ -31,8 +36,8 @@ export class DashboardMainComponent {
     private userService: VerifyUserService,
     private leagueService: LeagueService,
     private portfolioService: PortfolioService,
-    private tradeService: TradeService
-
+    private tradeService: TradeService,
+    private stockService: StockService
   ) {}
 
   ngOnInit(): void {
@@ -125,6 +130,25 @@ export class DashboardMainComponent {
 
   redirectToSettings() {
     this.router.navigate(['dashboard/settings']);
+  }
+
+  onSearch(): void {
+    const stocks = this.stockService.getAllStocks();
+    console.log("helo", stocks)
+
+    if (this.searchQuery.trim()) {
+      console.log('Searching for:', this.searchQuery);
+      // Mock search results (Replace with an API call in the future)
+      this.searchResults = [
+        { name: 'Apple', symbol: 'AAPL' },
+        { name: 'Tesla', symbol: 'TSLA' },
+        { name: 'Microsoft', symbol: 'MSFT' },
+      ].filter((stock) =>
+        stock.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
+    } else {
+      this.searchResults = [];
+    }
   }
 
   // * Refresh Information

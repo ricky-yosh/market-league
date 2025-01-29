@@ -68,6 +68,22 @@ export class StockService {
     this.webSocketService.sendMessage(websocketMessage);
   }
 
+  getAllStocks(): void {
+    const websocketMessage = {
+      type: WebSocketMessageTypes.MessageType_Stock_GetAllStocks,
+      data: {} // No additional data needed
+    };
+    this.webSocketService.sendMessage(websocketMessage);
+
+    // Listen for the response from the WebSocket
+    this.webSocketService.getMessages().subscribe((message: any) => {
+        if (message.type === WebSocketMessageTypes.MessageType_Stock_GetAllStocks) {
+            console.log("Received all stocks:", message.data); // Should log all stocks
+            // You can now use message.data (the list of stocks) as needed
+        }
+    });
+  }  
+
   // * Helper Functions
 
   setStock(stock: Stock): void {
