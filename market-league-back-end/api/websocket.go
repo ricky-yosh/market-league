@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 	ws "github.com/market-league/api/websocket"
 	"github.com/market-league/internal/league"
-	"github.com/market-league/internal/leagueportfolio"
+	league_portfolio "github.com/market-league/internal/league_portfolio"
 	"github.com/market-league/internal/portfolio"
 	"github.com/market-league/internal/stock"
 	"github.com/market-league/internal/trade"
@@ -23,7 +23,7 @@ type WebSocketHandler struct {
 	stockHandler           stock.StockHandlerInterface
 	userHandler            user.UserHandlerInterface
 	tradeHandler           trade.TradeHandlerInterface
-	leaguePortfolioHandler leagueportfolio.LeaguePortfolioHandlerInterface
+	leaguePortfolioHandler league_portfolio.LeaguePortfolioHandlerInterface
 	leagueHandler          league.LeagueHandlerInterface
 }
 
@@ -32,7 +32,7 @@ func NewWebSocketHandler(
 	stockHandler stock.StockHandlerInterface,
 	userHandler user.UserHandlerInterface,
 	tradeHandler trade.TradeHandlerInterface,
-	leaguePortfolioHandler leagueportfolio.LeaguePortfolioHandlerInterface,
+	leaguePortfolioHandler league_portfolio.LeaguePortfolioHandlerInterface,
 	leagueHandler league.LeagueHandlerInterface,
 ) *WebSocketHandler {
 	return &WebSocketHandler{
