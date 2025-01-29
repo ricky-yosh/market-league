@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -82,7 +83,10 @@ func (s *Scheduler) StartDailyTask() {
 					log.Printf("Failed to update stock price for %s: %v", company.TickerSymbol, err)
 				}
 			}
-			s.ownershipHistoryService.UpdateActiveOwnershipHistoryCurrentPrices()
+			err = s.ownershipHistoryService.UpdateActiveOwnershipHistoryCurrentPrices()
+			if err != nil {
+				fmt.Printf("unable to update active ownershipHistory prices! %v", err)
+			}
 
 			log.Printf("Task completed. Waiting for the next interval.")
 		}

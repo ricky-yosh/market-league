@@ -40,7 +40,7 @@ func (r *ownershipHistoryRepository) FindByStockIDAndPortfolioID(stockID uint, p
 	var history models.OwnershipHistory
 	err := r.db.Where("stock_id = ? AND portfolio_id = ?", stockID, portfolioID).First(&history).Error
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to retrieve ownership history with stockID and portfolioID: %v", err)
 	}
 	if history.EndDate != nil {
 		return nil, fmt.Errorf("EndDate is not nil, which means that this history section is not mutable")
@@ -51,7 +51,7 @@ func (r *ownershipHistoryRepository) FindByStockIDAndPortfolioID(stockID uint, p
 // GetActiveHistories gets all the currently active histories
 func (r *ownershipHistoryRepository) GetActiveHistories() ([]*models.OwnershipHistory, error) {
 	var histories []*models.OwnershipHistory
-	err := r.db.Where("end_date IS NULL").Find(histories).Error
+	err := r.db.Where("end_date IS NULL").Find(&histories).Error
 	if err != nil {
 		return nil, err
 	}

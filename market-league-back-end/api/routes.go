@@ -82,9 +82,10 @@ func RegisterRoutes(router *gin.Engine) {
 
 	// Initialize the scheduler and start it
 	scheduler := &Scheduler{
-		db:           database,
-		StockService: stockService,
-		stockRepo:    stockRepo,
+		db:                      database,
+		StockService:            stockService,
+		stockRepo:               stockRepo,
+		ownershipHistoryService: ownershipHistoryService,
 	}
 	scheduler.StartDailyTask()
 
