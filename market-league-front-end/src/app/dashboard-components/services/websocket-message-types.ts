@@ -11,6 +11,7 @@ export const WebSocketMessageTypes = {
 	MessageType_Stock_CreateMultipleStocks: "MessageType_Stock_CreateMultipleStocks",
 	MessageType_Stock_GetStockInformation: "MessageType_Stock_GetStockInformation",
 	MessageType_Stock_UpdateCurrentStockPrice: "MessageType_Stock_UpdateCurrentStockPrice",
+	MessageType_Stock_GetAllStocks: "MessageType_Stock_GetAllStocks",
 
 	// User Routes
 	MessageType_User_UserInfo: "MessageType_User_UserInfo",

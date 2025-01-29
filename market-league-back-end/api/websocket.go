@@ -71,6 +71,8 @@ func (h *WebSocketHandler) routeTransmission(conn *websocket.Conn, message ws.We
 		return h.stockHandler.UpdatePrice(conn, message.Data)
 	case ws.MessageType_Stock_GetStockInformation:
 		return h.stockHandler.GetStockInfo(conn, message.Data)
+	case ws.MessageType_Stock_GetAllStocks:
+		return h.stockHandler.GetAllStocks(conn, message.Data)
 
 	// User Routes
 	case ws.MessageType_User_UserInfo:
