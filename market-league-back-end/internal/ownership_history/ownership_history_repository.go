@@ -12,6 +12,7 @@ type OwnershipHistoryRepositoryInterface interface {
 	Create(history *models.OwnershipHistory) error
 	Update(history *models.OwnershipHistory) error
 	FindByStockIDAndPortfolioID(stockID uint, portfolioID uint) (*models.OwnershipHistory, error)
+	GetActiveHistories() ([]*models.OwnershipHistory, error)
 }
 
 // ownershipHistoryRepository implements OwnershipHistoryRepository
@@ -47,20 +48,12 @@ func (r *ownershipHistoryRepository) FindByStockIDAndPortfolioID(stockID uint, p
 	return &history, nil
 }
 
-// UpdateActiveHistories gets all the currently active histories and updates their current price, this is to keep portfolio score accurate
-func (r *ownershipHistoryRepository) UpdateActiveHistories() error {
-	var histories []models.OwnershipHistory
-	err := r.db.Where("end_date IS NULL").Find(&histories).Error
+// GetActiveHistories gets all the currently active histories
+func (r *ownershipHistoryRepository) GetActiveHistories() ([]*models.OwnershipHistory, error) {
+	var histories []*models.OwnershipHistory
+	err := r.db.Where("end_date IS NULL").Find(histories).Error
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	for _, history := range histories {
-		err = r.repo.Update(history)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return histories, nil
 }

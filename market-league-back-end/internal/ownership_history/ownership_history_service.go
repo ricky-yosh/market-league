@@ -1,6 +1,7 @@
 package ownershiphistory
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/market-league/internal/models"
@@ -10,6 +11,7 @@ import (
 type OwnershipHistoryServiceInterface interface {
 	CreateOwnershipHistory(portfolioID uint, stockID uint, startingValue float64, startDate time.Time) error
 	UpdateOwnershipHistory(portfolioID uint, stockID uint, currentValue float64, endDate *time.Time) error
+	UpdateActiveOwnershipHistoryCurrentPrices() error
 }
 
 // ownershipHistoryService implements OwnershipHistoryService
@@ -50,5 +52,23 @@ func (s *ownershipHistoryService) UpdateOwnershipHistory(portfolioID uint, stock
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+// UpdateOwnershipHistory updates all active ownership records
+func (s *ownershipHistoryService) UpdateActiveOwnershipHistoryCurrentPrices() error {
+	histories, err := s.repo.GetActiveHistories()
+	if err != nil {
+		return fmt.Errorf("unable to retrieve active ownership histories: %v", err)
+	}
+
+	// Iterate over each history and update its current value
+	for i := range histories {
+		err = s.repo.Update(histories[i]) // Pass by reference
+		if err != nil {
+			return fmt.Errorf("unable to update current value of ownershipHistory ID %d: %v", histories[i].ID, err)
+		}
+	}
+
 	return nil
 }

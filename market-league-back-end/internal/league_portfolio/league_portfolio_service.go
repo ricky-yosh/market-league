@@ -17,7 +17,12 @@ type LeaguePortfolioService struct {
 	ownershipHistoryService ownership_history.OwnershipHistoryServiceInterface
 }
 
-func NewLeaguePortfolioService(leaguePortfolioRepo *LeaguePortfolioRepository, stockRepo *stock.StockRepository, portfolioRepo *portfolio.PortfolioRepository, ownershipHistoryService ownership_history.OwnershipHistoryServiceInterface) *LeaguePortfolioService {
+func NewLeaguePortfolioService(
+	leaguePortfolioRepo *LeaguePortfolioRepository,
+	stockRepo *stock.StockRepository,
+	portfolioRepo *portfolio.PortfolioRepository,
+	ownershipHistoryService ownership_history.OwnershipHistoryServiceInterface,
+) *LeaguePortfolioService {
 	return &LeaguePortfolioService{
 		repo:                    leaguePortfolioRepo,
 		stockRepo:               stockRepo,

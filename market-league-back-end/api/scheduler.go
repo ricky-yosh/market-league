@@ -5,15 +5,17 @@ import (
 	"time"
 
 	// "github.com/market-league/internal/models"
+	ownership_history "github.com/market-league/internal/ownership_history"
 	"github.com/market-league/internal/services"
 	"github.com/market-league/internal/stock"
 	"gorm.io/gorm"
 )
 
 type Scheduler struct {
-	db           *gorm.DB
-	StockService *stock.StockService
-	stockRepo    *stock.StockRepository
+	db                      *gorm.DB
+	StockService            *stock.StockService
+	stockRepo               *stock.StockRepository
+	ownershipHistoryService ownership_history.OwnershipHistoryServiceInterface
 }
 
 func (s *Scheduler) StartDailyTask() {
@@ -80,6 +82,7 @@ func (s *Scheduler) StartDailyTask() {
 					log.Printf("Failed to update stock price for %s: %v", company.TickerSymbol, err)
 				}
 			}
+			s.ownershipHistoryService.UpdateActiveOwnershipHistoryCurrentPrices()
 
 			log.Printf("Task completed. Waiting for the next interval.")
 		}

@@ -7,7 +7,7 @@ import (
 	"github.com/market-league/internal/auth"
 	"github.com/market-league/internal/db"
 	"github.com/market-league/internal/league"
-	league_portfolio "github.com/market-league/internal/leagueportfolio"
+	league_portfolio "github.com/market-league/internal/league_portfolio"
 	ownership_history "github.com/market-league/internal/ownership_history"
 	"github.com/market-league/internal/portfolio"
 	"github.com/market-league/internal/stock"
@@ -49,17 +49,19 @@ func RegisterRoutes(router *gin.Engine) {
 	userService := user.NewUserService(userRepo)
 	userHandler := user.NewUserHandler(userService)
 
-	// Initialize Trade Dependencies
-	tradeRepo := trade.NewTradeRepository(database)
-	tradeService := trade.NewTradeService(tradeRepo, stockRepo, portfolioRepo, userRepo)
-	tradeHandler := trade.NewTradeHandler(tradeService)
-
-	// Initialize LeaguePortfolio Dependencies
+	// Initialize OwnershipHistory
 	ownershipHistoryRepo := ownership_history.NewOwnershipHistoryRepository(database)
 	ownershipHistoryService := ownership_history.NewOwnershipHistoryService(ownershipHistoryRepo)
+
+	// Initialize LeaguePortfolio Dependencies
 	leaguePortfolioRepository := league_portfolio.NewLeaguePortfolioRepository(database)
-	leaguePortfolioService := league_portfolio.NewLeaguePortfolioService(leaguePortfolioRepository, stockRepo, ownershipHistoryService)
+	leaguePortfolioService := league_portfolio.NewLeaguePortfolioService(leaguePortfolioRepository, stockRepo, portfolioRepo, ownershipHistoryService)
 	leaguePortfolioHandler := league_portfolio.NewLeaguePortfolioHandler(leaguePortfolioService)
+
+	// Initialize Trade Dependencies
+	tradeRepo := trade.NewTradeRepository(database)
+	tradeService := trade.NewTradeService(tradeRepo, stockRepo, portfolioRepo, userRepo, ownershipHistoryService)
+	tradeHandler := trade.NewTradeHandler(tradeService)
 
 	// Initialize League Dependencies
 	leagueRepo := league.NewLeagueRepository(database)
