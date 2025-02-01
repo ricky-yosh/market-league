@@ -37,6 +37,20 @@ func (r *PortfolioRepository) GetPortfolioWithID(portfolioID uint) (*models.Port
 	return &portfolio, nil
 }
 
+// UpdatePortfolioPoints update points of a portfolio specifically
+func (r *PortfolioRepository) GetAllPortfolios() ([]models.Portfolio, error) {
+	var portfolios []models.Portfolio
+	err := r.db.
+		Preload("User").
+		Preload("League").
+		Preload("Stocks").
+		Find(&portfolios).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve portfolios: %v", err)
+	}
+	return portfolios, nil
+}
+
 // GetPortfolioIDByUserAndLeague retrieves the portfolio ID for a given user and league.
 func (r *PortfolioRepository) GetPortfolioIDByUserAndLeague(userID, leagueID uint) (uint, error) {
 	var portfolio models.Portfolio
@@ -74,6 +88,17 @@ func (r *PortfolioRepository) UpdatePortfolio(portfolio *models.Portfolio) error
 
 	// Commit the transaction
 	return tx.Commit().Error
+}
+
+// UpdatePortfolioPoints update points of a portfolio specifically
+func (r *PortfolioRepository) UpdatePortfolioPoints(portfolioID uint, newPoints int) error {
+	err := r.db.Model(&models.Portfolio{}).
+		Where("id = ?", portfolioID).
+		Update("points", newPoints).Error
+	if err != nil {
+		return fmt.Errorf("failed to update portfolio points: %v", err)
+	}
+	return nil
 }
 
 // DeletePortfolio deletes a portfolio by its ID.

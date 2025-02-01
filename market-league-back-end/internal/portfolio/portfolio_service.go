@@ -2,18 +2,27 @@ package portfolio
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/market-league/internal/models"
+	ownership_history "github.com/market-league/internal/ownership_history"
 )
 
 // PortfolioService handles business logic related to portfolios.
 type PortfolioService struct {
-	repo *PortfolioRepository
+	repo                 *PortfolioRepository
+	ownershipHistoryRepo ownership_history.OwnershipHistoryRepositoryInterface
 }
 
 // NewPortfolioService creates a new instance of PortfolioService.
-func NewPortfolioService(repo *PortfolioRepository) *PortfolioService {
-	return &PortfolioService{repo: repo}
+func NewPortfolioService(
+	repo *PortfolioRepository,
+	ownershipHistoryRepo ownership_history.OwnershipHistoryRepositoryInterface,
+) *PortfolioService {
+	return &PortfolioService{
+		repo:                 repo,
+		ownershipHistoryRepo: ownershipHistoryRepo,
+	}
 }
 
 // GetPortfolio fetches a portfolio by its ID.
@@ -167,14 +176,52 @@ func (s *PortfolioService) RemoveStockFromPortfolio(portfolioID, stockID uint) e
 	return nil
 }
 
-// CalculateTotalValue calculates the total value of the portfolio based on its stocks.
-func (s *PortfolioService) CalculateTotalValue(portfolio *models.Portfolio) float64 {
-	total := 0.0
-
-	// Iterate over each stock in the portfolio and sum up their current prices.
-	for _, stock := range portfolio.Stocks {
-		total += stock.CurrentPrice
+// CalculateAllPortfolioTotalValues calculates the value of every portfolio
+func (s *PortfolioService) CalculateAllPortfolioTotalValues() error {
+	// Get all portfolios to update
+	allPortfolios, err := s.repo.GetAllPortfolios()
+	if err != nil {
+		return fmt.Errorf("unable to load all portfolios: %v", err)
+	}
+	for index := range allPortfolios {
+		// update each portfolio's value
+		portfolio := allPortfolios[index]
+		err := s.CalculatePortfolioTotalValue(&portfolio)
+		if err != nil {
+			return fmt.Errorf("unable to calculate portfolio total value %v", err)
+		}
 	}
 
-	return total
+	return nil
+}
+
+// CalculateTotalValue calculates the total value of the portfolio based on its stocks.
+func (s *PortfolioService) CalculatePortfolioTotalValue(portfolio *models.Portfolio) error {
+	totalPercentChangeForPortfolio := 0.0
+	// Get percent change of each ownership_history
+	for index := range portfolio.Stocks {
+		stock := portfolio.Stocks[index]
+		ownershipHistoryList, err := s.ownershipHistoryRepo.GetAllStockHistoryByStockIDAndPortfolioID(stock.ID, portfolio.ID)
+		if err != nil {
+			return fmt.Errorf("unable to retrieve ownership history with stockID and portfolioID: %v", err)
+		}
+		totalPercentageChangeForStock := 0.0
+		for index := range ownershipHistoryList {
+			ownershipHistoryItem := ownershipHistoryList[index]
+			currentVal := ownershipHistoryItem.CurrentValue
+			previousVal := ownershipHistoryItem.StartingValue
+			// Calculate the percentage change and use that in the point scoring system
+			percentChangeForItem := ((currentVal - previousVal) / math.Abs(previousVal)) * 100
+			totalPercentageChangeForStock = totalPercentageChangeForStock + percentChangeForItem
+		}
+		totalPercentChangeForPortfolio = totalPercentChangeForPortfolio + totalPercentageChangeForStock
+	}
+	// Add all of them up and update the score
+	portfolioValue := int(totalPercentChangeForPortfolio)
+	err := s.repo.UpdatePortfolioPoints(portfolio.ID, portfolioValue)
+	if err != nil {
+		return fmt.Errorf("unable to update portfolio points: %v", err)
+	}
+
+	return nil
 }

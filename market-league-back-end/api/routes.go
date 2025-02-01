@@ -34,11 +34,6 @@ func RegisterRoutes(router *gin.Engine) {
 
 	// * DEPENDENCIES *
 
-	// Initialize Portfolio Dependencies
-	portfolioRepo := portfolio.NewPortfolioRepository(database)
-	portfolioService := portfolio.NewPortfolioService(portfolioRepo)
-	portfolioHandler := portfolio.NewPortfolioHandler(portfolioService)
-
 	// Initialize Stock Dependencies
 	stockRepo := stock.NewStockRepository(database)
 	stockService := stock.NewStockService(stockRepo)
@@ -52,6 +47,11 @@ func RegisterRoutes(router *gin.Engine) {
 	// Initialize OwnershipHistory
 	ownershipHistoryRepo := ownership_history.NewOwnershipHistoryRepository(database)
 	ownershipHistoryService := ownership_history.NewOwnershipHistoryService(ownershipHistoryRepo)
+
+	// Initialize Portfolio Dependencies
+	portfolioRepo := portfolio.NewPortfolioRepository(database)
+	portfolioService := portfolio.NewPortfolioService(portfolioRepo, ownershipHistoryRepo)
+	portfolioHandler := portfolio.NewPortfolioHandler(portfolioService)
 
 	// Initialize LeaguePortfolio Dependencies
 	leaguePortfolioRepository := league_portfolio.NewLeaguePortfolioRepository(database)
@@ -86,6 +86,7 @@ func RegisterRoutes(router *gin.Engine) {
 		StockService:            stockService,
 		stockRepo:               stockRepo,
 		ownershipHistoryService: ownershipHistoryService,
+		portfolioService:        portfolioService,
 	}
 	scheduler.StartDailyTask()
 

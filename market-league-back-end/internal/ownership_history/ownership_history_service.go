@@ -42,7 +42,7 @@ func (s *ownershipHistoryService) CreateOwnershipHistory(portfolioID uint, stock
 
 // UpdateOwnershipHistory updates an existing ownership record
 func (s *ownershipHistoryService) UpdateOwnershipHistory(portfolioID uint, stockID uint, currentValue float64, endDate *time.Time) error {
-	history, err := s.repo.FindByStockIDAndPortfolioID(stockID, portfolioID)
+	history, err := s.repo.FindActiveByStockIDAndPortfolioID(stockID, portfolioID)
 	if err != nil {
 		return err
 	}

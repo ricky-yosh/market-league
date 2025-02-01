@@ -7,6 +7,7 @@ import (
 
 	// "github.com/market-league/internal/models"
 	ownership_history "github.com/market-league/internal/ownership_history"
+	"github.com/market-league/internal/portfolio"
 	"github.com/market-league/internal/services"
 	"github.com/market-league/internal/stock"
 	"gorm.io/gorm"
@@ -17,6 +18,7 @@ type Scheduler struct {
 	StockService            *stock.StockService
 	stockRepo               *stock.StockRepository
 	ownershipHistoryService ownership_history.OwnershipHistoryServiceInterface
+	portfolioService        *portfolio.PortfolioService
 }
 
 func (s *Scheduler) StartDailyTask() {

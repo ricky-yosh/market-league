@@ -10,5 +10,6 @@ type Portfolio struct {
 	LeagueID  uint      `json:"league_id"`                   // Foreign key to League
 	League    League    `gorm:"foreignKey:LeagueID"`         // Association with League
 	Stocks    []Stock   `gorm:"many2many:portfolio_stocks;"` // Many-to-many relationship with Stocks
+	Points    int       `json:"points" gorm:"default:0"`     // Points calculated based on stock performances
 	CreatedAt time.Time `gorm:"autoCreateTime"`              // Timestamp of portfolio creation
 }

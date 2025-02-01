@@ -11,7 +11,8 @@ import (
 type OwnershipHistoryRepositoryInterface interface {
 	Create(history *models.OwnershipHistory) error
 	Update(history *models.OwnershipHistory) error
-	FindByStockIDAndPortfolioID(stockID uint, portfolioID uint) (*models.OwnershipHistory, error)
+	FindActiveByStockIDAndPortfolioID(stockID uint, portfolioID uint) (*models.OwnershipHistory, error)
+	GetAllStockHistoryByStockIDAndPortfolioID(stockID uint, portfolioID uint) ([]models.OwnershipHistory, error)
 	GetActiveHistories() ([]*models.OwnershipHistory, error)
 }
 
@@ -36,7 +37,7 @@ func (r *ownershipHistoryRepository) Update(history *models.OwnershipHistory) er
 }
 
 // FindByID fetches an OwnershipHistory record by its ID
-func (r *ownershipHistoryRepository) FindByStockIDAndPortfolioID(stockID uint, portfolioID uint) (*models.OwnershipHistory, error) {
+func (r *ownershipHistoryRepository) FindActiveByStockIDAndPortfolioID(stockID uint, portfolioID uint) (*models.OwnershipHistory, error) {
 	var history models.OwnershipHistory
 	err := r.db.Where("stock_id = ? AND portfolio_id = ?", stockID, portfolioID).First(&history).Error
 	if err != nil {
@@ -46,6 +47,16 @@ func (r *ownershipHistoryRepository) FindByStockIDAndPortfolioID(stockID uint, p
 		return nil, fmt.Errorf("EndDate is not nil, which means that this history section is not mutable")
 	}
 	return &history, nil
+}
+
+// GetAllStockHistoryByStockIDAndPortfolioID gets all the history of a single stock so that we can calculate portfolio points
+func (r *ownershipHistoryRepository) GetAllStockHistoryByStockIDAndPortfolioID(stockID uint, portfolioID uint) ([]models.OwnershipHistory, error) {
+	var history []models.OwnershipHistory
+	err := r.db.Where("stock_id = ? AND portfolio_id = ?", stockID, portfolioID).Find(&history).Error
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve ownership history with stockID %d and portfolioID %d: %v", stockID, portfolioID, err)
+	}
+	return history, nil
 }
 
 // GetActiveHistories gets all the currently active histories
