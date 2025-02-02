@@ -46,7 +46,7 @@ func RegisterRoutes(router *gin.Engine) {
 
 	// Initialize OwnershipHistory
 	ownershipHistoryRepo := ownership_history.NewOwnershipHistoryRepository(database)
-	ownershipHistoryService := ownership_history.NewOwnershipHistoryService(ownershipHistoryRepo)
+	ownershipHistoryService := ownership_history.NewOwnershipHistoryService(ownershipHistoryRepo, stockRepo)
 
 	// Initialize Portfolio Dependencies
 	portfolioRepo := portfolio.NewPortfolioRepository(database)

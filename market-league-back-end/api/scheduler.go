@@ -90,6 +90,11 @@ func (s *Scheduler) StartDailyTask() {
 				fmt.Printf("unable to update active ownershipHistory prices! %v", err)
 			}
 
+			err = s.portfolioService.CalculateAllPortfolioTotalValues()
+			if err != nil {
+				fmt.Printf("unable to update total portfolio values! %v", err)
+			}
+
 			log.Printf("Task completed. Waiting for the next interval.")
 		}
 	}()

@@ -209,19 +209,59 @@ func (s *PortfolioService) CalculatePortfolioTotalValue(portfolio *models.Portfo
 		for index := range ownershipHistoryList {
 			ownershipHistoryItem := ownershipHistoryList[index]
 			currentVal := ownershipHistoryItem.CurrentValue
+
 			previousVal := ownershipHistoryItem.StartingValue
+			// Check for 0 and replace with 1 to avoid infinity
+			if previousVal == 0 {
+				previousVal = 1
+			}
 			// Calculate the percentage change and use that in the point scoring system
 			percentChangeForItem := ((currentVal - previousVal) / math.Abs(previousVal)) * 100
+			fmt.Println("percentChangeForItem: ", percentChangeForItem)
 			totalPercentageChangeForStock = totalPercentageChangeForStock + percentChangeForItem
 		}
 		totalPercentChangeForPortfolio = totalPercentChangeForPortfolio + totalPercentageChangeForStock
 	}
 	// Add all of them up and update the score
-	portfolioValue := int(totalPercentChangeForPortfolio)
+	portfolioValue := int(math.Round(totalPercentChangeForPortfolio))
 	err := s.repo.UpdatePortfolioPoints(portfolio.ID, portfolioValue)
 	if err != nil {
 		return fmt.Errorf("unable to update portfolio points: %v", err)
 	}
-
+	err = s.repo.LogPortfolioPointsChange(portfolio.ID, portfolioValue)
+	if err != nil {
+		return fmt.Errorf("unable to log portfolio points change %v", err)
+	}
 	return nil
+}
+
+// GetPortfolioPointsHistory
+func (s *PortfolioService) GetPortfolioPointsHistory(portfolioID uint) ([]models.PortfolioPointsHistory, error) {
+	// Get the portfolio by ID
+	portfolioPointsHistoryEntries, err := s.repo.GetPortfolioPointsHistoryEntry(portfolioID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch portfolioPointsHistoryEntries: %v", err)
+	}
+
+	return portfolioPointsHistoryEntries, nil
+}
+
+// GetStocksValueChange
+func (s *PortfolioService) GetStocksValueChange(portfolioID uint) ([]*models.OwnershipHistory, error) {
+	var stocksAndHistory []*models.OwnershipHistory
+	// Get the portfolio by ID
+	portfolio, err := s.repo.GetPortfolioWithID(portfolioID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch portfolio: %v", err)
+	}
+	for index := range portfolio.Stocks {
+		stock := portfolio.Stocks[index]
+		historyItem, err := s.ownershipHistoryRepo.FindActiveByStockIDAndPortfolioID(stock.ID, portfolioID)
+		if err != nil {
+			return nil, fmt.Errorf("unable to retrieve ownershipHistoryItem with stockID and portfolioID: %v", err)
+		}
+		stocksAndHistory = append(stocksAndHistory, historyItem)
+	}
+
+	return stocksAndHistory, nil
 }

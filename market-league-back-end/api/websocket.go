@@ -61,6 +61,10 @@ func (h *WebSocketHandler) routeTransmission(conn *websocket.Conn, message ws.We
 		return h.portfolioHandler.AddStockToPortfolio(conn, message.Data)
 	case ws.MessageType_Portfolio_RemoveStock:
 		return h.portfolioHandler.RemoveStockFromPortfolio(conn, message.Data)
+	case ws.MessageType_Portfolio_GetPortfolioPointsHistory:
+		return h.portfolioHandler.GetPortfolioPointsHistory(conn, message.Data)
+	case ws.MessageType_Portfolio_GetStocksValueChange:
+		return h.portfolioHandler.GetStocksValueChange(conn, message.Data)
 
 	// Stock Routes
 	case ws.MessageType_Stock_CreateStock:

@@ -8,6 +8,7 @@ import (
 	ownership_history "github.com/market-league/internal/ownership_history"
 	"github.com/market-league/internal/portfolio"
 	"github.com/market-league/internal/stock"
+	"github.com/market-league/internal/utils"
 )
 
 type LeaguePortfolioService struct {
@@ -133,7 +134,7 @@ func (s *LeaguePortfolioService) DraftStock(leagueID, userID, stockID uint) erro
 	if err != nil {
 		return fmt.Errorf("unable to find stock: %v", err)
 	}
-	stock, err := FirstStock(stocks)
+	stock, err := utils.FirstStock(stocks)
 	if err != nil {
 		return fmt.Errorf("unable to access first stock: %v", err)
 	}
@@ -161,14 +162,4 @@ func (s *LeaguePortfolioService) GetLeaguePortfolioInfo(leagueID uint) (*models.
 	}
 
 	return leaguePortfolio, nil
-}
-
-// * Helper Functions *
-// Safely retrieve first item in stock list
-func FirstStock(slice []models.Stock) (*models.Stock, error) {
-	firstIndex := 0
-	if len(slice) > 0 {
-		return &slice[firstIndex], nil
-	}
-	return nil, fmt.Errorf("stocks list is empty")
 }

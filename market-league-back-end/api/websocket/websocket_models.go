@@ -15,18 +15,20 @@ type WebsocketMessage struct {
 
 const (
 	// Portfolio Routes
-	MessageType_Portfolio_CreatePortfolio = "MessageType_Portfolio_CreatePortfolio"
-	MessageType_Portfolio_PortfolioWithID = "MessageType_Portfolio_PortfolioWithID"
-	MessageType_Portfolio_LeaguePortfolio = "MessageType_Portfolio_LeaguePortfolio"
-	MessageType_Portfolio_AddStock        = "MessageType_Portfolio_AddStock"
-	MessageType_Portfolio_RemoveStock     = "MessageType_Portfolio_RemoveStock"
+	MessageType_Portfolio_CreatePortfolio           = "MessageType_Portfolio_CreatePortfolio"
+	MessageType_Portfolio_PortfolioWithID           = "MessageType_Portfolio_PortfolioWithID"
+	MessageType_Portfolio_LeaguePortfolio           = "MessageType_Portfolio_LeaguePortfolio"
+	MessageType_Portfolio_AddStock                  = "MessageType_Portfolio_AddStock"
+	MessageType_Portfolio_RemoveStock               = "MessageType_Portfolio_RemoveStock"
+	MessageType_Portfolio_GetPortfolioPointsHistory = "MessageType_Portfolio_GetPortfolioPointsHistory"
+	MessageType_Portfolio_GetStocksValueChange      = "MessageType_Portfolio_GetStocksValueChange"
 
 	// Stock Routes
 	MessageType_Stock_CreateStock             = "MessageType_Stock_CreateStock"
 	MessageType_Stock_CreateMultipleStocks    = "MessageType_Stock_CreateMultipleStocks"
 	MessageType_Stock_GetStockInformation     = "MessageType_Stock_GetStockInformation"
 	MessageType_Stock_UpdateCurrentStockPrice = "MessageType_Stock_UpdateCurrentStockPrice"
-	MessageType_Stock_GetAllStocks			  = "MessageType_Stock_GetAllStocks"
+	MessageType_Stock_GetAllStocks            = "MessageType_Stock_GetAllStocks"
 
 	// User Routes
 	MessageType_User_UserInfo       = "MessageType_User_UserInfo"
