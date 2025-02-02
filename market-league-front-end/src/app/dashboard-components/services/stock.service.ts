@@ -6,6 +6,9 @@ import { StockWithHistory } from '../../models/stock-with-history.model';
 import { WebSocketMessageTypes } from './websocket-message-types';
 import { devLog } from '../../../environments/development/devlog';
 import { WebSocketService } from './websocket.service';
+import { filter, map } from 'rxjs/operators';
+
+
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +21,9 @@ export class StockService {
   private selectedStockDetailsSubject = new Subject<StockWithHistory>();
   selectedStockDetails$ = this.selectedStockDetailsSubject.asObservable();
 
+  private allStockSubject = new Subject<Stock[]>();
+  allStock$ = this.allStockSubject.asObservable();
+
   // * Constructor
   
   constructor(
@@ -28,6 +34,10 @@ export class StockService {
         case WebSocketMessageTypes.MessageType_Stock_GetStockInformation:
           devLog("Received GetStockInformation Response: " + message.data);
           this.handleGetStockInformationResponse(message.data);
+          break;
+        case WebSocketMessageTypes.MessageType_Stock_GetAllStocks:
+          devLog("Received GetAllStocks Response: " + message.data);
+          this.handleGetAllStocks(message.data);
           break;
         default:
           // devLog("Stock Service unable to route Websocket Message properly! " + message.data);
@@ -48,11 +58,25 @@ export class StockService {
     }
     this.handleSuccessfulGetStockInformationResponse(responseData);
   }
+  
+    handleGetAllStocks(responseData: any): void {
+      // Check for error message
+      const didErrorOccur = this.webSocketService.didErrorOccur(responseData);
+      if (didErrorOccur) {
+        devLog("Error occurred: " + responseData.message)
+        return
+      }
+      this.handleSuccessfulGetAllStocks(responseData);
+    }
 
   // * Helper Functions to Websocket Responses
 
   handleSuccessfulGetStockInformationResponse(stockDetails: StockWithHistory): void {
     this.selectedStockDetailsSubject.next(stockDetails);
+  }
+
+  handleSuccessfulGetAllStocks(allStocks: Stock[]): void{
+    this.allStockSubject.next(allStocks)
   }
 
   // * Websocket Call Functions
@@ -68,20 +92,17 @@ export class StockService {
     this.webSocketService.sendMessage(websocketMessage);
   }
 
-  getAllStocks(): void {
+  getAllStocks(): Observable<Stock[]> {
     const websocketMessage = {
       type: WebSocketMessageTypes.MessageType_Stock_GetAllStocks,
       data: {} // No additional data needed
     };
     this.webSocketService.sendMessage(websocketMessage);
 
-    // Listen for the response from the WebSocket
-    this.webSocketService.getMessages().subscribe((message: any) => {
-        if (message.type === WebSocketMessageTypes.MessageType_Stock_GetAllStocks) {
-            console.log("Received all stocks:", message.data); // Should log all stocks
-            // You can now use message.data (the list of stocks) as needed
-        }
-    });
+    return this.webSocketService.getMessages().pipe(
+      filter((message: any) => message.type === WebSocketMessageTypes.MessageType_Stock_GetAllStocks),
+      map((message: any) => message.data as Stock[]) // Ensure correct type
+  );
   }  
 
   // * Helper Functions

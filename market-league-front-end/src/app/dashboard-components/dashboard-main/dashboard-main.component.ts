@@ -5,7 +5,8 @@ import { VerifyUserService } from '../services/verify-user.service';
 import { LeagueService } from '../services/league.service';
 import { User } from '../../models/user.model';
 import { League } from '../../models/league.model';
-import { Subscription } from 'rxjs';
+import { Stock } from '../../models/stock.model';
+import { Subscription, Subject } from 'rxjs';
 import { devLog } from '../../../environments/development/devlog';
 import { PortfolioService } from '../services/portfolio.service';
 import { TradeService } from '../services/trade.service';
@@ -20,14 +21,14 @@ import { StockService } from '../services/stock.service';
   styleUrl: './dashboard-main.component.scss'
 })
 export class DashboardMainComponent {
-
   leagues: League[] = [];
+  stocks: Stock[] = [];
   selectedLeague: League | null = null;
   user: string = "User"
   showMenu = false
 
   searchQuery: string = ''; 
-  searchResults: { name: string; symbol: string }[] = [];
+  searchResults: { company_name: string; ticker_symbol: string }[] = [];
 
   private subscription!: Subscription;
 
@@ -47,6 +48,9 @@ export class DashboardMainComponent {
     this.subscription = this.leagueService.userLeagues$.subscribe((leagues) => {
       this.leagues = leagues;
     });
+    this.subscription = this.stockService.allStock$.subscribe((stocks) => {
+      this.stocks = stocks;
+    });
 
     // * Get Starting Values for Dashboard
     
@@ -54,6 +58,8 @@ export class DashboardMainComponent {
     this.loadUser();
     // Gets all of the user's leagues
     this.loadUserLeagues();
+    // Gets all of the stocks
+    this.stockService.getAllStocks();
   }
 
   ngOnDestroy(): void {
@@ -132,24 +138,19 @@ export class DashboardMainComponent {
     this.router.navigate(['dashboard/settings']);
   }
 
-  onSearch(): void {
-    const stocks = this.stockService.getAllStocks();
-    console.log("helo", stocks)
-
-    if (this.searchQuery.trim()) {
-      console.log('Searching for:', this.searchQuery);
-      // Mock search results (Replace with an API call in the future)
-      this.searchResults = [
-        { name: 'Apple', symbol: 'AAPL' },
-        { name: 'Tesla', symbol: 'TSLA' },
-        { name: 'Microsoft', symbol: 'MSFT' },
-      ].filter((stock) =>
-        stock.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+    onSearch(): void {    
+      if (this.searchQuery.trim()) {
+        console.log('Searching for:', this.searchQuery);
+        // Mock search results (Replace with an API call in the future)
+        this.searchResults = this.stocks.filter((stock) =>
+          ((stock.company_name?.toLowerCase() || "").includes(this.searchQuery.toLowerCase()) ||
+        (stock.ticker_symbol?.toLowerCase() || "").includes(this.searchQuery.toLowerCase()))
       );
     } else {
       this.searchResults = [];
     }
-  }
+    console.log("helo", this.searchResults)
+    }
 
   // * Refresh Information
   // Method to load members of a selected league
