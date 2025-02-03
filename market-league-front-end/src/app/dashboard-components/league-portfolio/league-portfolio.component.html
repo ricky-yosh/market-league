@@ -7,7 +7,13 @@
         </div>
 
         <div class="container">
-            <p>Container</p>
+            <h2>Stock Change</h2>
+            <ul *ngIf="stockHistoryList && stockHistoryList.length > 0; else noLeagueMembers">
+                <li *ngFor="let stockHistoryEntry of stockHistoryList">{{ stockHistoryEntry }}</li>
+            </ul>
+            <ng-template #noLeagueMembers>
+                <p>No Stocks Found</p>
+            </ng-template>
         </div>
     </div>
 </section>

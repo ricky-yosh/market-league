@@ -5,6 +5,8 @@ export const WebSocketMessageTypes = {
 	MessageType_Portfolio_LeaguePortfolio: "MessageType_Portfolio_LeaguePortfolio",
 	MessageType_Portfolio_AddStock: "MessageType_Portfolio_AddStock",
 	MessageType_Portfolio_RemoveStock: "MessageType_Portfolio_RemoveStock",
+	MessageType_Portfolio_GetPortfolioPointsHistory: "MessageType_Portfolio_GetPortfolioPointsHistory",
+	MessageType_Portfolio_GetStocksValueChange: "MessageType_Portfolio_GetStocksValueChange",
 
 	// Stock Routes
 	MessageType_Stock_CreateStock: "MessageType_Stock_CreateStock",

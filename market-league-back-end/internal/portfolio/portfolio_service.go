@@ -217,7 +217,6 @@ func (s *PortfolioService) CalculatePortfolioTotalValue(portfolio *models.Portfo
 			}
 			// Calculate the percentage change and use that in the point scoring system
 			percentChangeForItem := ((currentVal - previousVal) / math.Abs(previousVal)) * 100
-			fmt.Println("percentChangeForItem: ", percentChangeForItem)
 			totalPercentageChangeForStock = totalPercentageChangeForStock + percentChangeForItem
 		}
 		totalPercentChangeForPortfolio = totalPercentChangeForPortfolio + totalPercentageChangeForStock
