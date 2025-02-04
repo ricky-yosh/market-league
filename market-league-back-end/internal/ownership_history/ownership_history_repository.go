@@ -39,7 +39,10 @@ func (r *ownershipHistoryRepository) Update(history *models.OwnershipHistory) er
 // FindByID fetches an OwnershipHistory record by its ID
 func (r *ownershipHistoryRepository) FindActiveByStockIDAndPortfolioID(stockID uint, portfolioID uint) (*models.OwnershipHistory, error) {
 	var history models.OwnershipHistory
-	err := r.db.Where("stock_id = ? AND portfolio_id = ?", stockID, portfolioID).First(&history).Error
+	err := r.db.
+		Preload("Stock").
+		Where("stock_id = ? AND portfolio_id = ?", stockID, portfolioID).
+		First(&history).Error
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve ownership history with stockID and portfolioID: %v", err)
 	}

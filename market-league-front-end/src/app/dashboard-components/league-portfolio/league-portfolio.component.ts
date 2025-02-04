@@ -5,6 +5,7 @@ import { PortfolioService } from '../services/portfolio.service';
 import { PortfolioPointsHistoryEntry } from '../../models/points-history-entry.model';
 import { StockHistoryEntry } from '../../models/stock-history-entry.model';
 import { NgFor, NgIf } from '@angular/common';
+import { devLog } from '../../../environments/development/devlog';
 
 @Component({
   selector: 'app-league-portfolio',

@@ -9,7 +9,9 @@
         <div class="container">
             <h2>Stock Change</h2>
             <ul *ngIf="stockHistoryList && stockHistoryList.length > 0; else noLeagueMembers">
-                <li *ngFor="let stockHistoryEntry of stockHistoryList">{{ stockHistoryEntry }}</li>
+                <li *ngFor="let stockHistoryEntry of stockHistoryList">
+                    {{ stockHistoryEntry.stock.company_name }}
+                </li>
             </ul>
             <ng-template #noLeagueMembers>
                 <p>No Stocks Found</p>
