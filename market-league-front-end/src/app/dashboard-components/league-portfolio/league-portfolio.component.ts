@@ -4,13 +4,13 @@ import { Portfolio } from '../../models/portfolio.model';
 import { PortfolioService } from '../services/portfolio.service';
 import { PortfolioPointsHistoryEntry } from '../../models/points-history-entry.model';
 import { StockHistoryEntry } from '../../models/stock-history-entry.model';
-import { NgFor, NgIf } from '@angular/common';
+import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { devLog } from '../../../environments/development/devlog';
 
 @Component({
   selector: 'app-league-portfolio',
   standalone: true,
-  imports: [NgFor, NgIf],
+  imports: [NgFor, NgIf, CommonModule],
   templateUrl: './league-portfolio.component.html',
   styleUrl: './league-portfolio.component.scss'
 })

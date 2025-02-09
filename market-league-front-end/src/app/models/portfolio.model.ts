@@ -9,5 +9,6 @@ export interface Portfolio {
     league_id: number;
     league: League;
     stocks: Stock[];
+    points: number;
     created_at: string; // ISO date string
 }

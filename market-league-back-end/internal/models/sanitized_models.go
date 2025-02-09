@@ -16,6 +16,7 @@ type SanitizedPortfolio struct {
 	LeagueID  uint             `json:"league_id"`
 	League    SanitizedLeague  `json:"league"`
 	Stocks    []SanitizedStock `json:"stocks"`
+	Points    int              `json:"points"`
 	CreatedAt time.Time        `json:"created_at"`
 }
 
