@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { NgxEchartsModule } from 'ngx-echarts';
+import { PriceHistory } from '../../../models/price-history.model';
 
 @Component({
   selector: 'app-stock-chart',
@@ -15,11 +16,11 @@ export class StockChartComponent {
 
   ngOnChanges(): void {
     if (this.stockData?.price_histories) {
-      const timestamps = this.stockData.price_histories.map((history: any) =>
-        new Date(history.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      const timestamps = this.stockData.price_histories.map((history: PriceHistory) =>
+        new Date(history.timestamp).toLocaleDateString([], { day: 'numeric', month: 'numeric', year: 'numeric'})
       );
 
-      const prices = this.stockData.price_histories.map((history: any) => history.price);
+      const prices = this.stockData.price_histories.map((history: PriceHistory) => history.price);
 
       this.chartOptions = {
         xAxis: {
@@ -110,7 +111,7 @@ export class StockChartComponent {
 
   updateYAxisMin(startPercent: number, endPercent: number): void {
     if (this.stockData?.price_histories) {
-      const prices = this.stockData.price_histories.map((history: any) => history.price);
+      const prices = this.stockData.price_histories.map((history: PriceHistory) => history.price);
       const totalPoints = prices.length;
 
       const startIndex = Math.floor((startPercent / 100) * totalPoints);
