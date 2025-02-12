@@ -38,9 +38,8 @@ func NewStockHandler(service *StockService) *StockHandler {
 func (h *StockHandler) CreateStock(conn *websocket.Conn, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
-		TickerSymbol string  `json:"ticker_symbol" binding:"required"`
-		CompanyName  string  `json:"company_name" binding:"required"`
-		CurrentPrice float64 `json:"current_price" binding:"required,gt=0"`
+		TickerSymbol string `json:"ticker_symbol" binding:"required"`
+		CompanyName  string `json:"company_name" binding:"required"`
 	}
 
 	// Step 2: Parse data from WebSocket JSON payload
@@ -50,7 +49,7 @@ func (h *StockHandler) CreateStock(conn *websocket.Conn, rawData json.RawMessage
 	}
 
 	// Step 3: Process business logic (reuse the service layer)
-	stock, err := h.StockService.CreateStock(request.TickerSymbol, request.CompanyName, request.CurrentPrice)
+	stock, err := h.StockService.CreateStock(request.TickerSymbol, request.CompanyName)
 	if err != nil {
 		ws.SendError(conn, ws.MessageType_Stock_CreateStock, err.Error())
 		return fmt.Errorf("failed to create portfolio: %v", err)
@@ -79,9 +78,8 @@ func (h *StockHandler) CreateStock(conn *websocket.Conn, rawData json.RawMessage
 func (h *StockHandler) CreateMultipleStocks(conn *websocket.Conn, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request []struct {
-		TickerSymbol string  `json:"ticker_symbol" binding:"required"`
-		CompanyName  string  `json:"company_name" binding:"required"`
-		CurrentPrice float64 `json:"current_price" binding:"required,gt=0"`
+		TickerSymbol string `json:"ticker_symbol" binding:"required"`
+		CompanyName  string `json:"company_name" binding:"required"`
 	}
 
 	// Step 2: Parse data from WebSocket JSON payload
@@ -96,7 +94,6 @@ func (h *StockHandler) CreateMultipleStocks(conn *websocket.Conn, rawData json.R
 		stock := &models.Stock{
 			TickerSymbol: stockReq.TickerSymbol,
 			CompanyName:  stockReq.CompanyName,
-			CurrentPrice: stockReq.CurrentPrice,
 		}
 		stocksPointer = append(stocksPointer, stock)
 	}

@@ -5,21 +5,30 @@ import (
 	"time"
 
 	"github.com/market-league/internal/models"
+	ownership_history "github.com/market-league/internal/ownership_history"
 	"github.com/market-league/internal/portfolio"
 	"github.com/market-league/internal/stock"
+	"github.com/market-league/internal/utils"
 )
 
 type LeaguePortfolioService struct {
-	repo          *LeaguePortfolioRepository
-	stockRepo     *stock.StockRepository
-	portfolioRepo *portfolio.PortfolioRepository
+	repo                    *LeaguePortfolioRepository
+	stockRepo               *stock.StockRepository
+	portfolioRepo           *portfolio.PortfolioRepository
+	ownershipHistoryService ownership_history.OwnershipHistoryServiceInterface
 }
 
-func NewLeaguePortfolioService(leaguePortfolioRepo *LeaguePortfolioRepository, stockRepo *stock.StockRepository, portfolioRepo *portfolio.PortfolioRepository) *LeaguePortfolioService {
+func NewLeaguePortfolioService(
+	leaguePortfolioRepo *LeaguePortfolioRepository,
+	stockRepo *stock.StockRepository,
+	portfolioRepo *portfolio.PortfolioRepository,
+	ownershipHistoryService ownership_history.OwnershipHistoryServiceInterface,
+) *LeaguePortfolioService {
 	return &LeaguePortfolioService{
-		repo:          leaguePortfolioRepo,
-		stockRepo:     stockRepo,
-		portfolioRepo: portfolioRepo,
+		repo:                    leaguePortfolioRepo,
+		stockRepo:               stockRepo,
+		portfolioRepo:           portfolioRepo,
+		ownershipHistoryService: ownershipHistoryService,
 	}
 }
 
@@ -112,6 +121,26 @@ func (s *LeaguePortfolioService) DraftStock(leagueID, userID, stockID uint) erro
 	}
 
 	if err := s.portfolioRepo.UpdatePortfolio(userPortfolio); err != nil {
+		return fmt.Errorf("failed to update user portfolio: %v", err)
+	}
+
+	// Update OwnershipHistory of stock
+	portfolioID, err := s.portfolioRepo.GetPortfolioIDByUserAndLeague(userID, leagueID)
+	if err != nil {
+		return fmt.Errorf("failed to get user portfolioID: %v", err)
+	}
+	stockIDList := []uint{stockID} // Make list to have the correct input type
+	stocks, err := s.stockRepo.GetStocksByIDs(stockIDList)
+	if err != nil {
+		return fmt.Errorf("unable to find stock: %v", err)
+	}
+	stock, err := utils.FirstStock(stocks)
+	if err != nil {
+		return fmt.Errorf("unable to access first stock: %v", err)
+	}
+	startingValue := stock.CurrentPrice
+	startDate := time.Now()
+	if err := s.ownershipHistoryService.CreateOwnershipHistory(portfolioID, stockID, startingValue, startDate); err != nil {
 		return fmt.Errorf("failed to update user portfolio: %v", err)
 	}
 

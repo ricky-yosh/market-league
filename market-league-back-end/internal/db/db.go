@@ -37,11 +37,13 @@ func InitDB() {
 		// Add migrations go here
 		&models.League{},
 		&models.Portfolio{},
+		&models.PortfolioPointsHistory{},
 		&models.Stock{},
 		&models.PriceHistory{},
 		&models.LeaguePortfolio{},
 		&models.Trade{},
 		&models.User{},
+		&models.OwnershipHistory{},
 	)
 
 	if err != nil {

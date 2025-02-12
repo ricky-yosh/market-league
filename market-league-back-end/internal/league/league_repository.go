@@ -77,7 +77,7 @@ func (r *LeagueRepository) GetLeaderboard(leagueID uint, portfolioService *portf
 	for _, portfolio := range portfolios {
 		leaderboard = append(leaderboard, models.LeaderboardEntry{
 			Username:   portfolio.User.Username,
-			TotalValue: portfolioService.CalculateTotalValue(&portfolio),
+			TotalValue: portfolio.Points,
 		})
 	}
 

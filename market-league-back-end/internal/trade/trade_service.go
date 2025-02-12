@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/market-league/internal/models"
+	ownership_history "github.com/market-league/internal/ownership_history"
 	"github.com/market-league/internal/portfolio"
 	"github.com/market-league/internal/stock"
 	"github.com/market-league/internal/user"
@@ -14,19 +15,27 @@ import (
 
 // TradeService handles the business logic for trades.
 type TradeService struct {
-	TradeRepo     *TradeRepository
-	StockRepo     *stock.StockRepository
-	PortfolioRepo *portfolio.PortfolioRepository
-	UserRepo      *user.UserRepository
+	TradeRepo           *TradeRepository
+	StockRepo           *stock.StockRepository
+	PortfolioRepo       *portfolio.PortfolioRepository
+	UserRepo            *user.UserRepository
+	OwnerHistoryService ownership_history.OwnershipHistoryServiceInterface
 }
 
 // NewTradeService creates a new instance of TradeService
-func NewTradeService(tradeRepo *TradeRepository, stockRepo *stock.StockRepository, portfolioRepo *portfolio.PortfolioRepository, userRepo *user.UserRepository) *TradeService {
+func NewTradeService(
+	tradeRepo *TradeRepository,
+	stockRepo *stock.StockRepository,
+	portfolioRepo *portfolio.PortfolioRepository,
+	userRepo *user.UserRepository,
+	ownerHistoryService ownership_history.OwnershipHistoryServiceInterface,
+) *TradeService {
 	return &TradeService{
-		TradeRepo:     tradeRepo,
-		StockRepo:     stockRepo,
-		PortfolioRepo: portfolioRepo,
-		UserRepo:      userRepo,
+		TradeRepo:           tradeRepo,
+		StockRepo:           stockRepo,
+		PortfolioRepo:       portfolioRepo,
+		UserRepo:            userRepo,
+		OwnerHistoryService: ownerHistoryService,
 	}
 }
 
@@ -175,6 +184,22 @@ func (s *TradeService) ConfirmTrade(tradeID uint, userID uint) error {
 	if trade.User1Confirmed && trade.User2Confirmed {
 		if err := s.TradeRepo.SwapStocks(trade); err != nil {
 			return err
+		}
+		// Update the ownership history of the stocks
+		var user1Stocks []models.Stock = trade.Stocks1
+		currentTime := time.Now()
+		for _, stock := range user1Stocks {
+			// End ownership for User1
+			s.OwnerHistoryService.UpdateOwnershipHistory(trade.Portfolio1ID, stock.ID, stock.CurrentPrice, &currentTime)
+			// Create ownership for User2
+			s.OwnerHistoryService.CreateOwnershipHistory(trade.Portfolio2ID, stock.ID, stock.CurrentPrice, currentTime)
+		}
+		var user2Stocks []models.Stock = trade.Stocks2
+		for _, stock := range user2Stocks {
+			// End ownership for User2
+			s.OwnerHistoryService.UpdateOwnershipHistory(trade.Portfolio2ID, stock.ID, stock.CurrentPrice, &currentTime)
+			// Create ownership for User1
+			s.OwnerHistoryService.CreateOwnershipHistory(trade.Portfolio1ID, stock.ID, stock.CurrentPrice, currentTime)
 		}
 	}
 

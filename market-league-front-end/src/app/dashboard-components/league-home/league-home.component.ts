@@ -43,7 +43,7 @@ export class LeagueHomeComponent implements OnInit {
     });
     // User Portfolio
     this.subscription = this.portfolioService.userPortfolio$.subscribe((portfolio) => {
-      this.userPortfolio = portfolio.stocks;
+      this.userPortfolio = portfolio ? portfolio.stocks : null;
     });
     // League Trades
     this.subscription = this.tradeService.leagueTrades$.subscribe((trades) => {

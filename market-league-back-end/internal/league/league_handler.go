@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	ws "github.com/market-league/api/websocket"
-	league_portfolio "github.com/market-league/internal/leagueportfolio"
+	league_portfolio "github.com/market-league/internal/league_portfolio"
 	"github.com/market-league/internal/portfolio"
 )
 

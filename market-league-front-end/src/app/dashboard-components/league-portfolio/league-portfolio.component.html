@@ -1,5 +1,5 @@
 <section class="portfolio">
-    <div class="centering-container flex-column">
+    <div class="centering-container dynamic-flex">
         <div class="h1-container">
             <h1>
                 Portfolio
@@ -7,7 +7,45 @@
         </div>
 
         <div class="container">
-            <p>Container</p>
+            <h2>Stock Change</h2>
+            <div class="points-header">
+                <p class="total-points-text">Total Points:</p>
+                <p class="total-points">
+                    {{ portfolio ? (portfolio.points | number:'1.0-0') : 0 }}
+                </p>
+            </div>
+
+            <ul *ngIf="stockHistoryList && stockHistoryList.length > 0; else noLeagueMembers" class="portfolio-list">
+                <li *ngFor="let stockHistoryEntry of stockHistoryList" class="portfolio-row">
+                    <div class="company">
+                        <p class="company-name">{{ stockHistoryEntry.stock.company_name }}</p>
+                    </div>
+                    <div class="values">
+                    <p class="starting-value">${{ stockHistoryEntry.starting_value | number:'1.2-2' }}</p>
+                    <p class="current-value">${{ stockHistoryEntry.current_value | number:'1.2-2' }}</p>
+                    <p 
+                        class="percentage-change"
+                        [ngClass]="{
+                        'positive': (stockHistoryEntry.current_value - stockHistoryEntry.starting_value) >= 0,
+                        'negative': (stockHistoryEntry.current_value - stockHistoryEntry.starting_value) < 0
+                        }"
+                    >
+                        {{
+                        ((stockHistoryEntry.current_value - (stockHistoryEntry.starting_value || 1)) 
+                        / (stockHistoryEntry.starting_value || 1)) * 100 
+                        | number:'1.2-2'
+                        }}%
+                    </p>
+                    </div>
+                </li>                  
+            </ul>
+            <ng-template #noLeagueMembers>
+                <p>No Stocks Found</p>
+            </ng-template>
+        </div>
+        <div class="container">
+            <h2>Portfolio Growth</h2>
+            <app-portfolio-points-history-chart [portfolioPointsHistory]="portfolioPointsHistoryList"></app-portfolio-points-history-chart>
         </div>
     </div>
 </section>

@@ -7,7 +7,8 @@ import (
 	"github.com/market-league/internal/auth"
 	"github.com/market-league/internal/db"
 	"github.com/market-league/internal/league"
-	league_portfolio "github.com/market-league/internal/leagueportfolio"
+	league_portfolio "github.com/market-league/internal/league_portfolio"
+	ownership_history "github.com/market-league/internal/ownership_history"
 	"github.com/market-league/internal/portfolio"
 	"github.com/market-league/internal/stock"
 	"github.com/market-league/internal/trade"
@@ -33,11 +34,6 @@ func RegisterRoutes(router *gin.Engine) {
 
 	// * DEPENDENCIES *
 
-	// Initialize Portfolio Dependencies
-	portfolioRepo := portfolio.NewPortfolioRepository(database)
-	portfolioService := portfolio.NewPortfolioService(portfolioRepo)
-	portfolioHandler := portfolio.NewPortfolioHandler(portfolioService)
-
 	// Initialize Stock Dependencies
 	stockRepo := stock.NewStockRepository(database)
 	stockService := stock.NewStockService(stockRepo)
@@ -48,15 +44,24 @@ func RegisterRoutes(router *gin.Engine) {
 	userService := user.NewUserService(userRepo)
 	userHandler := user.NewUserHandler(userService)
 
-	// Initialize Trade Dependencies
-	tradeRepo := trade.NewTradeRepository(database)
-	tradeService := trade.NewTradeService(tradeRepo, stockRepo, portfolioRepo, userRepo)
-	tradeHandler := trade.NewTradeHandler(tradeService)
+	// Initialize OwnershipHistory
+	ownershipHistoryRepo := ownership_history.NewOwnershipHistoryRepository(database)
+	ownershipHistoryService := ownership_history.NewOwnershipHistoryService(ownershipHistoryRepo, stockRepo)
+
+	// Initialize Portfolio Dependencies
+	portfolioRepo := portfolio.NewPortfolioRepository(database)
+	portfolioService := portfolio.NewPortfolioService(portfolioRepo, ownershipHistoryRepo)
+	portfolioHandler := portfolio.NewPortfolioHandler(portfolioService)
 
 	// Initialize LeaguePortfolio Dependencies
 	leaguePortfolioRepository := league_portfolio.NewLeaguePortfolioRepository(database)
-	leaguePortfolioService := league_portfolio.NewLeaguePortfolioService(leaguePortfolioRepository, stockRepo, portfolioRepo)
+	leaguePortfolioService := league_portfolio.NewLeaguePortfolioService(leaguePortfolioRepository, stockRepo, portfolioRepo, ownershipHistoryService)
 	leaguePortfolioHandler := league_portfolio.NewLeaguePortfolioHandler(leaguePortfolioService)
+
+	// Initialize Trade Dependencies
+	tradeRepo := trade.NewTradeRepository(database)
+	tradeService := trade.NewTradeService(tradeRepo, stockRepo, portfolioRepo, userRepo, ownershipHistoryService)
+	tradeHandler := trade.NewTradeHandler(tradeService)
 
 	// Initialize League Dependencies
 	leagueRepo := league.NewLeagueRepository(database)
@@ -77,9 +82,11 @@ func RegisterRoutes(router *gin.Engine) {
 
 	// Initialize the scheduler and start it
 	scheduler := &Scheduler{
-		db:           database,
-		StockService: stockService,
-		stockRepo:    stockRepo,
+		db:                      database,
+		StockService:            stockService,
+		stockRepo:               stockRepo,
+		ownershipHistoryService: ownershipHistoryService,
+		portfolioService:        portfolioService,
 	}
 	scheduler.StartDailyTask()
 
