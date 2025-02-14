@@ -79,8 +79,13 @@ Thanks to Liam Molina for creating the logo for MarketLeague!
 ## Resources
 - [unDraw Illustrations](https://undraw.co/illustrations)
 - [Docker](https://www.docker.com/)
+- [Typescript](https://www.typescriptlang.org/)
 - [Angular](https://angular.dev/)
 - [Go](https://go.dev/)
+- [Gin](https://gin-gonic.com/)
+- [D2Lang](https://d2lang.com/)
+- [Mermaid.js](https://mermaid.js.org/)
+- [PostgreSQL](https://www.postgresql.org/)
 - [Digital Ocean Droplet](https://www.digitalocean.com/)
 - [Postman](https://www.postman.com/)
 - [Sourcetree](https://www.sourcetreeapp.com/)
