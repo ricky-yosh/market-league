@@ -19,10 +19,30 @@
                 [(ngModel)]="searchQuery"
                 name="searchQuery"
                 (input)="onSearch()"
+                (keydown.arrowDown)="navigateSuggestions(1)"
+                (keydown.arrowUp)="navigateSuggestions(-1)"
+                (keydown.enter)="selectStock(searchResults[activeIndex])"
+                (blur)="hideSuggestions()"
+                (focus)="showSuggestions()"
             />
             <button class="search-button" aria-label="Search" (click)="onSearch()">
                     <svg xmlns="http://www.w3.org/2000/svg" class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 </button>
+                <ul *ngIf="showDropdown" class="autocomplete-list">
+                    <!-- Show Search Suggestions -->
+                    <li *ngFor="let suggestion of searchSuggestions" 
+                        class="suggestion-item"
+                        (click)="applySuggestion(suggestion)">
+                        🔍 {{ suggestion }} 
+                    </li>
+                
+                    <!-- Show Search Results -->
+                    <li *ngFor="let stock of searchResults; let i = index" 
+                        [class.active]="i === activeIndex"
+                        (click)="selectStock(stock)">
+                        <strong>{{ stock.company_name }}</strong> ({{ stock.ticker_symbol }})
+                    </li>
+                </ul>
 
                 <!-- Display search results -->
   <ul *ngIf="searchResults.length > 0" class="results-list">

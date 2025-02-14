@@ -29,6 +29,9 @@ export class DashboardMainComponent {
 
   searchQuery: string = ''; 
   searchResults: { company_name: string; ticker_symbol: string }[] = [];
+  searchSuggestions: any[] = [];
+  showDropdown: boolean = false;
+  activeIndex: number = -1;
 
   private subscription!: Subscription;
 
@@ -138,19 +141,53 @@ export class DashboardMainComponent {
     this.router.navigate(['dashboard/settings']);
   }
 
-    onSearch(): void {    
-      if (this.searchQuery.trim()) {
-        console.log('Searching for:', this.searchQuery);
-        // Mock search results (Replace with an API call in the future)
-        this.searchResults = this.stocks.filter((stock) =>
-          ((stock.company_name?.toLowerCase() || "").includes(this.searchQuery.toLowerCase()) ||
-        (stock.ticker_symbol?.toLowerCase() || "").includes(this.searchQuery.toLowerCase()))
+  onSearch(): void {    
+    const query = this.searchQuery.trim().toLowerCase()
+    if (query) {
+      console.log('Searching for:', query);
+      // Mock search results (Replace with an API call in the future)
+      this.searchResults = this.stocks.filter((stock) =>
+        ((stock.company_name?.toLowerCase() || "").includes(query) ||
+      (stock.ticker_symbol?.toLowerCase() || "").includes(query))
       );
+      this.searchSuggestions = this.stocks
+        .map(stock => stock.company_name) // Extract company names
+        .filter(name => name.toLowerCase().startsWith(query)) // Suggest names starting with query
+        .slice(0, 5); // Limit to 5 suggestions
+      this.showDropdown = this.searchResults.length > 0 || this.searchSuggestions.length > 0;
     } else {
       this.searchResults = [];
+      this.searchSuggestions = [];
+      this.showDropdown = false;
     }
-    console.log("helo", this.searchResults)
+      console.log("helo", this.searchResults)
+  }
+
+  applySuggestion(suggestion: string): void {
+    this.searchQuery = suggestion;  // Fill input with suggestion
+    this.onSearch();  // Trigger search
+  }
+  
+  selectStock(stock: any): void {
+    this.searchQuery = stock.company_name;  // Fill input with stock name
+    this.searchResults = [];  // Clear results
+    this.showDropdown = false; // Hide dropdown
+    this.activeIndex = -1;
+  }
+
+  navigateSuggestions(direction: number): void {
+    if (this.searchResults.length > 0) {
+      this.activeIndex = (this.activeIndex + direction + this.searchResults.length) % this.searchResults.length;
     }
+  }
+
+  showSuggestions(): void {
+    this.showDropdown = this.searchResults.length > 0 || this.searchSuggestions.length > 0;
+  }
+
+  hideSuggestions(): void {
+    setTimeout(() => this.showDropdown = false, 200);  // Small delay for selection clicks
+  }
 
   // * Refresh Information
   // Method to load members of a selected league
