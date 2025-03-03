@@ -210,6 +210,15 @@
     padding-top: 0.2em;
 }
 
+.autocomplete-list{
+    overflow: visible;
+    background-color: black;
+    z-index: 1000;
+    position: absolute;
+    min-width: 200px; /* Adjust as needed */
+    white-space: nowrap;
+}
+
 .middle-icons {
     display: flex;
     flex-direction: row;
