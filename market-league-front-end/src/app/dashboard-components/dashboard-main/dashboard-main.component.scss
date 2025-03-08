@@ -210,14 +210,34 @@
     padding-top: 0.2em;
 }
 
-.autocomplete-list{
-    overflow: visible;
-    background-color: black;
-    z-index: 1000;
-    position: absolute;
-    min-width: 200px; /* Adjust as needed */
-    white-space: nowrap;
+.search-container {
+    position: relative; /* Ensures the suggestions are positioned relative to this container */
+    display: inline-block; /* Keeps the search bar and suggestions grouped */
+    // width: 100%;
 }
+
+.autocomplete-list {
+    position: absolute;
+    top: 100%; /* Places it directly below the search bar */
+    left: 0;
+    width: 100%; /* Ensures it spans the width of the search bar */
+    background-color: $market-league-purple;
+    z-index: 1000; /* Ensures it appears above other elements */
+    border-radius: 4px;
+    padding: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.suggestion-item {
+    padding: 8px;
+    cursor: pointer;
+}
+
+.suggestion-item:hover {
+    border-radius: 4px;
+    background-color: #9A7CBD;
+}
+
 
 .middle-icons {
     display: flex;

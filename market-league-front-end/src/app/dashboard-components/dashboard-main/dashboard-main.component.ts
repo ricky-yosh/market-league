@@ -160,7 +160,6 @@ export class DashboardMainComponent {
       this.searchSuggestions = [];
       this.showDropdown = false;
     }
-      console.log("helo", this.searchResults)
   }
 
   applySuggestion(suggestion: string): void {
@@ -173,6 +172,8 @@ export class DashboardMainComponent {
     this.searchResults = [];  // Clear results
     this.showDropdown = false; // Hide dropdown
     this.activeIndex = -1;
+    this.stockService.setStock(stock);
+    this.router.navigate(['dashboard/stock-details', stock.ticker_symbol]);
   }
 
   navigateSuggestions(direction: number): void {
