@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 )
 
 type WebsocketMessage struct {
@@ -51,16 +50,24 @@ const (
 	MessageType_League_AddUserToLeague = "MessageType_League_AddUserToLeague"
 	MessageType_League_GetDetails      = "MessageType_League_GetDetails"
 	MessageType_League_GetLeaderboard  = "MessageType_League_GetLeaderboard"
+	MessageType_League_QueueUp         = "MessageType_League_QueueUp"
+
+	MessageType_DraftStarted
+	MessageType_DraftComplete
+	MessageType_DraftPick
+
+	// Websocket Subscription
+	MessageType_SubscribeLeagues = "subscribe_leagues"
 
 	// Error Message
 	MessageType_Error = "MessageType_Error"
 )
 
-func SendError(conn *websocket.Conn, messageType string, errorMsg string) {
+func SendError(conn *Connection, messageType string, errorMsg string) {
 	// Construct the error response using gin.H
 	errorData := gin.H{
-		"type":    MessageType_Error, // Include the error type
-		"message": errorMsg,          // Include the error message
+		"type":    MessageType_Error, // Assume MessageType_Error is defined elsewhere
+		"message": errorMsg,
 	}
 
 	// Marshal the error data into JSON bytes
@@ -69,14 +76,15 @@ func SendError(conn *websocket.Conn, messageType string, errorMsg string) {
 		log.Println("Failed to serialize error data:", err)
 		return
 	}
-	// Create an error response using the Transmission struct
+
+	// Create an error response using the WebsocketMessage struct
 	errorResponse := WebsocketMessage{
-		Type: messageType, // Message type is 'error'
-		Data: errorJSON,   // Encodes the error message as JSON
+		Type: messageType,
+		Data: errorJSON,
 	}
 
-	// Write the error response back to the client
-	if err := conn.WriteJSON(errorResponse); err != nil {
+	// Write the error response back to the client using the underlying Ws connection.
+	if err := conn.Ws.WriteJSON(errorResponse); err != nil {
 		log.Println("Failed to send error message:", err)
 	}
 }

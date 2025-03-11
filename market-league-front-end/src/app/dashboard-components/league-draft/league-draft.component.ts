@@ -1,12 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { Stock } from '../../models/stock.model';
-import { LeagueService } from '../services/league.service';
-import { LeaguePortfolio } from '../../models/league-portfolio.model';
-import { League } from '../../models/league.model';
 import { guard } from '../../utils/guard';
-import { User } from '../../models/user.model';
-import { VerifyUserService } from '../services/verify-user.service';
 import { Portfolio } from '../../models/portfolio.model';
 import { Router } from '@angular/router';
 import { StockService } from '../services/stock.service';

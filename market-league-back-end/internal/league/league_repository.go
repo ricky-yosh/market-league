@@ -133,3 +133,35 @@ func (r *LeagueRepository) RemoveUserLeaguesByLeagueID(tx *gorm.DB, leagueID uin
 func (r *LeagueRepository) RemoveLeague(tx *gorm.DB, leagueID uint) error {
 	return tx.Where("id = ?", leagueID).Delete(&models.League{}).Error
 }
+
+// QueueUpPlayer updates the player's draft status to "ready"
+func (r *LeagueRepository) QueueUpPlayer(leagueID uint, playerID uint) error {
+	var leaguePlayer models.LeaguePlayer
+	if err := r.db.Where("league_id = ? AND player_id = ?", leagueID, playerID).First(&leaguePlayer).Error; err != nil {
+		return err
+	}
+
+	leaguePlayer.DraftStatus = models.DraftReady
+	return r.db.Save(&leaguePlayer).Error
+}
+
+// AllPlayersReady checks if every player in the league is ready
+func (r *LeagueRepository) AllPlayersReady(leagueID uint) (bool, error) {
+	var count int64
+	err := r.db.Model(&models.LeaguePlayer{}).
+		Where("league_id = ? AND draft_status != ?", leagueID, models.DraftReady).
+		Count(&count).Error
+	return count == 0, err
+}
+
+// GetLeague retrieves a league along with its players
+func (r *LeagueRepository) GetLeague(leagueID uint) (*models.League, error) {
+	var league models.League
+	err := r.db.Preload("LeaguePlayers").First(&league, leagueID).Error
+	return &league, err
+}
+
+// UpdateLeague updates a league record
+func (r *LeagueRepository) UpdateLeague(league *models.League) error {
+	return r.db.Save(league).Error
+}
