@@ -5,7 +5,8 @@ import { VerifyUserService } from '../services/verify-user.service';
 import { LeagueService } from '../services/league.service';
 import { User } from '../../models/user.model';
 import { League } from '../../models/league.model';
-import { Subscription } from 'rxjs';
+import { Stock } from '../../models/stock.model';
+import { Subscription, Subject } from 'rxjs';
 import { devLog } from '../../../environments/development/devlog';
 import { PortfolioService } from '../services/portfolio.service';
 import { TradeService } from '../services/trade.service';
@@ -20,14 +21,17 @@ import { StockService } from '../services/stock.service';
   styleUrl: './dashboard-main.component.scss'
 })
 export class DashboardMainComponent {
-
   leagues: League[] = [];
+  stocks: Stock[] = [];
   selectedLeague: League | null = null;
   user: string = "User"
   showMenu = false
 
   searchQuery: string = ''; 
-  searchResults: { name: string; symbol: string }[] = [];
+  searchResults: { company_name: string; ticker_symbol: string }[] = [];
+  searchSuggestions: any[] = [];
+  showDropdown: boolean = false;
+  activeIndex: number = -1;
 
   private subscription!: Subscription;
 
@@ -47,6 +51,9 @@ export class DashboardMainComponent {
     this.subscription = this.leagueService.userLeagues$.subscribe((leagues) => {
       this.leagues = leagues;
     });
+    this.subscription = this.stockService.allStock$.subscribe((stocks) => {
+      this.stocks = stocks;
+    });
 
     // * Get Starting Values for Dashboard
     
@@ -54,6 +61,8 @@ export class DashboardMainComponent {
     this.loadUser();
     // Gets all of the user's leagues
     this.loadUserLeagues();
+    // Gets all of the stocks
+    this.stockService.getAllStocks();
   }
 
   ngOnDestroy(): void {
@@ -132,23 +141,53 @@ export class DashboardMainComponent {
     this.router.navigate(['dashboard/settings']);
   }
 
-  onSearch(): void {
-    const stocks = this.stockService.getAllStocks();
-    console.log("helo", stocks)
-
-    if (this.searchQuery.trim()) {
-      console.log('Searching for:', this.searchQuery);
+  onSearch(): void {    
+    const query = this.searchQuery.trim().toLowerCase()
+    if (query) {
+      console.log('Searching for:', query);
       // Mock search results (Replace with an API call in the future)
-      this.searchResults = [
-        { name: 'Apple', symbol: 'AAPL' },
-        { name: 'Tesla', symbol: 'TSLA' },
-        { name: 'Microsoft', symbol: 'MSFT' },
-      ].filter((stock) =>
-        stock.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+      this.searchResults = this.stocks.filter((stock) =>
+        ((stock.company_name?.toLowerCase() || "").includes(query) ||
+      (stock.ticker_symbol?.toLowerCase() || "").includes(query))
       );
+      this.searchSuggestions = this.stocks
+        .map(stock => stock.company_name) // Extract company names
+        .filter(name => name.toLowerCase().startsWith(query)) // Suggest names starting with query
+        .slice(0, 5); // Limit to 5 suggestions
+      this.showDropdown = this.searchResults.length > 0 || this.searchSuggestions.length > 0;
     } else {
       this.searchResults = [];
+      this.searchSuggestions = [];
+      this.showDropdown = false;
     }
+  }
+
+  applySuggestion(suggestion: string): void {
+    this.searchQuery = suggestion;  // Fill input with suggestion
+    this.onSearch();  // Trigger search
+  }
+  
+  selectStock(stock: any): void {
+    this.searchQuery = stock.company_name;  // Fill input with stock name
+    this.searchResults = [];  // Clear results
+    this.showDropdown = false; // Hide dropdown
+    this.activeIndex = -1;
+    this.stockService.setStock(stock);
+    this.router.navigate(['dashboard/stock-details', stock.ticker_symbol]);
+  }
+
+  navigateSuggestions(direction: number): void {
+    if (this.searchResults.length > 0) {
+      this.activeIndex = (this.activeIndex + direction + this.searchResults.length) % this.searchResults.length;
+    }
+  }
+
+  showSuggestions(): void {
+    this.showDropdown = this.searchResults.length > 0 || this.searchSuggestions.length > 0;
+  }
+
+  hideSuggestions(): void {
+    setTimeout(() => this.showDropdown = false, 200);  // Small delay for selection clicks
   }
 
   // * Refresh Information

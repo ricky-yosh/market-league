@@ -33,7 +33,7 @@ export const routes: Routes = [
             { path: 'create-league', component: CreateLeagueComponent },
             { path: 'remove-league', component: RemoveLeagueComponent },
             { path: 'settings', component: SettingsComponent },
-            { path: 'stock-details', component: StockDetailsComponent },
+            { path: 'stock-details/:ticker_symbol', component: StockDetailsComponent },
         ]
     },
 ];
