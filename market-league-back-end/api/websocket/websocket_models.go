@@ -51,10 +51,7 @@ const (
 	MessageType_League_GetDetails      = "MessageType_League_GetDetails"
 	MessageType_League_GetLeaderboard  = "MessageType_League_GetLeaderboard"
 	MessageType_League_QueueUp         = "MessageType_League_QueueUp"
-
-	MessageType_DraftStarted
-	MessageType_DraftComplete
-	MessageType_DraftPick
+	MessageType_League_Portfolios      = "MessageType_League_Portfolios"
 
 	// Websocket Subscription
 	MessageType_SubscribeLeagues = "subscribe_leagues"

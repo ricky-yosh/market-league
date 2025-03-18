@@ -44,13 +44,13 @@ export class CreateLeagueComponent {
 
   }
 
-  private createLeague(leagueName: string, username: number, endDate: string | null): void {    
+  private createLeague(leagueName: string, user_id: number, endDate: string | null): void {    
     guard(leagueName != '', "League name is empty!");
     guardRFC3339(endDate, "End date is required and must be in RFC3339 format");
 
 
-    devLog('Create League Inputs\n---\nLeague Name: ', leagueName, "\nUsername: ", username, "\nEnd Date: ", endDate)
-    this.leagueService.createLeague(leagueName, username, endDate)
+    devLog('Create League Inputs\n---\nLeague Name: ', leagueName, "\nUser ID: ", user_id, "\nEnd Date: ", endDate)
+    this.leagueService.createLeague(leagueName, user_id, endDate)
   }
   
 }

@@ -47,7 +47,6 @@ func NewWebSocketHandler(
 
 func (h *WebSocketHandler) routeTransmission(conn *ws.Connection, message ws.WebsocketMessage) error {
 	// Route the message based on its type
-	fmt.Printf("Message: %s", message)
 	switch message.Type {
 
 	// Portfolio Routes
@@ -113,6 +112,8 @@ func (h *WebSocketHandler) routeTransmission(conn *ws.Connection, message ws.Web
 		return h.leagueHandler.GetLeagueDetails(conn, message.Data)
 	case ws.MessageType_League_GetLeaderboard:
 		return h.leagueHandler.GetLeaderboard(conn, message.Data)
+	case ws.MessageType_League_QueueUp:
+		return h.leagueHandler.QueueUp(conn, message.Data)
 
 	case ws.MessageType_SubscribeLeagues:
 		var req struct {

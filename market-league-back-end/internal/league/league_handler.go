@@ -18,6 +18,7 @@ type LeagueHandlerInterface interface {
 	GetLeagueDetails(conn *ws.Connection, rawData json.RawMessage) error
 	GetLeaderboard(conn *ws.Connection, rawData json.RawMessage) error
 	RemoveLeague(conn *ws.Connection, rawData json.RawMessage) error
+	QueueUp(conn *ws.Connection, rawData json.RawMessage) error
 }
 
 // Compile-time check
@@ -182,12 +183,14 @@ func (h *LeagueHandler) GetLeagueDetails(conn *ws.Connection, rawData json.RawMe
 
 	// Step 4: Marshal the portfolio into JSON
 	data := gin.H{
-		"id":           league.ID,
-		"league_name":  league.LeagueName,
-		"start_date":   league.StartDate,
-		"end_date":     league.EndDate,
-		"league_state": league.LeagueState,
-		"users":        users,
+		"id":             league.ID,
+		"league_name":    league.LeagueName,
+		"start_date":     league.StartDate,
+		"end_date":       league.EndDate,
+		"league_state":   league.LeagueState,
+		"users":          users,
+		"max_players":    league.MaxPlayers,
+		"league_players": league.LeaguePlayers,
 	}
 	// Construct response with sanitized user details
 	dataJSON, err := json.Marshal(data)

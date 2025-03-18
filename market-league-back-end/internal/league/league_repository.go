@@ -24,7 +24,11 @@ func (r *LeagueRepository) CreateLeague(league *models.League) error {
 	return r.db.Create(league).Error
 }
 
-// AddUserToLeague adds a user to a specific league by creating a record in the User_Leagues table.
+// CreateLeaguePlayer inserts a new LeaguePlayer record into the database.
+func (r *LeagueRepository) CreateLeaguePlayer(lp *models.LeaguePlayer) error {
+	return r.db.Create(lp).Error
+}
+
 // AddUserToLeague adds a user to a specific league by creating a record in the User_Leagues table.
 func (r *LeagueRepository) AddUserToLeague(userID, leagueID uint) error {
 	// Fetch the league to ensure it exists
@@ -87,7 +91,10 @@ func (r *LeagueRepository) GetLeaderboard(leagueID uint, portfolioService *portf
 // GetLeagueDetails retrieves details for a specific league by ID.
 func (r *LeagueRepository) GetLeagueDetails(leagueID uint) (*models.League, error) {
 	var league models.League
-	err := r.db.Preload("Users").Where("id = ?", leagueID).First(&league).Error
+	err := r.db.
+		Preload("LeaguePlayers").
+		Preload("Users").
+		Where("id = ?", leagueID).First(&league).Error
 	return &league, err
 }
 
@@ -108,9 +115,18 @@ func (r *LeagueRepository) RemoveTradesByLeagueID(tx *gorm.DB, leagueID uint) er
 	return tx.Where("league_id = ?", leagueID).Delete(&models.Trade{}).Error
 }
 
+func (r *LeagueRepository) RemovePortfolioPointsHistoryByLeagueID(tx *gorm.DB, leagueID uint) error {
+	return tx.Exec("DELETE FROM portfolio_points_histories WHERE portfolio_id IN (SELECT id FROM portfolios WHERE league_id = ?)", leagueID).Error
+}
+
 // RemoveLeaguePortfolioByLeagueID removes league portfolios for a specific league
 func (r *LeagueRepository) RemoveLeaguePortfolioByLeagueID(tx *gorm.DB, leagueID uint) error {
 	return tx.Exec("DELETE FROM league_portfolios WHERE league_id = ?", leagueID).Error
+}
+
+// RemoveOwnershipHistoriesByLeagueID removes ownership history for a specific league
+func (r *LeagueRepository) RemoveOwnershipHistoriesByLeagueID(tx *gorm.DB, leagueID uint) error {
+	return tx.Exec("DELETE FROM ownership_histories WHERE portfolio_id IN (SELECT id FROM portfolios WHERE league_id = ?)", leagueID).Error
 }
 
 // RemovePortfolioStocksByLeagueID removes all portfolio stocks associated with a league
@@ -127,6 +143,11 @@ func (r *LeagueRepository) RemoveLeaguePortfolioStocksByLeagueID(tx *gorm.DB, le
 // RemoveUserLeaguesByLeagueID removes user-league associations for a league
 func (r *LeagueRepository) RemoveUserLeaguesByLeagueID(tx *gorm.DB, leagueID uint) error {
 	return tx.Exec("DELETE FROM user_leagues WHERE league_id = ?", leagueID).Error
+}
+
+// RemoveLeaguePlayerByLeagueID removes user-league associations for a league
+func (r *LeagueRepository) RemoveLeaguePlayerByLeagueID(tx *gorm.DB, leagueID uint) error {
+	return tx.Exec("DELETE FROM league_players WHERE league_id = ?", leagueID).Error
 }
 
 // RemoveLeague removes the league itself

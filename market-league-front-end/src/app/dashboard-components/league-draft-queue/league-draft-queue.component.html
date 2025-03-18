@@ -1,0 +1,19 @@
+<section class="draft-queue">
+    <div class="centering-container flex-column">
+        <div class="h1-container">
+            <h1>
+                Draft Queue
+            </h1>
+        </div>
+
+        <div class="container">
+            <p class="queue-title">Players Queued</p>
+            <div class="queue-counter">
+              <span class="current-count">{{ getQueuedPlayersCount() }}</span>
+              <span class="separator">/</span>
+              <span class="max-count">{{ getPlayerCount() }}</span>
+            </div>
+            <button (click)="queuePlayer()" class="queue-for-draft-button">Queue</button>
+        </div>
+    </div>
+</section>

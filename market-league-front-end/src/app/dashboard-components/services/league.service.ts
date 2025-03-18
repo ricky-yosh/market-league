@@ -156,6 +156,7 @@ export class LeagueService {
     if (users) {
       this.leagueMembersSubject.next(users);
     }
+    this.selectedLeagueSource.next(response)
   }
 
   handleSuccessfulGetLeaderboardResponse(response: LeaderboardUser[]): void {
@@ -191,6 +192,22 @@ export class LeagueService {
     };
     const websocketMessage = {
       type: WebSocketMessageTypes.MessageType_League_RemoveLeague,
+      data: data
+    };
+    this.webSocketService.sendMessage(websocketMessage);
+  }
+
+  // Get league details using the league ID
+  getLeagueDetails(): void {
+    const selectedLeague = this.getSelectedLeagueValue();
+    if (!selectedLeague) {
+      return
+    }
+    const data = {
+      league_id: selectedLeague.id
+    };
+    const websocketMessage = {
+      type: WebSocketMessageTypes.MessageType_League_GetDetails,
       data: data
     };
     this.webSocketService.sendMessage(websocketMessage);

@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	ws "github.com/market-league/api/websocket"
 	leagueportfolio "github.com/market-league/internal/league_portfolio"
 	"github.com/market-league/internal/models"
@@ -55,42 +56,53 @@ type LeagueResponse struct {
 }
 
 // CreateLeague creates a new league with the given details.
+// Since a league starts with only one user (the owner),
+// it adds the owner to the Users slice and creates a LeaguePlayer record for them.
 func (s *LeagueService) CreateLeague(leagueName string, ownerUser uint, startDate, endDate string) (*LeagueResponse, error) {
 	// Parse start and end dates into time.Time
 	start, err := time.Parse(time.RFC3339, startDate)
 	if err != nil {
 		return nil, fmt.Errorf("invalid start date format: %v", err)
 	}
-
 	end, err := time.Parse(time.RFC3339, endDate)
 	if err != nil {
 		return nil, fmt.Errorf("invalid end date format: %v", err)
 	}
 
-	// Fetch the user by username
+	// Fetch the owner user by ID
 	owner, err := s.userRepo.GetUserByID(ownerUser)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find owner user: %v", err)
 	}
 
-	// Create a new league instance and add the owner to the Users slice
+	// Create a new league instance with the owner in the Users slice.
 	league := &models.League{
 		LeagueName: leagueName,
 		StartDate:  start,
 		EndDate:    end,
-		Users:      []models.User{*owner}, // Add the owner to the Users slice
+		Users:      []models.User{*owner},
 	}
 
-	// Save the league to the repository
-	err = s.repo.CreateLeague(league)
-	if err != nil {
+	// Save the league to the repository.
+	if err := s.repo.CreateLeague(league); err != nil {
 		return nil, fmt.Errorf("failed to create league: %v", err)
 	}
 
-	// Use the existing SanitizeUsers function to sanitize the user data
+	// Create a LeaguePlayer record for the owner.
+	lp := models.LeaguePlayer{
+		LeagueID:    league.ID,
+		PlayerID:    owner.ID,
+		DraftStatus: models.DraftNotReady, // default status
+	}
+	if err := s.repo.CreateLeaguePlayer(&lp); err != nil {
+		return nil, fmt.Errorf("failed to create league player for owner %d: %v", owner.ID, err)
+	}
+	league.LeaguePlayers = []models.LeaguePlayer{lp}
+
+	// Sanitize user data for the response.
 	sanitizedUsers := SanitizeUsers(league.Users)
 
-	// Return the league response with sanitized users
+	// Return the league response with sanitized users.
 	return &LeagueResponse{
 		ID:         league.ID,
 		LeagueName: league.LeagueName,
@@ -100,12 +112,21 @@ func (s *LeagueService) CreateLeague(leagueName string, ownerUser uint, startDat
 	}, nil
 }
 
-// AddUserToLeague associates a user with a specific league.
+// AddUserToLeague associates a user with a league and creates a LeaguePlayer record.
 func (s *LeagueService) AddUserToLeague(userID, leagueID uint) error {
-	// Delegate the logic to the repository
-	err := s.repo.AddUserToLeague(userID, leagueID)
-	if err != nil {
-		return fmt.Errorf("%v", err)
+	// First, add the user to the league via the join table.
+	if err := s.repo.AddUserToLeague(userID, leagueID); err != nil {
+		return fmt.Errorf("failed to add user to league: %v", err)
+	}
+
+	// Next, create a LeaguePlayer record for the new user.
+	lp := models.LeaguePlayer{
+		LeagueID:    leagueID,
+		PlayerID:    userID,
+		DraftStatus: models.DraftNotReady, // default draft status
+	}
+	if err := s.repo.CreateLeaguePlayer(&lp); err != nil {
+		return fmt.Errorf("failed to create league player record: %v", err)
 	}
 
 	return nil
@@ -159,7 +180,22 @@ func (s *LeagueService) RemoveLeague(leagueID uint) error {
 	}
 
 	// Execute deletions in the correct order
+	if err := s.repo.RemoveLeaguePlayerByLeagueID(tx, leagueID); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := s.repo.RemoveOwnershipHistoriesByLeagueID(tx, leagueID); err != nil {
+		tx.Rollback()
+		return err
+	}
+
 	if err := s.repo.RemovePortfolioStocksByLeagueID(tx, leagueID); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := s.repo.RemovePortfolioPointsHistoryByLeagueID(tx, leagueID); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -209,7 +245,7 @@ func (s *LeagueService) QueueUpPlayer(leagueID uint, playerID uint, conn *ws.Con
 	// 2. Subscribe this connection to the league.
 	conn.Subscriptions[leagueID] = true
 
-	// 3. Check if all players are queued.
+	// 3. Check if all players are queued
 	allReady, err := s.repo.AllPlayersReady(leagueID)
 	if err != nil {
 		return err
@@ -242,7 +278,7 @@ func (s *LeagueService) QueueUpPlayer(leagueID uint, playerID uint, conn *ws.Con
 			return err
 		}
 		response := ws.WebsocketMessage{
-			Type: ws.MessageType_DraftStarted, // Ensure this constant is defined.
+			Type: ws.MessageType_League_Portfolios,
 			Data: json.RawMessage(data),
 		}
 		responseBytes, err := json.Marshal(response)
@@ -251,9 +287,60 @@ func (s *LeagueService) QueueUpPlayer(leagueID uint, playerID uint, conn *ws.Con
 		}
 		ws.Manager.BroadcastToLeague(leagueID, responseBytes)
 
+		// Broadcast the updated league details with its new state
+		if err := s.BroadcastLeagueDetails(leagueID); err != nil {
+			return err
+		}
+
 		// Start the drafting loop in its own goroutine.
 		go s.startDraftLoop(leagueID)
+	} else {
+		// Not all players are ready, broadcast the current league state
+		if err := s.BroadcastLeagueDetails(leagueID); err != nil {
+			return err
+		}
 	}
+
+	return nil
+}
+
+// BroadcastLeagueDetails broadcasts the league details to all subscribers
+func (s *LeagueService) BroadcastLeagueDetails(leagueID uint) error {
+	// Get updated league details to broadcast
+	league, err := s.repo.GetLeagueDetails(leagueID)
+	if err != nil {
+		return fmt.Errorf("failed to get league details: %w", err)
+	}
+
+	// Prepare the data for broadcast
+	data := gin.H{
+		"id":             league.ID,
+		"league_name":    league.LeagueName,
+		"start_date":     league.StartDate,
+		"end_date":       league.EndDate,
+		"league_state":   league.LeagueState,
+		"max_players":    league.MaxPlayers,
+		"league_players": league.LeaguePlayers,
+	}
+
+	// Marshal the data into JSON
+	dataJSON, err := json.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("serialization error: %w", err)
+	}
+
+	// Create the WebSocket message
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_League_GetDetails,
+		Data: json.RawMessage(dataJSON),
+	}
+
+	// Broadcast to all connections subscribed to this league
+	responseBytes, err := json.Marshal(response)
+	if err != nil {
+		return fmt.Errorf("failed to marshal websocket message: %w", err)
+	}
+	ws.Manager.BroadcastToLeague(leagueID, responseBytes)
 
 	return nil
 }
@@ -338,7 +425,7 @@ func (s *LeagueService) startDraftLoop(leagueID uint) {
 	})
 	if err == nil {
 		response := ws.WebsocketMessage{
-			Type: ws.MessageType_DraftComplete,
+			Type: ws.MessageType_League_GetDetails,
 			Data: json.RawMessage(data),
 		}
 		respBytes, err := json.Marshal(response)
@@ -374,7 +461,7 @@ func (s *LeagueService) broadcastDraftPick(leagueID, playerID, stockID uint, aut
 	}
 
 	response := ws.WebsocketMessage{
-		Type: ws.MessageType_DraftPick, // Use a different type if you want to differentiate auto-picks.
+		Type: ws.MessageType_League_Portfolios,
 		Data: json.RawMessage(data),
 	}
 

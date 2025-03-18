@@ -10,5 +10,5 @@ type League struct {
 	LeagueState   LeagueState    `json:"league_state" gorm:"type:varchar(20);default:'pre_draft'"`
 	Users         []User         `json:"users" gorm:"many2many:user_leagues;"` // Many-to-many Users <-> Leagues
 	MaxPlayers    *int           `json:"max_players"`
-	LeaguePlayers []LeaguePlayer `json:"players" gorm:"foreignKey:LeagueID"`
+	LeaguePlayers []LeaguePlayer `json:"league_players" gorm:"foreignKey:LeagueID"`
 }
