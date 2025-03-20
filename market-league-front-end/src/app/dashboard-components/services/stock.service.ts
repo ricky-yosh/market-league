@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Stock } from '../../models/stock.model';
-import { Subject } from 'rxjs';
+import { Subject, Observable } from 'rxjs';
 import { StockWithHistory } from '../../models/stock-with-history.model';
 import { WebSocketMessageTypes } from './websocket-message-types';
 import { devLog } from '../../../environments/development/devlog';

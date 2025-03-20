@@ -1,13 +1,42 @@
 <section class="leaderboard">
     <div class="centering-container flex-column">
-        <div class="h1-container">
+        <div class="leaderboard-header">
             <h1>
-                Leaderboard
-            </h1>
+                {{ selectedLeague?.league_name + (selectedLeague?.league_name ? ": Leaderboard" : "") || "No league selected" }}
+              </h1>             
         </div>
-
-        <div class="container">
-            <p>Container</p>
+        <div class="leaderboard-content">
+            <div class="loading-indicator" *ngIf="!membersLoaded">
+              <div class="spinner"></div>
+              <p>Loading leaderboard data...</p>
+            </div>
+            <div class="no-data-message" *ngIf="membersLoaded && membersWithRank.length === 0">
+                <p>No members found in this league.</p>
+            </div>
+            <table class="leaderboard-table" *ngIf="membersLoaded && membersWithRank.length > 0">
+                <thead>
+                  <tr>
+                    <th class="rank-column">Rank</th>
+                    <th class="user-column">Username</th>
+                    <th class="value-column">Score Portfolio</th>
+                    <th class="highlight-column" *ngIf="user">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let member of membersWithRank" [class.current-user]="member.username === user">
+                    <td class="rank-column">
+                      <div class="rank-badge" [class.gold]="member.rank === 1" [class.silver]="member.rank === 2" [class.bronze]="member.rank === 3">
+                        {{ member.rank }}
+                      </div>
+                    </td>
+                    <td class="user-column">{{ member.username }}</td>
+                    <td class="value-column">{{ member.total_value | number:'1.2-2' }}</td>
+                    <td class="highlight-column" *ngIf="user">
+                      <span class="user-indicator" *ngIf="member.username === user">You</span>
+                    </td>
+                  </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </section>
