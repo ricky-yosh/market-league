@@ -280,27 +280,6 @@ func (s *LeagueService) QueueUpPlayer(leagueID uint, playerID uint, conn *ws.Con
 			return err
 		}
 
-		// Get all the portfolios in the league for the draft
-		portfolios, err := s.portfolioRepo.GetPortfoliosForLeague(leagueID)
-		if err != nil {
-			return err
-		}
-
-		// Broadcast a "DraftStarted" message.
-		data, err := json.Marshal(portfolios)
-		if err != nil {
-			return err
-		}
-		response := ws.WebsocketMessage{
-			Type: ws.MessageType_League_Portfolios,
-			Data: json.RawMessage(data),
-		}
-		responseBytes, err := json.Marshal(response)
-		if err != nil {
-			return err
-		}
-		ws.Manager.BroadcastToLeague(leagueID, responseBytes)
-
 		// Broadcast the updated league details with its new state
 		if err := s.BroadcastLeagueDetails(leagueID); err != nil {
 			return err
@@ -519,16 +498,39 @@ func (s *LeagueService) notifyPlayerOnClock(playerID, leagueID uint) {
 
 // broadcastDraftPick sends a message to all connections subscribed to the league,
 // informing them of the current pick (or auto-pick).
-func (s *LeagueService) broadcastDraftPick(leagueID, playerID, stockID uint) {
+func (s *LeagueService) broadcastDraftPick(leagueID, playerID, stockID uint) error {
+	// Broadcast draft pick
+	if err := s.broadcastDraftPickMessage(leagueID, playerID, stockID); err != nil {
+		log.Println("Error broadcasting draft pick:", err)
+		return err
+	}
+
+	// Broadcast all portfolios in the league
+	if err := s.broadcastLeaguePortfolios(leagueID); err != nil {
+		log.Println("Error broadcasting league portfolios:", err)
+		return err
+	}
+
+	// Broadcast the updated portfolio for the player who made the draft pick
+	if err := s.broadcastLeaguePortfolio(leagueID); err != nil {
+		log.Println("Error broadcasting league portfolio:", err)
+		return err
+	}
+
+	return nil
+}
+
+// Helper function to broadcast the draft pick message
+func (s *LeagueService) broadcastDraftPickMessage(leagueID, playerID, stockID uint) error {
 	payload := map[string]interface{}{
 		"league_id": leagueID,
 		"player_id": playerID,
 		"stock_id":  stockID,
 	}
+
 	data, err := json.Marshal(payload)
 	if err != nil {
-		log.Println("broadcastDraftPick: error marshaling payload:", err)
-		return
+		return fmt.Errorf("error marshaling draft pick payload: %w", err)
 	}
 
 	response := ws.WebsocketMessage{
@@ -538,10 +540,65 @@ func (s *LeagueService) broadcastDraftPick(leagueID, playerID, stockID uint) {
 
 	responseBytes, err := json.Marshal(response)
 	if err != nil {
-		log.Println("broadcastDraftPick: error marshaling response:", err)
-		return
+		return fmt.Errorf("error marshaling draft pick response: %w", err)
 	}
+
 	ws.Manager.BroadcastToLeague(leagueID, responseBytes)
+	return nil
+}
+
+// Helper function to broadcast all portfolios in the league
+func (s *LeagueService) broadcastLeaguePortfolios(leagueID uint) error {
+	// Get all the portfolios in the league for the draft
+	portfolios, err := s.portfolioRepo.GetPortfoliosForLeague(leagueID)
+	if err != nil {
+		return fmt.Errorf("error getting portfolios for league: %w", err)
+	}
+
+	data, err := json.Marshal(portfolios)
+	if err != nil {
+		return fmt.Errorf("error marshaling portfolios: %w", err)
+	}
+
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_League_Portfolios,
+		Data: json.RawMessage(data),
+	}
+
+	responseBytes, err := json.Marshal(response)
+	if err != nil {
+		return fmt.Errorf("error marshaling portfolios response: %w", err)
+	}
+
+	ws.Manager.BroadcastToLeague(leagueID, responseBytes)
+	return nil
+}
+
+// Helper function to broadcast a specific player's portfolio
+func (s *LeagueService) broadcastLeaguePortfolio(leagueID uint) error {
+	// Get the detailed portfolio
+	portfolio, err := s.leaguePortfolioService.GetLeaguePortfolioInfo(leagueID)
+	if err != nil {
+		return fmt.Errorf("error getting portfolio details: %w", err)
+	}
+
+	data, err := json.Marshal(portfolio)
+	if err != nil {
+		return fmt.Errorf("error marshaling portfolio: %w", err)
+	}
+
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_LeaguePortfolio_GetLeaguePortfolioInfo,
+		Data: json.RawMessage(data),
+	}
+
+	responseBytes, err := json.Marshal(response)
+	if err != nil {
+		return fmt.Errorf("error marshaling portfolio response: %w", err)
+	}
+
+	ws.Manager.BroadcastToLeague(leagueID, responseBytes)
+	return nil
 }
 
 func (s *LeagueService) GetDraftSelectionChannel(leagueID uint) chan uint {
@@ -555,10 +612,10 @@ func (s *LeagueService) GetDraftSelectionChannel(leagueID uint) chan uint {
 func (s *LeagueService) isDraftComplete(league *models.League) bool {
 	// Get all player portfolios for this league
 	playerPortfolios, err := s.portfolioRepo.GetPortfoliosForLeague(league.ID)
-	portfoliosJSON, _ := json.MarshalIndent(playerPortfolios, "", "  ")
-	log.Printf("Player portfolios:\n%s", string(portfoliosJSON))
 
 	// Custom logging with field details
+	// portfoliosJSON, _ := json.MarshalIndent(playerPortfolios, "", "  ")
+	// log.Printf("Player portfolios:\n%s", string(portfoliosJSON))
 	// for i, portfolio := range playerPortfolios {
 	// 	log.Printf("Portfolio[%d]: ID=%d, UserID=%d, LeagueID=%d, Points=%d, StockCount=%d",
 	// 		i, portfolio.ID, portfolio.UserID, portfolio.LeagueID, portfolio.Points, len(portfolio.Stocks))
