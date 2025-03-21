@@ -550,6 +550,21 @@ func (s *LeagueService) GetDraftSelectionChannel(leagueID uint) chan uint {
 func (s *LeagueService) isDraftComplete(league *models.League) bool {
 	// Get all player portfolios for this league
 	playerPortfolios, err := s.portfolioRepo.GetPortfoliosForLeague(league.ID)
+	portfoliosJSON, _ := json.MarshalIndent(playerPortfolios, "", "  ")
+	log.Printf("Player portfolios:\n%s", string(portfoliosJSON))
+
+	// Custom logging with field details
+	// for i, portfolio := range playerPortfolios {
+	// 	log.Printf("Portfolio[%d]: ID=%d, UserID=%d, LeagueID=%d, Points=%d, StockCount=%d",
+	// 		i, portfolio.ID, portfolio.UserID, portfolio.LeagueID, portfolio.Points, len(portfolio.Stocks))
+
+	// 	// Optional: Print details about each stock
+	// 	for j, stock := range portfolio.Stocks {
+	// 		log.Printf("  Stock[%d]: ID=%d, Symbol=%s", j, stock.ID, stock.TickerSymbol)
+	// 	}
+	// }
+	// End of custom logging
+
 	if err != nil {
 		log.Printf("Error checking if draft is complete: %v", err)
 		return false

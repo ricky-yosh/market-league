@@ -56,6 +56,7 @@ func (r *PortfolioRepository) GetAllPortfolios() ([]models.Portfolio, error) {
 func (r *PortfolioRepository) GetPortfoliosForLeague(leagueID uint) ([]models.Portfolio, error) {
 	var portfolios []models.Portfolio
 	err := r.db.
+		Preload("Stocks").
 		Where("league_id = ?", leagueID).
 		Find(&portfolios).Error
 	if err != nil {
