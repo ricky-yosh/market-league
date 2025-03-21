@@ -42,6 +42,178 @@ h1 {
     margin-left: 0.4rem
 }
 
+// Status bar styling
+.draft-status-bar {
+    width: 100%;
+    max-width: 90em;
+    background-color: $market-league-white;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.draft-status {
+    text-align: center;
+    
+    &.active {
+        .your-turn {
+            color: darken($market-league-gold, 10%);
+            font-size: 1.5rem;
+            animation: pulse 1.5s infinite;
+        }
+    }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.timer {
+    width: 100%;
+    height: 10px;
+    background-color: #e0e0e0;
+    border-radius: 5px;
+    margin-top: 0.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.timer-bar {
+    height: 100%;
+    background-color: $market-league-gold;
+    transition: width 1s linear;
+}
+
+.timer-text {
+    position: absolute;
+    top: -20px;
+    right: 0;
+    font-weight: bold;
+}
+
+// Draft history styling
+.draft-history {
+    width: 100%;
+    max-width: 90em;
+    background-color: $market-league-white;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.draft-picks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.draft-pick {
+    background-color: lighten($market-league-dark-blue, 60%);
+    border-radius: 5px;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.pick-player {
+    font-weight: bold;
+}
+
+.pick-arrow {
+    margin: 0 0.5rem;
+    color: $market-league-dark-blue;
+}
+
+.pick-stock {
+    font-weight: bold;
+    color: $market-league-gold;
+}
+
+// All portfolios section
+.all-portfolios {
+    background-color: $market-league-white;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    width: 100%;
+    max-width: 90em;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.portfolios-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+}
+
+.portfolio-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    min-width: 200px;
+    flex: 1;
+    
+    &.current-player {
+        border: 2px solid $market-league-gold;
+        background-color: lighten($market-league-gold, 45%);
+    }
+}
+
+.portfolio-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    
+    h3 {
+        margin: 0;
+    }
+    
+    .on-clock {
+        background-color: $market-league-gold;
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+}
+
+.portfolio-stocks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.mini-stock-card {
+    background-color: lighten($market-league-dark-blue, 50%);
+    border-radius: 5px;
+    padding: 0.3rem 0.5rem;
+    
+    .ticker {
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+}
+
+.empty-slot {
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    padding: 0.3rem 0.5rem;
+    border: 1px dashed #ccc;
+    
+    .empty-text {
+        color: #999;
+        font-size: 0.8rem;
+    }
+}
+
+// Original styles with modifications
 .stock-cards {
     display: flex;
     flex-wrap: wrap;
@@ -61,6 +233,7 @@ h1 {
     width: 200px;
     align-items: center;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background-color: white;
 }
 
 .stock-card h2 {
@@ -69,20 +242,23 @@ h1 {
 
 .draft-button {
     background-color: $market-league-gold;
-
     color: white;
     border: none;
     border-radius: 1.4rem;
     padding: 0.6rem 4rem;
     margin-top: 1rem;
-
     cursor: pointer;
     font-size: 1rem;
     font-weight: bold;
     letter-spacing: .04rem;
+    
+    &:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+    }
 }
 
-.draft-button:hover {
+.draft-button:hover:not(:disabled) {
     background-color: darken($market-league-gold, 10%);
 }
 
@@ -107,22 +283,44 @@ h1 {
     scrollbar-color: $scrollbar-grey transparent;
 }
 
+.empty-portfolio {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    font-style: italic;
+}
+
 .available-stocks-selection, .stocks-in-portfolio {
     background-color: $market-league-white;
-    padding: 1em 0.4em 1em 1em;
+    padding: 1em 1em 1em 1em;
     border-radius: 10px;
-    max-width: 40em;
+    width: 100%;
+    max-width: 100%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .container {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    width: 100%;
+    max-width: 90em;
 }
 
-@media (min-width: 70em) {
-    .container {
+.draft-main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+@media (min-width: 84em) {
+    .draft-main-content {
         flex-direction: row;
+        
+        .available-stocks-selection, .stocks-in-portfolio {
+            flex: 1;
+        }
     }
 }
 
@@ -139,11 +337,15 @@ h1 {
     }
 
     .portfolio-stock-cards {
-        direction: flex;
+        display: flex;
         flex-wrap: wrap;
         flex-direction: row;
         overflow: scroll;
-        max-width: 40em;
+        max-width: 100%;
         justify-content: center;
+    }
+    
+    .portfolio-card {
+        width: 100%;
     }
 }

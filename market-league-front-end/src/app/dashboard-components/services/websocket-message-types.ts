@@ -38,6 +38,8 @@ export const WebSocketMessageTypes = {
 	MessageType_League_GetLeaderboard: "MessageType_League_GetLeaderboard",
 	MessageType_League_QueueUp: "MessageType_League_QueueUp",
 	MessageType_League_Portfolios: "MessageType_League_Portfolios",
+	MessageType_League_DraftUpdate: "MessageType_League_DraftUpdate",
+	MessageType_League_DraftPick: "MessageType_League_DraftPick",
 
 	// Error Message
 	MessageType_Error: "MessageType_Error"

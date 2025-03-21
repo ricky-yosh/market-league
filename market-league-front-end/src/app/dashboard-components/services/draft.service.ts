@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { LeaguePortfolio } from '../../models/league-portfolio.model';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { devLog } from '../../../environments/development/devlog';
 import { WebSocketService } from './websocket.service';
 import { WebSocketMessageTypes } from './websocket-message-types';
@@ -10,6 +10,8 @@ import { guard } from '../../utils/guard';
 import { LeagueService } from './league.service';
 import { VerifyUserService } from './verify-user.service';
 import { Portfolio } from '../../models/portfolio.model';
+import { DraftUpdateResponse } from '../../models/websocket-responses/draft/draft-update-response.model';
+import { DraftPickResponse } from '../../models/websocket-responses/draft/draft-pick-response.model';
 
 @Injectable({
   providedIn: 'root'
@@ -21,6 +23,15 @@ export class DraftService {
   // League Portfolio List
   private leaguePortfolioSubject = new Subject<LeaguePortfolio>();
   leaguePortfolio$ = this.leaguePortfolioSubject.asObservable();
+
+  private playerPortfoliosForLeagueSubject = new Subject<Portfolio[]>();
+  playerPortfoliosForLeague$ = this.playerPortfoliosForLeagueSubject.asObservable();
+
+  private currentDraftPlayerSubject = new Subject<DraftUpdateResponse>();
+  currentDraftPlayer$ = this.currentDraftPlayerSubject.asObservable();
+  
+  private draftPickSubject = new Subject<DraftPickResponse>();
+  draftPick$ = this.draftPickSubject.asObservable();
 
   // * Constructor
   
@@ -50,8 +61,18 @@ export class DraftService {
           break;
 
         case WebSocketMessageTypes.MessageType_League_Portfolios:
-          devLog("Received QueueUp Response: " + message.data);
-          this.handleGetLeaguePortfolios(message.data);
+          devLog("Received PlayerPortfolios Response: " + message.data);
+          this.handleGetLeaguePortfoliosResponse(message.data);
+          break;
+
+        case WebSocketMessageTypes.MessageType_League_DraftUpdate:
+          devLog("Received DraftUpdate Response: " + message.data);
+          this.handleDraftUpdateResponse(message.data);
+          break;
+
+        case WebSocketMessageTypes.MessageType_League_DraftPick:
+          devLog("Received DraftPick Response: " + message.data);
+          this.handleDraftPickResponse(message.data);
           break;
 
         default:
@@ -92,14 +113,34 @@ export class DraftService {
     this.handleSuccessfulQueueUpResponse(responseData);
   }
 
-  handleGetLeaguePortfolios(responseData: any): void {
+  handleGetLeaguePortfoliosResponse(responseData: any): void {
     // Check for error message
     const didErrorOccur = this.webSocketService.didErrorOccur(responseData);
     if (didErrorOccur) {
       devLog("Error occurred: " + responseData.message)
       return
     }
-    this.handleSuccessfulGetLeaguePortfolios(responseData);
+    this.handleSuccessfulGetLeaguePortfoliosResponse(responseData);
+  }
+
+  handleDraftUpdateResponse(responseData: any): void {
+    // Check for error message
+    const didErrorOccur = this.webSocketService.didErrorOccur(responseData);
+    if (didErrorOccur) {
+      devLog("Error occurred: " + responseData.message)
+      return
+    }
+    this.handleSuccessfulDraftUpdateResponseResponse(responseData);
+  }
+
+  handleDraftPickResponse(responseData: any): void {
+    // Check for error message
+    const didErrorOccur = this.webSocketService.didErrorOccur(responseData);
+    if (didErrorOccur) {
+      devLog("Error occurred: " + responseData.message)
+      return
+    }
+    this.handleSuccessfulDraftPickResponseResponse(responseData);
   }
 
   // * Helper Functions to Websocket Responses
@@ -117,8 +158,16 @@ export class DraftService {
     devLog("Player queued up: " + response.message)
   }
 
-  handleSuccessfulGetLeaguePortfolios(response: Portfolio[]): void {
-    devLog("League portfolios retrieved: " + response)
+  handleSuccessfulGetLeaguePortfoliosResponse(playerPortfolios: Portfolio[]): void {
+    this.playerPortfoliosForLeagueSubject.next(playerPortfolios);
+  }
+
+  handleSuccessfulDraftUpdateResponseResponse(currentDraftPlayer: DraftUpdateResponse): void {
+    this.currentDraftPlayerSubject.next(currentDraftPlayer);
+  }
+
+  handleSuccessfulDraftPickResponseResponse(draftPick: DraftPickResponse): void {
+    this.draftPickSubject.next(draftPick);
   }
 
   // * Websocket Call Functions
@@ -169,6 +218,25 @@ export class DraftService {
       type: WebSocketMessageTypes.MessageType_League_QueueUp,
       data: data
     };
+    this.webSocketService.sendMessage(websocketMessage);
+  }
+
+  getAllPortfolios(): void {
+    const selectedLeague = this.leagueService.getSelectedLeagueValue();
+    if (!selectedLeague) {
+      devLog("No league selected!");
+      return;
+    }
+
+    const data = {
+      league_id: selectedLeague.id
+    };
+
+    const websocketMessage = {
+      type: WebSocketMessageTypes.MessageType_League_Portfolios,
+      data: data
+    };
+
     this.webSocketService.sendMessage(websocketMessage);
   }
 

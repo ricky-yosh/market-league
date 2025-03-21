@@ -40,6 +40,9 @@ func (r *UserRepository) GetUserLeagues(userID uint) ([]models.League, error) {
 	var user models.User
 	err := r.db.
 		Preload("Leagues").
+		Preload("Leagues.Users", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, username")
+		}).
 		Preload("Leagues.LeaguePlayers").
 		First(&user, userID).Error
 	if err != nil {

@@ -14,7 +14,6 @@ export class VerifyUserService {
 
   // Initialize BehaviorSubject with a value from localStorage, if available
   private currentUserSubject = new BehaviorSubject<User | null>(this.getStoredUser());
-
   public currentUser$ = this.currentUserSubject.asObservable(); // Expose observable
 
   constructor(

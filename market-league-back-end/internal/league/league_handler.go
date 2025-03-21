@@ -19,6 +19,7 @@ type LeagueHandlerInterface interface {
 	GetLeaderboard(conn *ws.Connection, rawData json.RawMessage) error
 	RemoveLeague(conn *ws.Connection, rawData json.RawMessage) error
 	QueueUp(conn *ws.Connection, rawData json.RawMessage) error
+	GetPlayerPortfoliosInLeague(conn *ws.Connection, rawData json.RawMessage) error
 }
 
 // Compile-time check
@@ -278,6 +279,50 @@ func (h *LeagueHandler) RemoveLeague(conn *ws.Connection, rawData json.RawMessag
 	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
+
+	return nil
+}
+
+func (h *LeagueHandler) GetPlayerPortfoliosInLeague(conn *ws.Connection, rawData json.RawMessage) error {
+	var request struct {
+		LeagueID uint `json:"league_id" binding:"required"`
+	}
+
+	if err := json.Unmarshal(rawData, &request); err != nil {
+		ws.SendError(conn, ws.MessageType_League_Portfolios, "Invalid input: "+err.Error())
+		return fmt.Errorf("invalid input: %v", err)
+	}
+
+	// Fetch all portfolios for the league from the service layer
+	portfolios, err := h.service.GetPlayerPortfoliosInLeague(request.LeagueID)
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_League_Portfolios, err.Error())
+		return fmt.Errorf("failed to get player portfolios: %v", err)
+	}
+
+	// Marshal the portfolios directly as they should be a slice
+	dataJSON, err := json.Marshal(portfolios)
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_League_Portfolios, "Failed to serialize response")
+		return fmt.Errorf("serialization error: %v", err)
+	}
+
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_League_Portfolios,
+		Data: json.RawMessage(dataJSON),
+	}
+
+	// Send the response to the requesting connection
+	if err := conn.Ws.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	// Broadcast to all connections in the league
+	responseBytes, err := json.Marshal(response)
+	if err != nil {
+		return fmt.Errorf("failed to marshal websocket message: %v", err)
+	}
+	ws.Manager.BroadcastToLeague(request.LeagueID, responseBytes)
 
 	return nil
 }

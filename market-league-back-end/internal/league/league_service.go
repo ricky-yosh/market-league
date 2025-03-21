@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -234,6 +235,16 @@ func (s *LeagueService) RemoveLeague(leagueID uint) error {
 	return tx.Commit().Error
 }
 
+// Add this function to your LeagueService struct
+func (s *LeagueService) GetPlayerPortfoliosInLeague(leagueID uint) ([]models.Portfolio, error) {
+	// Fetch all portfolios for the league
+	portfolios, err := s.portfolioRepo.GetPortfoliosForLeague(leagueID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch portfolios: %w", err)
+	}
+	return portfolios, nil
+}
+
 // QueueUpPlayer marks a player as queued and checks if all players are ready.
 // If all are ready, it updates the league state and broadcasts the update.
 func (s *LeagueService) QueueUpPlayer(leagueID uint, playerID uint, conn *ws.Connection) error {
@@ -271,9 +282,7 @@ func (s *LeagueService) QueueUpPlayer(leagueID uint, playerID uint, conn *ws.Con
 		}
 
 		// Broadcast a "DraftStarted" message.
-		data, err := json.Marshal(map[string]interface{}{
-			"league_portfolios": portfolios,
-		})
+		data, err := json.Marshal(portfolios)
 		if err != nil {
 			return err
 		}
@@ -393,10 +402,10 @@ func (s *LeagueService) startDraftLoop(leagueID uint) {
 			if err != nil {
 				log.Printf("Error processing selection for player %d: %v", currentPlayer, err)
 			} else {
-				s.broadcastDraftPick(leagueID, currentPlayer, stockID, false)
+				s.broadcastDraftPick(leagueID, currentPlayer, stockID)
 			}
 		} else {
-			autoStockID, err := s.autoSelectStock(currentPlayer)
+			autoStockID, err := s.autoSelectStock(leagueID)
 			if err != nil {
 				log.Printf("Auto-select error for player %d: %v", currentPlayer, err)
 			} else {
@@ -404,7 +413,7 @@ func (s *LeagueService) startDraftLoop(leagueID uint) {
 				if err != nil {
 					log.Printf("Error processing auto-selection for player %d: %v", currentPlayer, err)
 				} else {
-					s.broadcastDraftPick(leagueID, currentPlayer, autoStockID, true)
+					s.broadcastDraftPick(leagueID, currentPlayer, autoStockID)
 				}
 			}
 		}
@@ -415,44 +424,101 @@ func (s *LeagueService) startDraftLoop(leagueID uint) {
 		}
 	}
 
+	// Update league state to PostDraft
 	league.LeagueState = models.PostDraft
 	if err := s.repo.UpdateLeague(league); err != nil {
 		log.Println("Error updating league to PostDraft:", err)
 	}
-	data, err := json.Marshal(map[string]interface{}{
-		"league":  league,
-		"message": "Draft complete",
-	})
-	if err == nil {
-		response := ws.WebsocketMessage{
-			Type: ws.MessageType_League_GetDetails,
-			Data: json.RawMessage(data),
-		}
-		respBytes, err := json.Marshal(response)
-		if err == nil {
-			ws.Manager.BroadcastToLeague(leagueID, respBytes)
-		}
+
+	data := gin.H{
+		"id":             league.ID,
+		"league_name":    league.LeagueName,
+		"start_date":     league.StartDate,
+		"end_date":       league.EndDate,
+		"league_state":   league.LeagueState,
+		"max_players":    league.MaxPlayers,
+		"league_players": league.LeaguePlayers,
 	}
+
+	// Marshal the data into JSON
+	dataJSON, err := json.Marshal(data)
+	if err != nil {
+		log.Println("Failed to serialize league data:", err)
+	}
+
+	// Construct the WebSocket message
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_League_GetDetails,
+		Data: json.RawMessage(dataJSON),
+	}
+
+	// Broadcast the message to all users in the league
+	respBytes, err := json.Marshal(response)
+	if err != nil {
+		log.Println("Failed to serialize WebSocket message:", err)
+	}
+
+	ws.Manager.BroadcastToLeague(leagueID, respBytes)
 }
 
-// waitForPlayerSelection waits for the current player's selection.
-// This is a stub: in your real implementation, hook this up to your WebSocket messaging.
-func (s *LeagueService) waitForPlayerSelection(playerID, leagueID uint, timer *time.Timer, selectionChan chan uint) (uint, bool) {
+func (s *LeagueService) waitForPlayerSelection(playerID, leagueID uint, timer *time.Timer, selectionChannel chan uint) (uint, bool) {
+	// This function waits for one of two things:
+	// 1. The player makes a selection through the channel
+	// 2. The timer expires (draft time limit reached)
+
+	// Notify all clients that this player is now on the clock
+	s.notifyPlayerOnClock(playerID, leagueID)
+
+	// Wait for either a selection or timer expiration
 	select {
-	case stockID := <-selectionChan:
+	case stockID := <-selectionChannel:
+		// Player made a selection within the time limit
+		log.Printf("Player %d made selection (stock ID: %d) in league %d", playerID, stockID, leagueID)
 		return stockID, true
+
 	case <-timer.C:
+		// Timer expired, player did not make a selection in time
 		return 0, false
 	}
 }
 
+func (s *LeagueService) notifyPlayerOnClock(playerID, leagueID uint) {
+	// Create notification message
+	data, err := json.Marshal(map[string]interface{}{
+		"leagueID":      leagueID,
+		"playerID":      playerID,
+		"remainingTime": int(draftTurnDuration.Seconds()),
+	})
+
+	if err != nil {
+		log.Printf("Error marshalling player on clock notification: %v", err)
+		return
+	}
+
+	// Create websocket message
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_League_DraftUpdate,
+		Data: json.RawMessage(data),
+	}
+
+	// Marshal the response
+	respBytes, err := json.Marshal(response)
+	if err != nil {
+		log.Printf("Error marshalling websocket message: %v", err)
+		return
+	}
+
+	// Broadcast to all members of the league
+	ws.Manager.BroadcastToLeague(leagueID, respBytes)
+}
+
 // broadcastDraftPick sends a message to all connections subscribed to the league,
 // informing them of the current pick (or auto-pick).
-func (s *LeagueService) broadcastDraftPick(leagueID, playerID, stockID uint, auto bool) {
+func (s *LeagueService) broadcastDraftPick(leagueID, playerID, stockID uint) {
 	payload := map[string]interface{}{
+		"league_id": leagueID,
 		"player_id": playerID,
 		"stock_id":  stockID,
-		"auto":      auto,
 	}
 	data, err := json.Marshal(payload)
 	if err != nil {
@@ -461,7 +527,7 @@ func (s *LeagueService) broadcastDraftPick(leagueID, playerID, stockID uint, aut
 	}
 
 	response := ws.WebsocketMessage{
-		Type: ws.MessageType_League_Portfolios,
+		Type: ws.MessageType_League_DraftPick,
 		Data: json.RawMessage(data),
 	}
 
@@ -479,18 +545,53 @@ func (s *LeagueService) GetDraftSelectionChannel(leagueID uint) chan uint {
 	return s.activeDraftChannels[leagueID]
 }
 
-// isDraftComplete checks whether the draft is complete.
-// You need to implement the logic (for example, after a fixed number of rounds).
+// isDraftComplete checks whether the draft is complete by verifying
+// if each player has drafted 5 stocks.
 func (s *LeagueService) isDraftComplete(league *models.League) bool {
-	// Implement your draft completion logic.
-	return false
+	// Get all player portfolios for this league
+	playerPortfolios, err := s.portfolioRepo.GetPortfoliosForLeague(league.ID)
+	if err != nil {
+		log.Printf("Error checking if draft is complete: %v", err)
+		return false
+	}
+
+	// Get the number of players in the league
+	numPlayers := len(league.Users)
+	if numPlayers == 0 {
+		return false
+	}
+
+	// Check if each player has drafted 5 stocks
+	for _, portfolio := range playerPortfolios {
+		if len(portfolio.Stocks) < 5 {
+			// At least one player has not drafted 5 stocks yet
+			return false
+		}
+	}
+
+	// All players have drafted 5 stocks each, so draft is complete
+	return true
 }
 
 // autoSelectStock returns an auto-selected stock for the given player.
 // Implement your own logic here.
-func (s *LeagueService) autoSelectStock(playerID uint) (uint, error) {
-	// For example, simply return a fixed stock ID.
-	return 1, nil
+func (s *LeagueService) autoSelectStock(leagueID uint) (uint, error) {
+	// Get the league portfolio for the given league ID
+	leaguePortfolio, err := s.leaguePortfolioService.GetLeaguePortfolioInfo(leagueID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get league portfolio: %w", err)
+	}
+
+	// Check if there are any stocks in the portfolio
+	if len(leaguePortfolio.Stocks) == 0 {
+		return 0, fmt.Errorf("no stocks available in the league portfolio")
+	}
+
+	// Use the newer random number generation approach
+	randomIndex := rand.Intn(len(leaguePortfolio.Stocks))
+
+	// Return the ID of the randomly selected stock
+	return leaguePortfolio.Stocks[randomIndex].ID, nil
 }
 
 // getOrderedDraftPlayers returns a slice of player IDs for the league,

@@ -178,7 +178,7 @@ func (r *LeagueRepository) AllPlayersReady(leagueID uint) (bool, error) {
 // GetLeague retrieves a league along with its players
 func (r *LeagueRepository) GetLeague(leagueID uint) (*models.League, error) {
 	var league models.League
-	err := r.db.Preload("LeaguePlayers").First(&league, leagueID).Error
+	err := r.db.Preload("Users").First(&league, leagueID).Error
 	return &league, err
 }
 
