@@ -170,6 +170,7 @@ export class LeagueService {
       devLog("League is null or league.users is null for AddUserToLeagueResponse!")
     }
     this.getAllLeagues(); // Refresh all leagues in available leagues list
+    this.getUserLeagues();
   }
 
   handleSuccessfulGetLeagueDetailsResponse(response: League): void {
