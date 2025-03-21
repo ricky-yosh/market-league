@@ -12,6 +12,7 @@ import { PortfolioService } from '../services/portfolio.service';
 import { TradeService } from '../services/trade.service';
 import { FormsModule } from '@angular/forms';
 import { StockService } from '../services/stock.service';
+import { LeagueState } from '../../models/league-state.model';
 
 @Component({
   selector: 'app-dashboard-main',
@@ -75,7 +76,24 @@ export class DashboardMainComponent {
   // Method to handle league selection
   selectLeague(league: League) {
     this.leagueService.setSelectedLeague(league)
-    this.redirectToDashboard();
+    switch (league.league_state) {
+
+      case LeagueState.PreDraft:
+        this.redirectToDraftQueue();
+        break;
+
+      case LeagueState.InDraft:
+        this.redirectToDraft();
+        break;
+
+      case LeagueState.PostDraft:
+        this.redirectToDashboard();
+        break;
+
+      default:
+        devLog("An error has occurred! LeagueState is not a valid value: " + league.league_state)
+        this.redirectToDashboard();
+    }
   }
 
   // Method to hide/show side menu
@@ -108,6 +126,14 @@ export class DashboardMainComponent {
 
   redirectToHome() {
     this.router.navigate(['/home']);
+  }
+
+  redirectToDraftQueue() {
+    this.router.navigate(['/dashboard/draft-queue']);
+  }
+
+  redirectToDraft() {
+    this.router.navigate(['dashboard/draft']);
   }
 
   redirectToDashboard() {

@@ -52,6 +52,19 @@ func (r *PortfolioRepository) GetAllPortfolios() ([]models.Portfolio, error) {
 	return portfolios, nil
 }
 
+// GetPortfoliosForLeague gets all the portfolios and filters by a league
+func (r *PortfolioRepository) GetPortfoliosForLeague(leagueID uint) ([]models.Portfolio, error) {
+	var portfolios []models.Portfolio
+	err := r.db.
+		Preload("Stocks").
+		Where("league_id = ?", leagueID).
+		Find(&portfolios).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve portfolios: %v", err)
+	}
+	return portfolios, nil
+}
+
 // GetPortfolioIDByUserAndLeague retrieves the portfolio ID for a given user and league.
 func (r *PortfolioRepository) GetPortfolioIDByUserAndLeague(userID, leagueID uint) (uint, error) {
 	var portfolio models.Portfolio

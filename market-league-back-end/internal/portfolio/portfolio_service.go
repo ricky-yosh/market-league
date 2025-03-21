@@ -38,7 +38,7 @@ func (s *PortfolioService) GetPortfolioWithID(portfolioID uint) (*models.Sanitiz
 		UserID:    portfolio.UserID,
 		User:      models.SanitizedUser{ID: portfolio.User.ID, Username: portfolio.User.Username, Email: portfolio.User.Email, CreatedAt: portfolio.User.CreatedAt},
 		LeagueID:  portfolio.LeagueID,
-		League:    models.SanitizedLeague{ID: portfolio.League.ID, LeagueName: portfolio.League.LeagueName, StartDate: portfolio.League.StartDate, EndDate: portfolio.League.EndDate},
+		League:    models.SanitizedLeague{ID: portfolio.League.ID, LeagueName: portfolio.League.LeagueName, StartDate: portfolio.League.StartDate, EndDate: portfolio.League.EndDate, LeagueState: portfolio.League.LeagueState},
 		Points:    portfolio.Points,
 		CreatedAt: portfolio.CreatedAt,
 	}

@@ -1,15 +1,13 @@
-import { NgFor } from '@angular/common';
+import { CommonModule, NgFor } from '@angular/common';
 import { Component } from '@angular/core';
 import { League } from '../../models/league.model';
-import { VerifyUserService } from '../services/verify-user.service';
 import { LeagueService } from '../services/league.service';
-import { User } from '../../models/user.model';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-remove-league',
   standalone: true,
-  imports: [NgFor],
+  imports: [NgFor, CommonModule],
   templateUrl: './remove-league.component.html',
   styleUrl: './remove-league.component.scss'
 })
@@ -31,6 +29,8 @@ export class RemoveLeagueComponent {
     this.subscription = this.leagueService.userLeagues$.subscribe((leagues) => {
       this.leagues = leagues;
     });
+
+    this.leagueService.getUserLeagues();
   }
 
   ngOnDestroy(): void {

@@ -4,19 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gorilla/websocket"
 	ws "github.com/market-league/api/websocket"
 )
 
 // PortfolioHandler Interface
 type PortfolioHandlerInterface interface {
-	GetPortfolioWithID(conn *websocket.Conn, rawData json.RawMessage) error
-	GetLeaguePortfolio(conn *websocket.Conn, rawData json.RawMessage) error
-	GetStocksValueChange(conn *websocket.Conn, rawData json.RawMessage) error
-	GetPortfolioPointsHistory(conn *websocket.Conn, rawData json.RawMessage) error
-	CreatePortfolio(conn *websocket.Conn, rawData json.RawMessage) error
-	AddStockToPortfolio(conn *websocket.Conn, rawData json.RawMessage) error
-	RemoveStockFromPortfolio(conn *websocket.Conn, rawData json.RawMessage) error
+	GetPortfolioWithID(conn *ws.Connection, rawData json.RawMessage) error
+	GetLeaguePortfolio(conn *ws.Connection, rawData json.RawMessage) error
+	GetStocksValueChange(conn *ws.Connection, rawData json.RawMessage) error
+	GetPortfolioPointsHistory(conn *ws.Connection, rawData json.RawMessage) error
+	CreatePortfolio(conn *ws.Connection, rawData json.RawMessage) error
+	AddStockToPortfolio(conn *ws.Connection, rawData json.RawMessage) error
+	RemoveStockFromPortfolio(conn *ws.Connection, rawData json.RawMessage) error
 }
 
 // Compile-time check
@@ -35,7 +34,7 @@ func NewPortfolioHandler(service *PortfolioService) *PortfolioHandler {
 // * Implementation of Interface
 
 // GetPortfolio handles fetching a portfolio by its ID.
-func (h *PortfolioHandler) GetPortfolioWithID(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *PortfolioHandler) GetPortfolioWithID(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
 		PortfolioID uint `json:"portfolio_id" binding:"required"`
@@ -66,7 +65,7 @@ func (h *PortfolioHandler) GetPortfolioWithID(conn *websocket.Conn, rawData json
 		Type: ws.MessageType_Portfolio_PortfolioWithID,
 		Data: json.RawMessage(portfolioJSON), // Use marshaled JSON bytes
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 
@@ -74,7 +73,7 @@ func (h *PortfolioHandler) GetPortfolioWithID(conn *websocket.Conn, rawData json
 }
 
 // GetUserPortfolio handles fetching a user's portfolio in a specific league.
-func (h *PortfolioHandler) GetLeaguePortfolio(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *PortfolioHandler) GetLeaguePortfolio(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
 		UserID   uint `json:"user_id" binding:"required"`
@@ -106,7 +105,7 @@ func (h *PortfolioHandler) GetLeaguePortfolio(conn *websocket.Conn, rawData json
 		Type: ws.MessageType_Portfolio_LeaguePortfolio,
 		Data: json.RawMessage(portfolioJSON), // Use marshaled JSON bytes
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 
@@ -114,7 +113,7 @@ func (h *PortfolioHandler) GetLeaguePortfolio(conn *websocket.Conn, rawData json
 }
 
 // CreatePortfolio handles the creation of a new portfolio for a user in a league.
-func (h *PortfolioHandler) CreatePortfolio(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *PortfolioHandler) CreatePortfolio(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
 		UserID   uint `json:"user_id"`
@@ -146,7 +145,7 @@ func (h *PortfolioHandler) CreatePortfolio(conn *websocket.Conn, rawData json.Ra
 		Type: ws.MessageType_Portfolio_CreatePortfolio,
 		Data: json.RawMessage(portfolioJSON), // Use marshaled JSON bytes
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 
@@ -154,7 +153,7 @@ func (h *PortfolioHandler) CreatePortfolio(conn *websocket.Conn, rawData json.Ra
 }
 
 // AddStockToPortfolio handles adding a stock to a user's portfolio.
-func (h *PortfolioHandler) AddStockToPortfolio(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *PortfolioHandler) AddStockToPortfolio(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
 		PortfolioID uint `json:"portfolio_id" binding:"required"`
@@ -178,7 +177,7 @@ func (h *PortfolioHandler) AddStockToPortfolio(conn *websocket.Conn, rawData jso
 		Type: ws.MessageType_Portfolio_AddStock,
 		Data: json.RawMessage(`{"message": "Stock added successfully"}`), // Simple JSON message
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 
@@ -186,7 +185,7 @@ func (h *PortfolioHandler) AddStockToPortfolio(conn *websocket.Conn, rawData jso
 }
 
 // RemoveStockFromPortfolio handles removing a stock from a user's portfolio.
-func (h *PortfolioHandler) RemoveStockFromPortfolio(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *PortfolioHandler) RemoveStockFromPortfolio(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
 		PortfolioID uint `json:"portfolio_id" binding:"required"`
@@ -210,7 +209,7 @@ func (h *PortfolioHandler) RemoveStockFromPortfolio(conn *websocket.Conn, rawDat
 		Type: ws.MessageType_Portfolio_RemoveStock,
 		Data: json.RawMessage(`{"message": "Stock removed successfully"}`), // Simple JSON message
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 
@@ -218,7 +217,7 @@ func (h *PortfolioHandler) RemoveStockFromPortfolio(conn *websocket.Conn, rawDat
 }
 
 // GetPortfolioPointsHistory gets the past history points the portfolio was in and sends it back as a list
-func (h *PortfolioHandler) GetPortfolioPointsHistory(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *PortfolioHandler) GetPortfolioPointsHistory(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
 		PortfolioID uint `json:"portfolio_id" binding:"required"`
@@ -249,7 +248,7 @@ func (h *PortfolioHandler) GetPortfolioPointsHistory(conn *websocket.Conn, rawDa
 		Type: ws.MessageType_Portfolio_GetPortfolioPointsHistory,
 		Data: json.RawMessage(portfolioJSON), // Use marshaled JSON bytes
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 
@@ -257,7 +256,7 @@ func (h *PortfolioHandler) GetPortfolioPointsHistory(conn *websocket.Conn, rawDa
 }
 
 // GetStockValueChange implements PortfolioHandlerInterface.
-func (h *PortfolioHandler) GetStocksValueChange(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *PortfolioHandler) GetStocksValueChange(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
 		PortfolioID uint `json:"portfolio_id" binding:"required"`
@@ -288,7 +287,7 @@ func (h *PortfolioHandler) GetStocksValueChange(conn *websocket.Conn, rawData js
 		Type: ws.MessageType_Portfolio_GetStocksValueChange,
 		Data: json.RawMessage(portfolioJSON), // Use marshaled JSON bytes
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 

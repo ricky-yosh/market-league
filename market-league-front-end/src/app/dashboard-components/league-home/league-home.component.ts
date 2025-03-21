@@ -6,7 +6,6 @@ import { League } from '../../models/league.model';
 import { Stock } from '../../models/stock.model';
 import { Subscription } from 'rxjs';
 import { Trade } from '../../models/trade.model';
-import { Router } from '@angular/router';
 import { PortfolioService } from '../services/portfolio.service';
 import { TradeService } from '../services/trade.service';
 
@@ -30,7 +29,6 @@ export class LeagueHomeComponent implements OnInit {
     private leagueService: LeagueService,
     private portfolioService: PortfolioService,
     private tradeService: TradeService,
-    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -84,10 +82,6 @@ export class LeagueHomeComponent implements OnInit {
   // Load the user's trades for a specific league
   private loadTrades(): void {
     this.tradeService.getTrades();
-  }
-
-  redirectToDraft() {
-    this.router.navigate(['dashboard/draft']);
   }
 
 }

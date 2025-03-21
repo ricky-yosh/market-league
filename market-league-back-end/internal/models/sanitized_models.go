@@ -21,10 +21,11 @@ type SanitizedPortfolio struct {
 }
 
 type SanitizedLeague struct {
-	ID         uint      `json:"id"`
-	LeagueName string    `json:"league_name"`
-	StartDate  time.Time `json:"start_date"`
-	EndDate    time.Time `json:"end_date"`
+	ID          uint        `json:"id"`
+	LeagueName  string      `json:"league_name"`
+	StartDate   time.Time   `json:"start_date"`
+	EndDate     time.Time   `json:"end_date"`
+	LeagueState LeagueState `json:"league_state"`
 }
 
 type SanitizedStock struct {

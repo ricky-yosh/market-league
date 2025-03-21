@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/market-league/internal/draft"
 	"github.com/market-league/internal/models"
 	ownership_history "github.com/market-league/internal/ownership_history"
 	"github.com/market-league/internal/portfolio"
@@ -16,6 +17,7 @@ type LeaguePortfolioService struct {
 	stockRepo               *stock.StockRepository
 	portfolioRepo           *portfolio.PortfolioRepository
 	ownershipHistoryService ownership_history.OwnershipHistoryServiceInterface
+	draftProvider           draft.DraftChannelProvider
 }
 
 func NewLeaguePortfolioService(
@@ -23,12 +25,14 @@ func NewLeaguePortfolioService(
 	stockRepo *stock.StockRepository,
 	portfolioRepo *portfolio.PortfolioRepository,
 	ownershipHistoryService ownership_history.OwnershipHistoryServiceInterface,
+	draftProvider draft.DraftChannelProvider,
 ) *LeaguePortfolioService {
 	return &LeaguePortfolioService{
 		repo:                    leaguePortfolioRepo,
 		stockRepo:               stockRepo,
 		portfolioRepo:           portfolioRepo,
 		ownershipHistoryService: ownershipHistoryService,
+		draftProvider:           draftProvider,
 	}
 }
 
@@ -145,6 +149,11 @@ func (s *LeaguePortfolioService) DraftStock(leagueID, userID, stockID uint) erro
 	}
 
 	return nil
+}
+
+// Helper function to get active drafts
+func (s *LeaguePortfolioService) GetDraftSelectionChannel(leagueID uint) chan uint {
+	return s.draftProvider.GetDraftSelectionChannel(leagueID)
 }
 
 // GetLeaguePortfolioInfo fetches the details of a LeaguePortfolio by ID.

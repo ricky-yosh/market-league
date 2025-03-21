@@ -7,7 +7,7 @@
         </div>
 
         <div class="container">
-            <ul class="leagues">
+            <ul class="leagues" *ngIf="leagues && leagues.length > 0">
                 <li 
                     *ngFor="let league of leagues" 
                     class="league-item"
@@ -19,6 +19,10 @@
                     </button>
                 </li>
             </ul>
+            <div *ngIf="!leagues || leagues.length === 0" class="no-leagues-message">
+                <p>You don't have any leagues to remove.</p>
+                <p>Create a league first or join an existing one.</p>
+            </div>
         </div>
     </div>
 </section>

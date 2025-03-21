@@ -53,20 +53,21 @@ func RegisterRoutes(router *gin.Engine) {
 	portfolioService := portfolio.NewPortfolioService(portfolioRepo, ownershipHistoryRepo)
 	portfolioHandler := portfolio.NewPortfolioHandler(portfolioService)
 
-	// Initialize LeaguePortfolio Dependencies
-	leaguePortfolioRepository := league_portfolio.NewLeaguePortfolioRepository(database)
-	leaguePortfolioService := league_portfolio.NewLeaguePortfolioService(leaguePortfolioRepository, stockRepo, portfolioRepo, ownershipHistoryService)
-	leaguePortfolioHandler := league_portfolio.NewLeaguePortfolioHandler(leaguePortfolioService)
-
 	// Initialize Trade Dependencies
 	tradeRepo := trade.NewTradeRepository(database)
 	tradeService := trade.NewTradeService(tradeRepo, stockRepo, portfolioRepo, userRepo, ownershipHistoryService)
 	tradeHandler := trade.NewTradeHandler(tradeService)
 
-	// Initialize League Dependencies
+	// Initialize League and LeaguePortfolio Dependencies
 	leagueRepo := league.NewLeagueRepository(database)
-	leagueService := league.NewLeagueService(leagueRepo, userRepo, portfolioRepo)
+	leaguePortfolioRepository := league_portfolio.NewLeaguePortfolioRepository(database)
+
+	leagueService := league.NewLeagueService(leagueRepo, userRepo, portfolioRepo, nil)
+	leaguePortfolioService := league_portfolio.NewLeaguePortfolioService(leaguePortfolioRepository, stockRepo, portfolioRepo, ownershipHistoryService, leagueService)
+	leagueService.SetLeaguePortfolioService(leaguePortfolioService)
+
 	leagueHandler := league.NewLeagueHandler(leagueService, portfolioService, leaguePortfolioService)
+	leaguePortfolioHandler := league_portfolio.NewLeaguePortfolioHandler(leaguePortfolioService)
 
 	webSocketHandler := NewWebSocketHandler(
 		portfolioHandler,

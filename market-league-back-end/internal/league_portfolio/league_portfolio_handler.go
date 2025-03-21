@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gorilla/websocket"
 	ws "github.com/market-league/api/websocket"
 )
 
 // LeaguePortfolioHandler Interface
 type LeaguePortfolioHandlerInterface interface {
-	DraftStock(conn *websocket.Conn, rawData json.RawMessage) error
-	GetLeaguePortfolioInfo(conn *websocket.Conn, rawData json.RawMessage) error
+	DraftStock(conn *ws.Connection, rawData json.RawMessage) error
+	GetLeaguePortfolioInfo(conn *ws.Connection, rawData json.RawMessage) error
 }
 
 // Compile-time check
@@ -21,7 +20,9 @@ type LeaguePortfolioHandler struct {
 	leaguePortfolioService *LeaguePortfolioService
 }
 
-func NewLeaguePortfolioHandler(leaguePortfolioService *LeaguePortfolioService) *LeaguePortfolioHandler {
+func NewLeaguePortfolioHandler(
+	leaguePortfolioService *LeaguePortfolioService,
+) *LeaguePortfolioHandler {
 	return &LeaguePortfolioHandler{
 		leaguePortfolioService: leaguePortfolioService,
 	}
@@ -30,40 +31,32 @@ func NewLeaguePortfolioHandler(leaguePortfolioService *LeaguePortfolioService) *
 // * Implementation of Interface
 
 // DraftStock handles the drafting of a stock by transferring it from the LeaguePortfolio to a user's portfolio
-func (h *LeaguePortfolioHandler) DraftStock(conn *websocket.Conn, rawData json.RawMessage) error {
-	// Step 1: Parse the WebSocket message
+func (h *LeaguePortfolioHandler) DraftStock(conn *ws.Connection, rawData json.RawMessage) error {
 	var request struct {
 		LeagueID uint `json:"league_id" binding:"required"`
 		UserID   uint `json:"user_id" binding:"required"`
 		StockID  uint `json:"stock_id" binding:"required"`
 	}
-
-	// Step 2: Parse data from WebSocket JSON payload
 	if err := json.Unmarshal(rawData, &request); err != nil {
 		ws.SendError(conn, ws.MessageType_LeaguePortfolio_DraftStock, "Invalid input: "+err.Error())
 		return fmt.Errorf("invalid input: %v", err)
 	}
 
-	// Step 3: Process business logic (reuse the service layer)
-	if err := h.leaguePortfolioService.DraftStock(request.LeagueID, request.UserID, request.StockID); err != nil {
-		ws.SendError(conn, ws.MessageType_LeaguePortfolio_DraftStock, err.Error())
-		return fmt.Errorf("failed to retrieve portfolio with ID: %v", err)
+	// Check if there's an active draft channel for this league.
+	// Assume LeaguePortfolioService has a reference to LeagueService, or you have a shared mechanism.
+	if draftChan := h.leaguePortfolioService.GetDraftSelectionChannel(request.LeagueID); draftChan != nil {
+		// Send the selection into the channel.
+		draftChan <- request.StockID
+
+		return nil
 	}
 
-	// Step 4: Send success response (no data, just confirmation)
-	response := ws.WebsocketMessage{
-		Type: ws.MessageType_LeaguePortfolio_DraftStock,
-		Data: json.RawMessage(`{"message": "Stock price updated successfully"}`), // Simple JSON message
-	}
-	if err := conn.WriteJSON(response); err != nil {
-		return fmt.Errorf("failed to send response: %v", err)
-	}
-
-	return nil
+	// If no active draft channel exists, you could process it normally or return an error.
+	return fmt.Errorf("no active draft for league %d", request.LeagueID)
 }
 
 // GetLeaguePortfolioInfo handles retrieving the League's LeaguePortfolio
-func (h *LeaguePortfolioHandler) GetLeaguePortfolioInfo(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *LeaguePortfolioHandler) GetLeaguePortfolioInfo(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
 		LeaguePortfolioID uint `json:"league_id" binding:"required"`
@@ -94,7 +87,7 @@ func (h *LeaguePortfolioHandler) GetLeaguePortfolioInfo(conn *websocket.Conn, ra
 		Type: ws.MessageType_LeaguePortfolio_GetLeaguePortfolioInfo,
 		Data: json.RawMessage(leaguePortfolioJSON), // Use marshaled JSON bytes
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 

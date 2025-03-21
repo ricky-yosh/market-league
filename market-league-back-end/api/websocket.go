@@ -45,9 +45,8 @@ func NewWebSocketHandler(
 	}
 }
 
-func (h *WebSocketHandler) routeTransmission(conn *websocket.Conn, message ws.WebsocketMessage) error {
+func (h *WebSocketHandler) routeTransmission(conn *ws.Connection, message ws.WebsocketMessage) error {
 	// Route the message based on its type
-	fmt.Printf("Message: %s", message)
 	switch message.Type {
 
 	// Portfolio Routes
@@ -113,6 +112,27 @@ func (h *WebSocketHandler) routeTransmission(conn *websocket.Conn, message ws.We
 		return h.leagueHandler.GetLeagueDetails(conn, message.Data)
 	case ws.MessageType_League_GetLeaderboard:
 		return h.leagueHandler.GetLeaderboard(conn, message.Data)
+	case ws.MessageType_League_QueueUp:
+		return h.leagueHandler.QueueUp(conn, message.Data)
+	case ws.MessageType_League_Portfolios:
+		return h.leagueHandler.GetPlayerPortfoliosInLeague(conn, message.Data)
+	case ws.MessageType_League_GetAllLeagues:
+		return h.leagueHandler.GetAllLeagues(conn, message.Data)
+
+	case ws.MessageType_SubscribeLeagues:
+		var req struct {
+			LeagueIDs []uint `json:"league_ids"`
+		}
+		if err := json.Unmarshal(message.Data, &req); err != nil {
+			ws.SendError(conn, ws.MessageType_Error, "Invalid subscription format")
+			return fmt.Errorf("invalid subscription format: %v", err)
+		}
+		// Update the connection's subscriptions.
+		for _, leagueID := range req.LeagueIDs {
+			conn.Subscriptions[leagueID] = true
+		}
+		// Optionally, send back an acknowledgment.
+		return nil
 
 	// Error or Unknown Message Type
 	default:
@@ -133,36 +153,41 @@ var upgrader = websocket.Upgrader{
 
 // HandleWebSocket - Handles incoming WebSocket connections
 func (h *WebSocketHandler) HandleWebSocket(c *gin.Context) {
-	// Upgrade HTTP request to WebSocket
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	// Upgrade HTTP request to WebSocket.
+	rawConn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println("Failed to upgrade connection:", err)
 		return
 	}
-	defer conn.Close() // Close connection when done
+
+	// Create our custom Connection with an empty subscriptions map.
+	conn := &ws.Connection{
+		Ws:            rawConn,
+		Subscriptions: make(map[uint]bool),
+	}
+	ws.Manager.Register(conn)
+	defer ws.Manager.Unregister(conn)
 
 	log.Println("New WebSocket Connection Established!")
 
 	for {
-		// Read message from client
-		_, transmissionRaw, err := conn.ReadMessage()
+		// Read message from client.
+		_, transmissionRaw, err := conn.Ws.ReadMessage()
 		if err != nil {
 			log.Println("Read error:", err)
 			break
 		}
 
-		// Decode the JSON message
 		var message ws.WebsocketMessage
-		err = json.Unmarshal(transmissionRaw, &message)
-		if err != nil {
+		if err = json.Unmarshal(transmissionRaw, &message); err != nil {
+			// Pass the raw connection to SendError if that function expects *websocket.Conn.
 			ws.SendError(conn, ws.MessageType_Error, "Invalid JSON format")
 			continue
 		}
 
-		// Route the message
-		err = h.routeTransmission(conn, message) // Pass dependencies via handler
-		if err != nil {
-			log.Println("Error with transmission: \"" + message.Type + "\" " + err.Error())
+		// Pass our custom Connection to routeTransmission.
+		if err = h.routeTransmission(conn, message); err != nil {
+			log.Println("Error with transmission:", message.Type, err.Error())
 		}
 	}
 }
