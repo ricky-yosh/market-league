@@ -20,6 +20,7 @@ type LeagueHandlerInterface interface {
 	RemoveLeague(conn *ws.Connection, rawData json.RawMessage) error
 	QueueUp(conn *ws.Connection, rawData json.RawMessage) error
 	GetPlayerPortfoliosInLeague(conn *ws.Connection, rawData json.RawMessage) error
+	GetAllLeagues(conn *ws.Connection, rawData json.RawMessage) error
 }
 
 // Compile-time check
@@ -323,6 +324,33 @@ func (h *LeagueHandler) GetPlayerPortfoliosInLeague(conn *ws.Connection, rawData
 		return fmt.Errorf("failed to marshal websocket message: %v", err)
 	}
 	ws.Manager.BroadcastToLeague(request.LeagueID, responseBytes)
+
+	return nil
+}
+
+func (h *LeagueHandler) GetAllLeagues(conn *ws.Connection, rawData json.RawMessage) error {
+	// Step 2: Process business logic (use the service layer)
+	leagues, err := h.service.GetAllLeagues()
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_League_GetAllLeagues, err.Error())
+		return fmt.Errorf("failed to retrieve leagues: %v", err)
+	}
+
+	// Step 3: Marshal the leagues into JSON
+	leaguesJSON, err := json.Marshal(leagues)
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_League_GetAllLeagues, "Failed to serialize leagues")
+		return fmt.Errorf("serialization error: %v", err)
+	}
+
+	// Step 4: Send success response back via WebSocket
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_League_GetAllLeagues,
+		Data: json.RawMessage(leaguesJSON),
+	}
+	if err := conn.Ws.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
 
 	return nil
 }

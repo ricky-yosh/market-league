@@ -155,6 +155,19 @@ func (r *LeagueRepository) RemoveLeague(tx *gorm.DB, leagueID uint) error {
 	return tx.Where("id = ?", leagueID).Delete(&models.League{}).Error
 }
 
+func (r *LeagueRepository) GetAllLeagues() ([]models.League, error) {
+	var leagues []models.League
+
+	// Fetch all leagues from the database
+	// You might want to add pagination here in the future
+	err := r.db.Find(&leagues).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return leagues, nil
+}
+
 // QueueUpPlayer updates the player's draft status to "ready"
 func (r *LeagueRepository) QueueUpPlayer(leagueID uint, playerID uint) error {
 	var leaguePlayer models.LeaguePlayer

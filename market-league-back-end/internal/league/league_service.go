@@ -245,6 +245,11 @@ func (s *LeagueService) GetPlayerPortfoliosInLeague(leagueID uint) ([]models.Por
 	return portfolios, nil
 }
 
+func (s *LeagueService) GetAllLeagues() ([]models.League, error) {
+	// Delegate the league retrieval to the repository
+	return s.repo.GetAllLeagues()
+}
+
 // QueueUpPlayer marks a player as queued and checks if all players are ready.
 // If all are ready, it updates the league state and broadcasts the update.
 func (s *LeagueService) QueueUpPlayer(leagueID uint, playerID uint, conn *ws.Connection) error {

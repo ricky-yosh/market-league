@@ -54,6 +54,7 @@ const (
 	MessageType_League_Portfolios      = "MessageType_League_Portfolios"
 	MessageType_League_DraftUpdate     = "MessageType_League_DraftUpdate"
 	MessageType_League_DraftPick       = "MessageType_League_DraftPick"
+	MessageType_League_GetAllLeagues   = "MessageType_League_GetAllLeagues"
 
 	// Websocket Subscription
 	MessageType_SubscribeLeagues = "subscribe_leagues"

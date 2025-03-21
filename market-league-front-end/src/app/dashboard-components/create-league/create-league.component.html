@@ -33,5 +33,24 @@
                 <button type="submit" class="submit-button">Create League</button>
             </form>
         </div>
+
+        <div class="h1-container">
+            <h1>
+                Available Leagues
+            </h1>
+        </div>
+
+        <div class="container available-leagues">
+            <div *ngIf="availableLeagues.length === 0" class="no-leagues">
+                No available leagues to join at this time.
+            </div>
+            <div *ngFor="let league of availableLeagues" class="league-item">
+                <div class="league-info">
+                    <span class="league-name">{{ league.league_name }}</span>
+                    <span class="league-end-date">Ends: {{ league.end_date | date }}</span>
+                </div>
+                <button (click)="joinLeague(league.id)" class="join-button">Join</button>
+            </div>
+        </div>
     </div>
 </section>

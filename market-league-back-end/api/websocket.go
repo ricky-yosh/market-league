@@ -116,6 +116,8 @@ func (h *WebSocketHandler) routeTransmission(conn *ws.Connection, message ws.Web
 		return h.leagueHandler.QueueUp(conn, message.Data)
 	case ws.MessageType_League_Portfolios:
 		return h.leagueHandler.GetPlayerPortfoliosInLeague(conn, message.Data)
+	case ws.MessageType_League_GetAllLeagues:
+		return h.leagueHandler.GetAllLeagues(conn, message.Data)
 
 	case ws.MessageType_SubscribeLeagues:
 		var req struct {
