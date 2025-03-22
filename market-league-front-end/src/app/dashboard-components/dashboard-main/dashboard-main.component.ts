@@ -6,7 +6,7 @@ import { LeagueService } from '../services/league.service';
 import { User } from '../../models/user.model';
 import { League } from '../../models/league.model';
 import { Stock } from '../../models/stock.model';
-import { Subscription, Subject } from 'rxjs';
+import { Subscription} from 'rxjs';
 import { devLog } from '../../../environments/development/devlog';
 import { PortfolioService } from '../services/portfolio.service';
 import { TradeService } from '../services/trade.service';
