@@ -22,6 +22,7 @@ h1 {
     padding-bottom: 0.5em;
     font-size: 1.8em;
 }
+
 .centering-container {
     display: flex;
     align-items: center;
@@ -29,16 +30,26 @@ h1 {
 }
 
 .leaderboard-header {
+    width: 100%;
+    max-width: 40em;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-top: 1em;
 
     h1 {
         font-size: 24px;
         color: #333;
         margin: 0;
     }
+}
+
+.leaderboard-content {
+    background-color: $market-league-white;
+    padding: .5em;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 40em;
 }
 
 .loading-indicator {
@@ -89,6 +100,14 @@ h1 {
         border-bottom: 2px solid #eaeaea;
     }
 
+    th:first-child {
+        border-top-left-radius: 8px;
+    }
+
+    th:last-child {
+        border-top-right-radius: 8px;
+    }
+
     td {
         border-bottom: 1px solid #eaeaea;
     }
@@ -133,18 +152,18 @@ h1 {
         font-weight: bold;
         
         &.gold {
-        background-color: #FFD700;
-        box-shadow: 0 2px 4px rgba(255, 215, 0, 0.4);
+            background-color: #FFD700;
+            box-shadow: 0 2px 4px rgba(255, 215, 0, 0.4);
         }
         
         &.silver {
-        background-color: #C0C0C0;
-        box-shadow: 0 2px 4px rgba(192, 192, 192, 0.4);
+            background-color: #C0C0C0;
+            box-shadow: 0 2px 4px rgba(192, 192, 192, 0.4);
         }
         
         &.bronze {
-        background-color: #CD7F32;
-        box-shadow: 0 2px 4px rgba(205, 127, 50, 0.4);
+            background-color: #CD7F32;
+            box-shadow: 0 2px 4px rgba(205, 127, 50, 0.4);
         }
     }
 
@@ -165,17 +184,17 @@ h1 {
         align-items: flex-start;
         
         h1 {
-        margin-bottom: 12px;
+            margin-bottom: 12px;
         }
     }
 
     .leaderboard-table {
         th, td {
-        padding: 10px 8px;
+            padding: 10px 8px;
         }
         
         .highlight-column {
-        display: none;
+            display: none;
         }
     }
 }
