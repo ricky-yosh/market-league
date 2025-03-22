@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { Portfolio } from '../../models/portfolio.model';
 import { PortfolioService } from '../services/portfolio.service';
@@ -54,6 +54,27 @@ export class LeaguePortfolioComponent {
   ngOnDestroy(): void {
     // Unsubscribe to avoid memory leaks
     this.subscription.unsubscribe();
+  }
+
+  // Track window resize events
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    // Trigger chart redraw when window is resized
+    this.triggerChartResize();
+  }
+  
+  ngAfterViewInit() {
+    // Short delay to ensure DOM is ready
+    setTimeout(() => {
+      this.triggerChartResize();
+    }, 100);
+  }
+  
+  private triggerChartResize() {
+    // Create and dispatch a resize event
+    const event = window.document.createEvent('UIEvents');
+    event.initUIEvent('resize', true, false, window, 0);
+    window.dispatchEvent(event);
   }
 
 }
