@@ -24,7 +24,11 @@ func (r *LeagueRepository) CreateLeague(league *models.League) error {
 	return r.db.Create(league).Error
 }
 
-// AddUserToLeague adds a user to a specific league by creating a record in the User_Leagues table.
+// CreateLeaguePlayer inserts a new LeaguePlayer record into the database.
+func (r *LeagueRepository) CreateLeaguePlayer(lp *models.LeaguePlayer) error {
+	return r.db.Create(lp).Error
+}
+
 // AddUserToLeague adds a user to a specific league by creating a record in the User_Leagues table.
 func (r *LeagueRepository) AddUserToLeague(userID, leagueID uint) error {
 	// Fetch the league to ensure it exists
@@ -77,7 +81,7 @@ func (r *LeagueRepository) GetLeaderboard(leagueID uint, portfolioService *portf
 	for _, portfolio := range portfolios {
 		leaderboard = append(leaderboard, models.LeaderboardEntry{
 			Username:   portfolio.User.Username,
-			TotalValue: portfolioService.CalculateTotalValue(&portfolio),
+			TotalValue: portfolio.Points,
 		})
 	}
 
@@ -87,7 +91,10 @@ func (r *LeagueRepository) GetLeaderboard(leagueID uint, portfolioService *portf
 // GetLeagueDetails retrieves details for a specific league by ID.
 func (r *LeagueRepository) GetLeagueDetails(leagueID uint) (*models.League, error) {
 	var league models.League
-	err := r.db.Preload("Users").Where("id = ?", leagueID).First(&league).Error
+	err := r.db.
+		Preload("LeaguePlayers").
+		Preload("Users").
+		Where("id = ?", leagueID).First(&league).Error
 	return &league, err
 }
 
@@ -108,9 +115,18 @@ func (r *LeagueRepository) RemoveTradesByLeagueID(tx *gorm.DB, leagueID uint) er
 	return tx.Where("league_id = ?", leagueID).Delete(&models.Trade{}).Error
 }
 
+func (r *LeagueRepository) RemovePortfolioPointsHistoryByLeagueID(tx *gorm.DB, leagueID uint) error {
+	return tx.Exec("DELETE FROM portfolio_points_histories WHERE portfolio_id IN (SELECT id FROM portfolios WHERE league_id = ?)", leagueID).Error
+}
+
 // RemoveLeaguePortfolioByLeagueID removes league portfolios for a specific league
 func (r *LeagueRepository) RemoveLeaguePortfolioByLeagueID(tx *gorm.DB, leagueID uint) error {
 	return tx.Exec("DELETE FROM league_portfolios WHERE league_id = ?", leagueID).Error
+}
+
+// RemoveOwnershipHistoriesByLeagueID removes ownership history for a specific league
+func (r *LeagueRepository) RemoveOwnershipHistoriesByLeagueID(tx *gorm.DB, leagueID uint) error {
+	return tx.Exec("DELETE FROM ownership_histories WHERE portfolio_id IN (SELECT id FROM portfolios WHERE league_id = ?)", leagueID).Error
 }
 
 // RemovePortfolioStocksByLeagueID removes all portfolio stocks associated with a league
@@ -129,7 +145,57 @@ func (r *LeagueRepository) RemoveUserLeaguesByLeagueID(tx *gorm.DB, leagueID uin
 	return tx.Exec("DELETE FROM user_leagues WHERE league_id = ?", leagueID).Error
 }
 
+// RemoveLeaguePlayerByLeagueID removes user-league associations for a league
+func (r *LeagueRepository) RemoveLeaguePlayerByLeagueID(tx *gorm.DB, leagueID uint) error {
+	return tx.Exec("DELETE FROM league_players WHERE league_id = ?", leagueID).Error
+}
+
 // RemoveLeague removes the league itself
 func (r *LeagueRepository) RemoveLeague(tx *gorm.DB, leagueID uint) error {
 	return tx.Where("id = ?", leagueID).Delete(&models.League{}).Error
+}
+
+func (r *LeagueRepository) GetAllLeagues() ([]models.League, error) {
+	var leagues []models.League
+
+	// Fetch all leagues from the database
+	// You might want to add pagination here in the future
+	err := r.db.Find(&leagues).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return leagues, nil
+}
+
+// QueueUpPlayer updates the player's draft status to "ready"
+func (r *LeagueRepository) QueueUpPlayer(leagueID uint, playerID uint) error {
+	var leaguePlayer models.LeaguePlayer
+	if err := r.db.Where("league_id = ? AND player_id = ?", leagueID, playerID).First(&leaguePlayer).Error; err != nil {
+		return err
+	}
+
+	leaguePlayer.DraftStatus = models.DraftReady
+	return r.db.Save(&leaguePlayer).Error
+}
+
+// AllPlayersReady checks if every player in the league is ready
+func (r *LeagueRepository) AllPlayersReady(leagueID uint) (bool, error) {
+	var count int64
+	err := r.db.Model(&models.LeaguePlayer{}).
+		Where("league_id = ? AND draft_status != ?", leagueID, models.DraftReady).
+		Count(&count).Error
+	return count == 0, err
+}
+
+// GetLeague retrieves a league along with its players
+func (r *LeagueRepository) GetLeague(leagueID uint) (*models.League, error) {
+	var league models.League
+	err := r.db.Preload("Users").First(&league, leagueID).Error
+	return &league, err
+}
+
+// UpdateLeague updates a league record
+func (r *LeagueRepository) UpdateLeague(league *models.League) error {
+	return r.db.Save(league).Error
 }

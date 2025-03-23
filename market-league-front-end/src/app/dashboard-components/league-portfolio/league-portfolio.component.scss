@@ -23,16 +23,6 @@ h1 {
     font-size: 1.8em;
 }
 
-.container {
-    background-color: $market-league-white;
-    padding: 1em 0.4em 1em 1em;
-    border-radius: 10px;
-    margin: 0em 2em;
-
-    width: 100%;
-    max-width: 40em;
-}
-
 .centering-container {
     display: flex;
     align-items: center;
@@ -41,5 +31,135 @@ h1 {
 
 .h1-container {
     width: 100%;
+    max-width: 84em; // Increased to accommodate two columns
+}
+
+// New flex container for the two-column layout
+.portfolio-content {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 2em;
+    width: 100%;
+    max-width: 84em; // Increased to accommodate two columns
+}
+
+.container {
+    background-color: $market-league-white;
+    padding: 1em 0.4em 1em 1em;
+    border-radius: 10px;
+    margin: 0;
+    
+    // Each container takes up roughly half the width with some room for gap
+    flex: 1;
+    min-width: 300px; // Minimum width before stacking
     max-width: 40em;
+}
+
+// * Points *
+.points-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.total-points-text {
+    margin-top: 0.4em;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.total-points {
+    font-size: 2em;
+    font-weight: bold;
+    color: darken($market-league-gold, 2);
+}
+
+// * Stock List Styling *
+.portfolio-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 1em 0;
+}
+
+/* Each row (flex container) */
+.portfolio-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 .1rem .2rem rgba(0, 0, 0, 0.15);
+}
+
+/* Company section */
+.company {
+    flex: 2; /* Takes more space */
+}
+
+.company-name {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Values section */
+.values {
+    flex: 3;
+    display: flex;
+    justify-content: space-between;
+    text-align: center;
+    width: 100%;
+}
+
+.values p {
+    flex: 1;
+    font-size: 16px;
+    padding: 5px;
+}
+
+/* Green for positive percentage, red for negative */
+.percentage-change.positive {
+    color: $market-league-green;
+    font-weight: bold;
+}
+
+.percentage-change.negative {
+    color: $market-league-red;
+    font-weight: bold;
+}
+.portfolio-growth {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    
+    app-portfolio-points-history-chart {
+        flex: 1;
+        min-height: 300px; // Ensure minimum height for chart
+        width: 100%;
+        display: block;
+    }
+}
+
+// Media query for responsive layout
+@media (max-width: 53em) {
+    .portfolio-content {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .container {
+        width: 100%;
+        margin-bottom: 2em;
+    }
+    
+    .portfolio-growth {
+        min-height: 350px; // Slightly larger minimum height on mobile
+    }
+    
+    .h1-container {
+        max-width: 40em;
+    }
 }

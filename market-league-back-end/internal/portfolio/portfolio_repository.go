@@ -2,6 +2,7 @@ package portfolio
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/market-league/internal/models"
 	"gorm.io/gorm"
@@ -35,6 +36,33 @@ func (r *PortfolioRepository) GetPortfolioWithID(portfolioID uint) (*models.Port
 	}
 
 	return &portfolio, nil
+}
+
+// UpdatePortfolioPoints update points of a portfolio specifically
+func (r *PortfolioRepository) GetAllPortfolios() ([]models.Portfolio, error) {
+	var portfolios []models.Portfolio
+	err := r.db.
+		Preload("User").
+		Preload("League").
+		Preload("Stocks").
+		Find(&portfolios).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve portfolios: %v", err)
+	}
+	return portfolios, nil
+}
+
+// GetPortfoliosForLeague gets all the portfolios and filters by a league
+func (r *PortfolioRepository) GetPortfoliosForLeague(leagueID uint) ([]models.Portfolio, error) {
+	var portfolios []models.Portfolio
+	err := r.db.
+		Preload("Stocks").
+		Where("league_id = ?", leagueID).
+		Find(&portfolios).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve portfolios: %v", err)
+	}
+	return portfolios, nil
 }
 
 // GetPortfolioIDByUserAndLeague retrieves the portfolio ID for a given user and league.
@@ -76,6 +104,17 @@ func (r *PortfolioRepository) UpdatePortfolio(portfolio *models.Portfolio) error
 	return tx.Commit().Error
 }
 
+// UpdatePortfolioPoints update points of a portfolio specifically
+func (r *PortfolioRepository) UpdatePortfolioPoints(portfolioID uint, newPoints int) error {
+	err := r.db.Model(&models.Portfolio{}).
+		Where("id = ?", portfolioID).
+		Update("points", newPoints).Error
+	if err != nil {
+		return fmt.Errorf("failed to update portfolio points: %v", err)
+	}
+	return nil
+}
+
 // DeletePortfolio deletes a portfolio by its ID.
 func (r *PortfolioRepository) DeletePortfolio(portfolioID uint) error {
 	return r.db.Delete(&models.Portfolio{}, portfolioID).Error
@@ -96,4 +135,30 @@ func (r *PortfolioRepository) LeagueExists(leagueID uint) (bool, error) {
 		return false, err
 	}
 	return count > 0, nil
+}
+
+func (r *PortfolioRepository) GetPortfolioPointsHistoryEntry(portfolioID uint) ([]models.PortfolioPointsHistory, error) {
+	var history []models.PortfolioPointsHistory
+	err := r.db.
+		Where("portfolio_id = ?", portfolioID).
+		Order("recorded_at DESC"). // Sort by most recent first
+		Find(&history).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve portfolio points history: %v", err)
+	}
+	return history, nil
+}
+
+func (r *PortfolioRepository) LogPortfolioPointsChange(portfolioID uint, newPoints int) error {
+	historyEntry := models.PortfolioPointsHistory{
+		PortfolioID: portfolioID,
+		Points:      newPoints,
+		RecordedAt:  time.Now(),
+	}
+
+	err := r.db.Create(&historyEntry).Error
+	if err != nil {
+		return fmt.Errorf("failed to log portfolio points change: %v", err)
+	}
+	return nil
 }

@@ -23,23 +23,178 @@ h1 {
     font-size: 1.8em;
 }
 
-.container {
-    background-color: $market-league-white;
-    padding: 1em 0.4em 1em 1em;
-    border-radius: 10px;
-    margin: 0em 2em;
-
-    width: 100%;
-    max-width: 40em;
-}
-
 .centering-container {
     display: flex;
     align-items: center;
     flex-direction: column;
 }
 
-.h1-container {
+.leaderboard-header {
     width: 100%;
     max-width: 40em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1em;
+
+    h1 {
+        font-size: 24px;
+        color: #333;
+        margin: 0;
+    }
+}
+
+.leaderboard-content {
+    background-color: $market-league-white;
+    padding: .5em;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 40em;
+}
+
+.loading-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        border-top-color: #3498db;
+        animation: spin 1s ease-in-out infinite;
+        margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    p {
+        color: #666;
+    }
+}
+
+.no-data-message {
+    text-align: center;
+    padding: 40px 0;
+    color: #666;
+}
+
+.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th, td {
+        padding: 14px 16px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #f4f6f8;
+        color: #555;
+        font-weight: 600;
+        border-bottom: 2px solid #eaeaea;
+    }
+
+    th:first-child {
+        border-top-left-radius: 8px;
+    }
+
+    th:last-child {
+        border-top-right-radius: 8px;
+    }
+
+    td {
+        border-bottom: 1px solid #eaeaea;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    tr.current-user {
+        background-color: rgba(52, 152, 219, 0.1);
+    }
+
+    .rank-column {
+        width: 80px;
+        text-align: center;
+    }
+
+    .user-column {
+        width: 40%;
+    }
+
+    .value-column {
+        width: 30%;
+        text-align: right;
+        font-weight: 600;
+    }
+
+    .highlight-column {
+        width: 100px;
+        text-align: center;
+    }
+
+    .rank-badge {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: #ddd;
+        color: #fff;
+        font-weight: bold;
+        
+        &.gold {
+            background-color: #FFD700;
+            box-shadow: 0 2px 4px rgba(255, 215, 0, 0.4);
+        }
+        
+        &.silver {
+            background-color: #C0C0C0;
+            box-shadow: 0 2px 4px rgba(192, 192, 192, 0.4);
+        }
+        
+        &.bronze {
+            background-color: #CD7F32;
+            box-shadow: 0 2px 4px rgba(205, 127, 50, 0.4);
+        }
+    }
+
+    .user-indicator {
+        display: inline-block;
+        padding: 4px 8px;
+        background-color: #3498db;
+        color: white;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+}
+
+@media (max-width: 768px) {
+    .leaderboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        
+        h1 {
+            margin-bottom: 12px;
+        }
+    }
+
+    .leaderboard-table {
+        th, td {
+            padding: 10px 8px;
+        }
+        
+        .highlight-column {
+            display: none;
+        }
+    }
 }

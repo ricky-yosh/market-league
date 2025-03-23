@@ -1,36 +1,97 @@
 <section class="league-draft">
     <div class="centering-container">
         <div class="h1-container">
-            <h1>Draft Stocks</h1>
+            <h1>
+                Draft Stocks for {{ selectedLeague?.league_name || 'League' }}
+            </h1>
+        </div>
+
+        <!-- Draft Status Bar -->
+        <div class="draft-status-bar">
+            <div class="draft-status" [ngClass]="{'active': currentPlayerID === currentUserID}">
+                <h3 *ngIf="currentPlayerID === currentUserID" class="your-turn">YOUR TURN</h3>
+                <h3 *ngIf="currentPlayerID !== currentUserID">
+                    {{ getPlayerName(currentPlayerID) }}'s turn
+                </h3>
+                <div class="timer" *ngIf="remainingTime > 0">
+                    <div class="timer-bar" [style.width.%]="(remainingTime / maxDraftTime) * 100"></div>
+                    <span class="timer-text">{{ remainingTime }}s</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Draft History -->
+        <div class="draft-history">
+            <h3>Draft History</h3>
+            <div class="draft-picks">
+                <div class="draft-pick" *ngFor="let pick of draftPicks">
+                    <span class="pick-player">{{ getPlayerName(pick.player_id) }}</span>
+                    <span class="pick-arrow">→</span>
+                    <span class="pick-stock">{{ getStockTicker(pick.stock_id) }}</span>
+                </div>
+            </div>
         </div>
 
         <div class="container">
-            <div class="available-stocks-selection">
-                <h2>Available Stocks</h2>
-                <div class="stock-cards">
-                    <div *ngFor="let stock of leagueStocks" class="stock-card">
-                        <div class="flex-row">
-                            <h2>{{ stock.ticker_symbol }}</h2>
-                            <button (click)="stockDetails(stock)" class="stock-details-button">&#9432;</button>
+            <!-- All Players Portfolios Section -->
+            <div class="all-portfolios">
+                <h2>League Portfolios</h2>
+                <div class="portfolios-container">
+                    <div *ngFor="let portfolio of leaguePortfolios" 
+                        class="portfolio-card"
+                        [ngClass]="{'current-player': portfolio.user_id === currentPlayerID}">
+                        <div class="portfolio-header">
+                            <h3>{{ getPlayerName(portfolio.user_id) }}</h3>
+                            <span class="on-clock" *ngIf="portfolio.user_id === currentPlayerID">On Clock</span>
                         </div>
-                        <p class="full-company-name">{{ stock.company_name }}</p>
-                        <p class="stock-price">{{ stock.current_price | currency:'USD':'symbol':'1.2-2' }}</p>
-                        <button (click)="draftStock(stock)" class="draft-button">Draft</button>
+                        <div class="portfolio-stocks">
+                            <div *ngFor="let stock of portfolio.stocks" class="mini-stock-card">
+                                <span class="ticker">{{ stock.ticker_symbol }}</span>
+                            </div>
+                            <div *ngFor="let empty of getEmptySlots(portfolio?.stocks?.length || 0)" class="empty-slot">
+                                <span class="empty-text">Empty</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="stocks-in-portfolio">
-                <h2>Your current stocks</h2>
-                <div class="portfolio-stock-cards">
-                    <div *ngFor="let stock of userPortfolio ? userPortfolio.stocks : []" class="stock-card">
-                        <h2>{{ stock.ticker_symbol }}</h2>
-                        <p class="full-company-name">{{ stock.company_name }}</p>
-                        <p class="stock-price">{{ stock.current_price | currency:'USD':'symbol':'1.2-2' }}</p>
+
+            <div class="draft-main-content">
+                <!-- Available Stocks Section -->
+                <div class="available-stocks-selection">
+                    <h2>Available Stocks</h2>
+                    <div class="stock-cards">
+                        <div *ngFor="let stock of leagueStocks" class="stock-card">
+                            <div class="flex-row">
+                                <h2>{{ stock.ticker_symbol }}</h2>
+                                <button (click)="stockDetails(stock)" class="stock-details-button">&#9432;</button>
+                            </div>
+                            <p class="full-company-name">{{ stock.company_name }}</p>
+                            <p class="stock-price">{{ stock.current_price | currency:'USD':'symbol':'1.2-2' }}</p>
+                            <button (click)="draftStock(stock)" 
+                                    class="draft-button"
+                                    [disabled]="currentPlayerID !== currentUserID">
+                                Draft
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Your Portfolio Section -->
+                <div class="stocks-in-portfolio">
+                    <h2>Your Portfolio</h2>
+                    <div class="portfolio-stock-cards">
+                        <div *ngFor="let stock of userPortfolio ? userPortfolio.stocks : []" class="stock-card">
+                            <h2>{{ stock.ticker_symbol }}</h2>
+                            <p class="full-company-name">{{ stock.company_name }}</p>
+                            <p class="stock-price">{{ stock.current_price | currency:'USD':'symbol':'1.2-2' }}</p>
+                        </div>
+                        <div *ngIf="!userPortfolio || userPortfolio?.stocks?.length === 0" class="empty-portfolio">
+                            <p>Your portfolio is empty. Draft stocks when it's your turn!</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-
     </div>
 </section>

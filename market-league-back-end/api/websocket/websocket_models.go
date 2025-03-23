@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 )
 
 type WebsocketMessage struct {
@@ -15,17 +14,20 @@ type WebsocketMessage struct {
 
 const (
 	// Portfolio Routes
-	MessageType_Portfolio_CreatePortfolio = "MessageType_Portfolio_CreatePortfolio"
-	MessageType_Portfolio_PortfolioWithID = "MessageType_Portfolio_PortfolioWithID"
-	MessageType_Portfolio_LeaguePortfolio = "MessageType_Portfolio_LeaguePortfolio"
-	MessageType_Portfolio_AddStock        = "MessageType_Portfolio_AddStock"
-	MessageType_Portfolio_RemoveStock     = "MessageType_Portfolio_RemoveStock"
+	MessageType_Portfolio_CreatePortfolio           = "MessageType_Portfolio_CreatePortfolio"
+	MessageType_Portfolio_PortfolioWithID           = "MessageType_Portfolio_PortfolioWithID"
+	MessageType_Portfolio_LeaguePortfolio           = "MessageType_Portfolio_LeaguePortfolio"
+	MessageType_Portfolio_AddStock                  = "MessageType_Portfolio_AddStock"
+	MessageType_Portfolio_RemoveStock               = "MessageType_Portfolio_RemoveStock"
+	MessageType_Portfolio_GetPortfolioPointsHistory = "MessageType_Portfolio_GetPortfolioPointsHistory"
+	MessageType_Portfolio_GetStocksValueChange      = "MessageType_Portfolio_GetStocksValueChange"
 
 	// Stock Routes
 	MessageType_Stock_CreateStock             = "MessageType_Stock_CreateStock"
 	MessageType_Stock_CreateMultipleStocks    = "MessageType_Stock_CreateMultipleStocks"
 	MessageType_Stock_GetStockInformation     = "MessageType_Stock_GetStockInformation"
 	MessageType_Stock_UpdateCurrentStockPrice = "MessageType_Stock_UpdateCurrentStockPrice"
+	MessageType_Stock_GetAllStocks            = "MessageType_Stock_GetAllStocks"
 
 	// User Routes
 	MessageType_User_UserInfo       = "MessageType_User_UserInfo"
@@ -43,21 +45,28 @@ const (
 	MessageType_LeaguePortfolio_GetLeaguePortfolioInfo = "MessageType_LeaguePortfolio_GetLeaguePortfolioInfo"
 
 	// League Routes
-	MessageType_League_CreateLeague    = "MessageType_League_CreateLeague"
-	MessageType_League_RemoveLeague    = "MessageType_League_RemoveLeague"
-	MessageType_League_AddUserToLeague = "MessageType_League_AddUserToLeague"
-	MessageType_League_GetDetails      = "MessageType_League_GetDetails"
-	MessageType_League_GetLeaderboard  = "MessageType_League_GetLeaderboard"
+	MessageType_League_CreateLeague        = "MessageType_League_CreateLeague"
+	MessageType_League_RemoveLeague        = "MessageType_League_RemoveLeague"
+	MessageType_League_AddUserToLeague     = "MessageType_League_AddUserToLeague"
+	MessageType_League_GetDetails          = "MessageType_League_GetDetails"
+	MessageType_League_GetLeaderboard      = "MessageType_League_GetLeaderboard"
+	MessageType_League_QueueUp             = "MessageType_League_QueueUp"
+	MessageType_League_Portfolios          = "MessageType_League_Portfolios"
+	MessageType_League_DraftUpdate         = "MessageType_League_DraftUpdate"
+	MessageType_League_DraftPick           = "MessageType_League_DraftPick"
+	MessageType_League_GetAllLeagues       = "MessageType_League_GetAllLeagues"
+	MessageType_League_SubscribeToLeague   = "MessageType_League_SubscribeToLeague"
+	MessageType_League_UnsubscribeToLeague = "MessageType_League_UnsubscribeToLeague"
 
 	// Error Message
 	MessageType_Error = "MessageType_Error"
 )
 
-func SendError(conn *websocket.Conn, messageType string, errorMsg string) {
+func SendError(conn *Connection, messageType string, errorMsg string) {
 	// Construct the error response using gin.H
 	errorData := gin.H{
-		"type":    MessageType_Error, // Include the error type
-		"message": errorMsg,          // Include the error message
+		"type":    MessageType_Error, // Assume MessageType_Error is defined elsewhere
+		"message": errorMsg,
 	}
 
 	// Marshal the error data into JSON bytes
@@ -66,14 +75,15 @@ func SendError(conn *websocket.Conn, messageType string, errorMsg string) {
 		log.Println("Failed to serialize error data:", err)
 		return
 	}
-	// Create an error response using the Transmission struct
+
+	// Create an error response using the WebsocketMessage struct
 	errorResponse := WebsocketMessage{
-		Type: messageType, // Message type is 'error'
-		Data: errorJSON,   // Encodes the error message as JSON
+		Type: messageType,
+		Data: errorJSON,
 	}
 
-	// Write the error response back to the client
-	if err := conn.WriteJSON(errorResponse); err != nil {
+	// Write the error response back to the client using the underlying Ws connection.
+	if err := conn.Ws.WriteJSON(errorResponse); err != nil {
 		log.Println("Failed to send error message:", err)
 	}
 }

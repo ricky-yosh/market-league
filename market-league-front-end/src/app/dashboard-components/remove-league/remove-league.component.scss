@@ -37,7 +37,6 @@ h1 {
     padding: 1em 0.4em 1em 1em;
     border-radius: 10px;
     margin: 0em 2em;
-
     width: 100%;
     max-width: 40em;
 }
@@ -57,4 +56,34 @@ h1 {
 .h1-container {
     width: 100%;
     max-width: 40em;
+}
+
+/* New styles for empty state */
+.no-leagues-message {
+    text-align: center;
+    padding: 2em 1em;
+    color: lighten($market-league-black, 30%);
+    
+    p {
+        margin: 0.5em 0;
+        
+        &:first-child {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: lighten($market-league-black, 20%);
+        }
+        
+        &:last-child {
+            font-size: 0.9em;
+            font-style: italic;
+        }
+    }
+}
+
+/* Fix for lists */
+.leagues {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
 }

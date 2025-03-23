@@ -2,24 +2,38 @@ package leagueportfolio
 
 import (
 	"fmt"
+	"log"
 	"time"
 
+	"github.com/market-league/internal/draft"
 	"github.com/market-league/internal/models"
+	ownership_history "github.com/market-league/internal/ownership_history"
 	"github.com/market-league/internal/portfolio"
 	"github.com/market-league/internal/stock"
+	"github.com/market-league/internal/utils"
 )
 
 type LeaguePortfolioService struct {
-	repo          *LeaguePortfolioRepository
-	stockRepo     *stock.StockRepository
-	portfolioRepo *portfolio.PortfolioRepository
+	repo                    *LeaguePortfolioRepository
+	stockRepo               *stock.StockRepository
+	portfolioRepo           *portfolio.PortfolioRepository
+	ownershipHistoryService ownership_history.OwnershipHistoryServiceInterface
+	draftProvider           draft.DraftChannelProvider
 }
 
-func NewLeaguePortfolioService(leaguePortfolioRepo *LeaguePortfolioRepository, stockRepo *stock.StockRepository, portfolioRepo *portfolio.PortfolioRepository) *LeaguePortfolioService {
+func NewLeaguePortfolioService(
+	leaguePortfolioRepo *LeaguePortfolioRepository,
+	stockRepo *stock.StockRepository,
+	portfolioRepo *portfolio.PortfolioRepository,
+	ownershipHistoryService ownership_history.OwnershipHistoryServiceInterface,
+	draftProvider draft.DraftChannelProvider,
+) *LeaguePortfolioService {
 	return &LeaguePortfolioService{
-		repo:          leaguePortfolioRepo,
-		stockRepo:     stockRepo,
-		portfolioRepo: portfolioRepo,
+		repo:                    leaguePortfolioRepo,
+		stockRepo:               stockRepo,
+		portfolioRepo:           portfolioRepo,
+		ownershipHistoryService: ownershipHistoryService,
+		draftProvider:           draftProvider,
 	}
 }
 
@@ -58,6 +72,7 @@ func (s *LeaguePortfolioService) CreateLeaguePortfolio(leagueID uint) (*models.L
 }
 
 func (s *LeaguePortfolioService) DraftStock(leagueID, userID, stockID uint) error {
+	log.Printf("Processing draft selection: League=%d, User=%d, Stock=%d", leagueID, userID, stockID)
 
 	leaguePortfolioID, err := s.repo.GetLeaguePortfolioIDByLeagueID(leagueID)
 	if err != nil {
@@ -115,7 +130,33 @@ func (s *LeaguePortfolioService) DraftStock(leagueID, userID, stockID uint) erro
 		return fmt.Errorf("failed to update user portfolio: %v", err)
 	}
 
+	// Update OwnershipHistory of stock
+	portfolioID, err := s.portfolioRepo.GetPortfolioIDByUserAndLeague(userID, leagueID)
+	if err != nil {
+		return fmt.Errorf("failed to get user portfolioID: %v", err)
+	}
+	stockIDList := []uint{stockID} // Make list to have the correct input type
+	stocks, err := s.stockRepo.GetStocksByIDs(stockIDList)
+	if err != nil {
+		return fmt.Errorf("unable to find stock: %v", err)
+	}
+	stock, err := utils.FirstStock(stocks)
+	if err != nil {
+		return fmt.Errorf("unable to access first stock: %v", err)
+	}
+	startingValue := stock.CurrentPrice
+	startDate := time.Now()
+	if err := s.ownershipHistoryService.CreateOwnershipHistory(portfolioID, stockID, startingValue, startDate); err != nil {
+		return fmt.Errorf("failed to update user portfolio: %v", err)
+	}
+
+	log.Printf("Draft selection successful: League=%d, User=%d, Stock=%d", leagueID, userID, stockID)
 	return nil
+}
+
+// Helper function to get active drafts
+func (s *LeaguePortfolioService) GetDraftSelectionChannel(leagueID uint) chan uint {
+	return s.draftProvider.GetDraftSelectionChannel(leagueID)
 }
 
 // GetLeaguePortfolioInfo fetches the details of a LeaguePortfolio by ID.

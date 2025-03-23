@@ -38,7 +38,13 @@ func (r *UserRepository) GetUserByUsername(username string) (*models.User, error
 // GetUserLeagues retrieves all leagues that the user is a member of.
 func (r *UserRepository) GetUserLeagues(userID uint) ([]models.League, error) {
 	var user models.User
-	err := r.db.Preload("Leagues").First(&user, userID).Error
+	err := r.db.
+		Preload("Leagues").
+		Preload("Leagues.Users", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, username")
+		}).
+		Preload("Leagues.LeaguePlayers").
+		First(&user, userID).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to find user: %w", err)
 	}

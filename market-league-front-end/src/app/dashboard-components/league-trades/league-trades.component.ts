@@ -4,10 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { LeagueService } from '../services/league.service';
 import { User } from '../../models/user.model';
 import { VerifyUserService } from '../services/verify-user.service';
-import { League } from '../../models/league.model';
-import { devLog } from '../../../environments/development/devlog';
 import { Stock } from '../../models/stock.model';
-import { Observable, Subscription, catchError, map, of, tap } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { Trade } from '../../models/trade.model';
 import { guard } from '../../utils/guard';
 import { PortfolioService } from '../services/portfolio.service';
@@ -47,7 +45,7 @@ export class LeagueTradesComponent {
 
     // User's Portfolio
     this.subscription = this.portfolioService.userPortfolio$.subscribe((portfolio) => {
-      this.currentUsersStocks = portfolio.stocks;
+      this.currentUsersStocks = portfolio ? portfolio.stocks : [];
     });
     this.subscription = this.tradeService.leagueTrades$.subscribe((leagueTrades) => {
       const filteredCurrentUserFromTrades = leagueTrades.filter(trade => trade.user2 == this.verifyUserService.getCurrentUserValue());

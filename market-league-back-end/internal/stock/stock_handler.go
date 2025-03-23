@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gorilla/websocket"
 	ws "github.com/market-league/api/websocket"
 	"github.com/market-league/internal/models"
 )
 
 // StockHandler Interface
 type StockHandlerInterface interface {
-	CreateStock(conn *websocket.Conn, rawData json.RawMessage) error
-	CreateMultipleStocks(conn *websocket.Conn, rawData json.RawMessage) error
-	UpdatePrice(conn *websocket.Conn, rawData json.RawMessage) error
-	GetStockInfo(conn *websocket.Conn, rawData json.RawMessage) error
+	CreateStock(conn *ws.Connection, rawData json.RawMessage) error
+	CreateMultipleStocks(conn *ws.Connection, rawData json.RawMessage) error
+	UpdatePrice(conn *ws.Connection, rawData json.RawMessage) error
+	GetAllStocks(conn *ws.Connection, rawData json.RawMessage) error
+	GetStockInfo(conn *ws.Connection, rawData json.RawMessage) error
 }
 
 // Compile-time check
@@ -34,12 +34,11 @@ func NewStockHandler(service *StockService) *StockHandler {
 // * Implementation of Interface
 
 // CreateStock handles the creation of a new stock
-func (h *StockHandler) CreateStock(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *StockHandler) CreateStock(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
-		TickerSymbol string  `json:"ticker_symbol" binding:"required"`
-		CompanyName  string  `json:"company_name" binding:"required"`
-		CurrentPrice float64 `json:"current_price" binding:"required,gt=0"`
+		TickerSymbol string `json:"ticker_symbol" binding:"required"`
+		CompanyName  string `json:"company_name" binding:"required"`
 	}
 
 	// Step 2: Parse data from WebSocket JSON payload
@@ -49,7 +48,7 @@ func (h *StockHandler) CreateStock(conn *websocket.Conn, rawData json.RawMessage
 	}
 
 	// Step 3: Process business logic (reuse the service layer)
-	stock, err := h.StockService.CreateStock(request.TickerSymbol, request.CompanyName, request.CurrentPrice)
+	stock, err := h.StockService.CreateStock(request.TickerSymbol, request.CompanyName)
 	if err != nil {
 		ws.SendError(conn, ws.MessageType_Stock_CreateStock, err.Error())
 		return fmt.Errorf("failed to create portfolio: %v", err)
@@ -67,7 +66,7 @@ func (h *StockHandler) CreateStock(conn *websocket.Conn, rawData json.RawMessage
 		Type: ws.MessageType_Stock_CreateStock,
 		Data: json.RawMessage(stockJSON), // Use marshaled JSON bytes
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 
@@ -75,12 +74,11 @@ func (h *StockHandler) CreateStock(conn *websocket.Conn, rawData json.RawMessage
 }
 
 // CreateMultipleStocks handles the creation of multiple stocks
-func (h *StockHandler) CreateMultipleStocks(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *StockHandler) CreateMultipleStocks(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request []struct {
-		TickerSymbol string  `json:"ticker_symbol" binding:"required"`
-		CompanyName  string  `json:"company_name" binding:"required"`
-		CurrentPrice float64 `json:"current_price" binding:"required,gt=0"`
+		TickerSymbol string `json:"ticker_symbol" binding:"required"`
+		CompanyName  string `json:"company_name" binding:"required"`
 	}
 
 	// Step 2: Parse data from WebSocket JSON payload
@@ -95,7 +93,6 @@ func (h *StockHandler) CreateMultipleStocks(conn *websocket.Conn, rawData json.R
 		stock := &models.Stock{
 			TickerSymbol: stockReq.TickerSymbol,
 			CompanyName:  stockReq.CompanyName,
-			CurrentPrice: stockReq.CurrentPrice,
 		}
 		stocksPointer = append(stocksPointer, stock)
 	}
@@ -122,7 +119,7 @@ func (h *StockHandler) CreateMultipleStocks(conn *websocket.Conn, rawData json.R
 		Type: ws.MessageType_Stock_CreateMultipleStocks,
 		Data: json.RawMessage(stockJSON), // Use marshaled JSON bytes
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 
@@ -130,7 +127,7 @@ func (h *StockHandler) CreateMultipleStocks(conn *websocket.Conn, rawData json.R
 }
 
 // UpdatePrice handles the request to update a stock's current price
-func (h *StockHandler) UpdatePrice(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *StockHandler) UpdatePrice(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
 		StockID   uint       `json:"stock_id" binding:"required"`
@@ -155,7 +152,35 @@ func (h *StockHandler) UpdatePrice(conn *websocket.Conn, rawData json.RawMessage
 		Type: ws.MessageType_Stock_UpdateCurrentStockPrice,
 		Data: json.RawMessage(`{"message": "Stock price updated successfully"}`), // Simple JSON message
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
+}
+
+func (h *StockHandler) GetAllStocks(conn *ws.Connection, rawData json.RawMessage) error {
+	// Step 1: Fetch all stocks using the service layer
+	stocks, err := h.StockService.GetAllStocks()
+	if err != nil {
+		// Send an error response if something goes wrong
+		ws.SendError(conn, ws.MessageType_Stock_GetAllStocks, "Failed to retrieve stocks: "+err.Error())
+		return fmt.Errorf("failed to retrieve stocks: %v", err)
+	}
+
+	// Step 2: Prepare the response
+	responseData, err := json.Marshal(stocks)
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_Stock_GetAllStocks, "Failed to serialize stock data: "+err.Error())
+		return fmt.Errorf("failed to serialize stock data: %v", err)
+	}
+
+	// Step 3: Send the list of stocks back to the client
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_Stock_GetAllStocks,
+		Data: json.RawMessage(responseData),
+	}
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 
@@ -163,7 +188,7 @@ func (h *StockHandler) UpdatePrice(conn *websocket.Conn, rawData json.RawMessage
 }
 
 // GetStockInfo handles retrieving stock information with stock price history
-func (h *StockHandler) GetStockInfo(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *StockHandler) GetStockInfo(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
 		StockID uint `json:"stock_id" binding:"required"`
@@ -203,7 +228,7 @@ func (h *StockHandler) GetStockInfo(conn *websocket.Conn, rawData json.RawMessag
 		Type: ws.MessageType_Stock_GetStockInformation,
 		Data: json.RawMessage(stockJSON), // Use marshaled JSON bytes
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 

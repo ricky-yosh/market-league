@@ -5,12 +5,15 @@ export const WebSocketMessageTypes = {
 	MessageType_Portfolio_LeaguePortfolio: "MessageType_Portfolio_LeaguePortfolio",
 	MessageType_Portfolio_AddStock: "MessageType_Portfolio_AddStock",
 	MessageType_Portfolio_RemoveStock: "MessageType_Portfolio_RemoveStock",
+	MessageType_Portfolio_GetPortfolioPointsHistory: "MessageType_Portfolio_GetPortfolioPointsHistory",
+	MessageType_Portfolio_GetStocksValueChange: "MessageType_Portfolio_GetStocksValueChange",
 
 	// Stock Routes
 	MessageType_Stock_CreateStock: "MessageType_Stock_CreateStock",
 	MessageType_Stock_CreateMultipleStocks: "MessageType_Stock_CreateMultipleStocks",
 	MessageType_Stock_GetStockInformation: "MessageType_Stock_GetStockInformation",
 	MessageType_Stock_UpdateCurrentStockPrice: "MessageType_Stock_UpdateCurrentStockPrice",
+	MessageType_Stock_GetAllStocks: "MessageType_Stock_GetAllStocks",
 
 	// User Routes
 	MessageType_User_UserInfo: "MessageType_User_UserInfo",
@@ -33,6 +36,13 @@ export const WebSocketMessageTypes = {
 	MessageType_League_AddUserToLeague: "MessageType_League_AddUserToLeague",
 	MessageType_League_GetDetails: "MessageType_League_GetDetails",
 	MessageType_League_GetLeaderboard: "MessageType_League_GetLeaderboard",
+	MessageType_League_QueueUp: "MessageType_League_QueueUp",
+	MessageType_League_Portfolios: "MessageType_League_Portfolios",
+	MessageType_League_DraftUpdate: "MessageType_League_DraftUpdate",
+	MessageType_League_DraftPick: "MessageType_League_DraftPick",
+	MessageType_League_GetAllLeagues: "MessageType_League_GetAllLeagues",
+	MessageType_League_SubscribeToLeague: "MessageType_League_SubscribeToLeague",
+	MessageType_League_UnsubscribeToLeague: "MessageType_League_UnsubscribeToLeague",
 
 	// Error Message
 	MessageType_Error: "MessageType_Error"

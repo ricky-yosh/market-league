@@ -14,6 +14,7 @@ import { SettingsComponent } from './dashboard-components/settings/settings.comp
 import { LeagueDraftComponent } from './dashboard-components/league-draft/league-draft.component';
 import { StockDetailsComponent } from './dashboard-components/stock-details/stock-details.component';
 import { LoggedOutComponent } from './logged-out/logged-out.component';
+import { LeagueDraftQueueComponent } from './dashboard-components/league-draft-queue/league-draft-queue.component';
 
 export const routes: Routes = [
     { path: '', component: HomeComponent },
@@ -27,13 +28,14 @@ export const routes: Routes = [
             { path: '', component: LeagueHomeComponent },
             { path: 'home', component: LeagueHomeComponent },
             { path: 'draft', component: LeagueDraftComponent},
+            { path: 'draft-queue', component: LeagueDraftQueueComponent },
             { path: 'leaderboard', component: LeagueLeaderboardComponent },
             { path: 'portfolio', component: LeaguePortfolioComponent },
             { path: 'trades', component: LeagueTradesComponent },
             { path: 'create-league', component: CreateLeagueComponent },
             { path: 'remove-league', component: RemoveLeagueComponent },
             { path: 'settings', component: SettingsComponent },
-            { path: 'stock-details', component: StockDetailsComponent },
+            { path: 'stock-details/:ticker_symbol', component: StockDetailsComponent },
         ]
     },
 ];

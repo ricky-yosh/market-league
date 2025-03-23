@@ -31,6 +31,9 @@ export class LeagueService {
   private leaderboardSubject = new Subject<LeaderboardUser[]>();
   leaderboard$ = this.leaderboardSubject.asObservable();
 
+  private allLeaguesSubject = new Subject<League[]>();
+  allLeagues$ = this.allLeaguesSubject.asObservable();
+
   // * Constructor
 
   // Routes Websocket Messages
@@ -63,6 +66,10 @@ export class LeagueService {
         case WebSocketMessageTypes.MessageType_User_UserLeagues:
           devLog("Received GetUserLeagues Response: " + message.data);
           this.handleGetUserLeaguesResponse(message.data);
+          break;
+        case WebSocketMessageTypes.MessageType_League_GetAllLeagues:
+          devLog("Received GetAllLeagues Response: " + message.data);
+          this.handleGetAllLeaguesResponse(message.data);
           break;
         default:
           // devLog("League Service unable to route Websocket Message properly! " + message.data);
@@ -132,6 +139,16 @@ export class LeagueService {
     this.handleSuccessfulGetUserLeaguesResponse(responseData);
   }
 
+  handleGetAllLeaguesResponse(responseData: any): void {
+    // Check for error message
+    const didErrorOccur = this.webSocketService.didErrorOccur(responseData);
+    if (didErrorOccur) {
+      devLog("Error occurred: " + responseData.message)
+      return
+    }
+    this.handleSuccessfulGetAllLeaguesResponse(responseData);
+  }
+
   // * Helper Functions to Websocket Responses
 
   handleSuccessfulCreateLeagueResponse(response: CreateLeagueResponse): void {
@@ -145,10 +162,15 @@ export class LeagueService {
   }
 
   handleSuccessfulAddUserToLeagueResponse(response: AddUserToLeagueResponse): void {
-    const users = response.league.users;
-    if (users) {
-      this.leagueMembersSubject.next(users);
+    const league = response.league;
+    if (league && league.users) {
+      this.leagueMembersSubject.next(league.users);
     }
+    else {
+      devLog("League is null or league.users is null for AddUserToLeagueResponse!")
+    }
+    this.getAllLeagues(); // Refresh all leagues in available leagues list
+    this.getUserLeagues();
   }
 
   handleSuccessfulGetLeagueDetailsResponse(response: League): void {
@@ -156,6 +178,7 @@ export class LeagueService {
     if (users) {
       this.leagueMembersSubject.next(users);
     }
+    this.selectedLeagueSource.next(response)
   }
 
   handleSuccessfulGetLeaderboardResponse(response: LeaderboardUser[]): void {
@@ -166,6 +189,11 @@ export class LeagueService {
   handleSuccessfulGetUserLeaguesResponse(response: League[]): void {
     const leagues = response;
     this.userLeaguesSubject.next(leagues);
+  }
+
+  handleSuccessfulGetAllLeaguesResponse(response: League[]): void {
+    const leagues = response;
+    this.allLeaguesSubject.next(leagues);
   }
 
   // * Websocket Call Functions
@@ -191,6 +219,22 @@ export class LeagueService {
     };
     const websocketMessage = {
       type: WebSocketMessageTypes.MessageType_League_RemoveLeague,
+      data: data
+    };
+    this.webSocketService.sendMessage(websocketMessage);
+  }
+
+  // Get league details using the league ID
+  getLeagueDetails(): void {
+    const selectedLeague = this.getSelectedLeagueValue();
+    if (!selectedLeague) {
+      return
+    }
+    const data = {
+      league_id: selectedLeague.id
+    };
+    const websocketMessage = {
+      type: WebSocketMessageTypes.MessageType_League_GetDetails,
       data: data
     };
     this.webSocketService.sendMessage(websocketMessage);
@@ -226,7 +270,7 @@ export class LeagueService {
 
   // Get the user's leagues using their user ID
   getUserLeagues(): void {
-    const currentUser = this.verifyUserService.getCurrentUserValue()
+    const currentUser = this.verifyUserService.getCurrentUserValue();
     if (!currentUser) {
       return
     }
@@ -236,6 +280,14 @@ export class LeagueService {
     const websocketMessage = {
       type: WebSocketMessageTypes.MessageType_User_UserLeagues,
       data: data
+    };
+    this.webSocketService.sendMessage(websocketMessage);
+  }
+
+  getAllLeagues(): void {
+    const websocketMessage = {
+      type: WebSocketMessageTypes.MessageType_League_GetAllLeagues,
+      data: {} // No data needed for this request
     };
     this.webSocketService.sendMessage(websocketMessage);
   }
@@ -252,6 +304,22 @@ export class LeagueService {
     } else {
       localStorage.removeItem('selectedLeague');
     }
+  }
+
+  addUserToLeague(leagueID: number): void {
+    const currentUser = this.verifyUserService.getCurrentUserValue()
+    if (!currentUser) {
+      return
+    }
+    const data = {
+      user_id: currentUser.id,
+      league_id: leagueID
+    };
+    const websocketMessage = {
+      type: WebSocketMessageTypes.MessageType_League_AddUserToLeague,
+      data: data
+    };
+    this.webSocketService.sendMessage(websocketMessage);
   }
 
   // * Getter Functions
@@ -277,6 +345,41 @@ export class LeagueService {
     }
 
     return null;
+  }
+
+  // * Websocket Functions *
+
+  subscribeToLeague(): void {
+    const selectedLeague = this.getSelectedLeagueValue();
+    if (!selectedLeague) {
+      return
+    }
+
+    const data = {
+      league_id: selectedLeague.id,
+    };
+    const websocketMessage = {
+      type: WebSocketMessageTypes.MessageType_League_SubscribeToLeague,
+      data: data
+    };
+    
+    this.webSocketService.sendMessage(websocketMessage);
+  }
+
+  unsubscribeFromLeague(): void {
+    const selectedLeague = this.getSelectedLeagueValue();
+    if (!selectedLeague) {
+      return
+    }
+
+    const data = {
+      league_id: selectedLeague.id,
+    };
+    const websocketMessage = {
+      type: WebSocketMessageTypes.MessageType_League_UnsubscribeToLeague,
+      data: data
+    };
+    this.webSocketService.sendMessage(websocketMessage);
   }
 
 }

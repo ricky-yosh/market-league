@@ -14,6 +14,8 @@ export class WebSocketService {
   private websocket_URL = environment.websocket_url;
   private messageQueue: string[] = [];
   private isConnected = false;
+  private connectionStatusSubject = new Subject<boolean>();
+  connectionStatus = this.connectionStatusSubject.asObservable();
 
   constructor() {}
 
@@ -26,17 +28,27 @@ export class WebSocketService {
       this.socket.onopen = () => {
           console.log('WebSocket connected');
           this.isConnected = true;
+          this.connectionStatusSubject.next(true);
 
           // Flush the message queue
           while (this.messageQueue.length > 0) {
             const message = this.messageQueue.shift(); // Remove the first message
-            if (message) this.socket.send(message); // Send it through WebSocket
+            if (message && this.socket && this.socket.readyState === WebSocket.OPEN) {
+              try {
+                this.socket.send(message); // Send it through WebSocket
+              } catch (error) {
+                console.error("Error sending queued message:", error);
+                // Put the message back in the queue
+                this.messageQueue.unshift(message);
+                break; // Stop processing and try again later
+              }
+            }
           }
         };
       this.socket.onmessage = (event) => {
         try {
           const parsedData = JSON.parse(event.data);
-          console.log(parsedData)
+          devLog(parsedData)
           this.messageSubject.next(parsedData);
         } catch (error) {
           console.error("Failed to parse WebSocket message:", error, event.data);
@@ -45,6 +57,10 @@ export class WebSocketService {
       this.socket.onclose = () => {
         console.log('WebSocket disconnected');
         this.isConnected = false;
+        this.connectionStatusSubject.next(false);
+        
+        // Attempt reconnection
+        setTimeout(() => this.connect(), 1000);
       };
       this.socket.onerror = (error) => console.error('WebSocket error:', error);
     }
@@ -67,12 +83,19 @@ export class WebSocketService {
   // Send messages to the backend
   sendMessage(message: WebSocketTransmission): void {
     const messageString = JSON.stringify(message);
-
+  
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify(message));
+      // Connection is open, send immediately
+      this.socket.send(messageString);  // Use messageString instead of JSON.stringify again
+    } else if (this.socket && this.socket.readyState === WebSocket.CONNECTING) {
+      // Connection is still being established, queue the message
+      console.log('WebSocket is connecting. Queuing message.');
+      this.messageQueue.push(messageString);
     } else {
-      console.warn('WebSocket is not connected! Queuing message.');
-      this.messageQueue.push(messageString); // Queue the message if WebSocket is not ready
+      // Socket doesn't exist or is in closing/closed state
+      console.warn('WebSocket is not connected. Queuing message and attempting to reconnect.');
+      this.messageQueue.push(messageString);
+      this.connect(); // Try to reconnect
     }
   }
   
@@ -80,5 +103,4 @@ export class WebSocketService {
   didErrorOccur(data: any): boolean {
     return data?.type == WebSocketMessageTypes.MessageType_Error
   }
-
 }

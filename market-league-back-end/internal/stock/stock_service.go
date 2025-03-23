@@ -17,11 +17,10 @@ func NewStockService(repo *StockRepository) *StockService {
 	return &StockService{StockRepo: repo}
 }
 
-func (s *StockService) CreateStock(tickerSymbol string, companyName string, currentPrice float64) (*models.Stock, error) {
+func (s *StockService) CreateStock(tickerSymbol string, companyName string) (*models.Stock, error) {
 	stock := &models.Stock{
 		TickerSymbol: tickerSymbol,
 		CompanyName:  companyName,
-		CurrentPrice: currentPrice,
 	}
 
 	err := s.StockRepo.CreateStock(stock)
@@ -68,4 +67,20 @@ func (s *StockService) GetStockInfo(stockID uint) (models.Stock, error) {
 	}
 
 	return stock, nil
+}
+
+func (s *StockService) GetAllStocks() ([]*models.Stock, error) {
+	// Fetch all stocks from the repository
+	stocks, err := s.StockRepo.GetAllStocks()
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert []models.Stock to []*models.Stock
+	var stocksPointers []*models.Stock
+	for i := range stocks {
+		stocksPointers = append(stocksPointers, &stocks[i])
+	}
+
+	return stocksPointers, nil
 }

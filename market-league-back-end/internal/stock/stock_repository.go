@@ -35,20 +35,6 @@ func (r *StockRepository) CreateStock(stock *models.Stock) error {
 			return err
 		}
 
-		// Create the initial price history entry
-		priceHistory := models.PriceHistory{
-			StockID:   stock.ID,
-			Price:     stock.CurrentPrice,
-			Timestamp: time.Now(), // Assuming CreatedAt is set
-		}
-
-		if err := tx.Create(&priceHistory).Error; err != nil {
-			return err
-		}
-
-		// Optionally, associate the price history with the stock
-		stock.PriceHistories = append(stock.PriceHistories, priceHistory)
-
 		return nil
 	})
 }
@@ -60,18 +46,6 @@ func (r *StockRepository) CreateMultipleStocks(stocks []*models.Stock) error {
 			if err := tx.Create(stock).Error; err != nil {
 				return err
 			}
-
-			priceHistory := models.PriceHistory{
-				StockID:   stock.ID,
-				Price:     stock.CurrentPrice,
-				Timestamp: time.Now(), // Ensure current time is used
-			}
-
-			if err := tx.Create(&priceHistory).Error; err != nil {
-				return err
-			}
-
-			stock.PriceHistories = append(stock.PriceHistories, priceHistory)
 		}
 		return nil
 	})

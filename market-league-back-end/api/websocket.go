@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -10,7 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 	ws "github.com/market-league/api/websocket"
 	"github.com/market-league/internal/league"
-	"github.com/market-league/internal/leagueportfolio"
+	league_portfolio "github.com/market-league/internal/league_portfolio"
 	"github.com/market-league/internal/portfolio"
 	"github.com/market-league/internal/stock"
 	"github.com/market-league/internal/trade"
@@ -23,7 +22,7 @@ type WebSocketHandler struct {
 	stockHandler           stock.StockHandlerInterface
 	userHandler            user.UserHandlerInterface
 	tradeHandler           trade.TradeHandlerInterface
-	leaguePortfolioHandler leagueportfolio.LeaguePortfolioHandlerInterface
+	leaguePortfolioHandler league_portfolio.LeaguePortfolioHandlerInterface
 	leagueHandler          league.LeagueHandlerInterface
 }
 
@@ -32,7 +31,7 @@ func NewWebSocketHandler(
 	stockHandler stock.StockHandlerInterface,
 	userHandler user.UserHandlerInterface,
 	tradeHandler trade.TradeHandlerInterface,
-	leaguePortfolioHandler leagueportfolio.LeaguePortfolioHandlerInterface,
+	leaguePortfolioHandler league_portfolio.LeaguePortfolioHandlerInterface,
 	leagueHandler league.LeagueHandlerInterface,
 ) *WebSocketHandler {
 	return &WebSocketHandler{
@@ -45,9 +44,8 @@ func NewWebSocketHandler(
 	}
 }
 
-func (h *WebSocketHandler) routeTransmission(conn *websocket.Conn, message ws.WebsocketMessage) error {
+func (h *WebSocketHandler) routeTransmission(conn *ws.Connection, message ws.WebsocketMessage) error {
 	// Route the message based on its type
-	fmt.Printf("Message: %s", message)
 	switch message.Type {
 
 	// Portfolio Routes
@@ -61,6 +59,10 @@ func (h *WebSocketHandler) routeTransmission(conn *websocket.Conn, message ws.We
 		return h.portfolioHandler.AddStockToPortfolio(conn, message.Data)
 	case ws.MessageType_Portfolio_RemoveStock:
 		return h.portfolioHandler.RemoveStockFromPortfolio(conn, message.Data)
+	case ws.MessageType_Portfolio_GetPortfolioPointsHistory:
+		return h.portfolioHandler.GetPortfolioPointsHistory(conn, message.Data)
+	case ws.MessageType_Portfolio_GetStocksValueChange:
+		return h.portfolioHandler.GetStocksValueChange(conn, message.Data)
 
 	// Stock Routes
 	case ws.MessageType_Stock_CreateStock:
@@ -71,6 +73,8 @@ func (h *WebSocketHandler) routeTransmission(conn *websocket.Conn, message ws.We
 		return h.stockHandler.UpdatePrice(conn, message.Data)
 	case ws.MessageType_Stock_GetStockInformation:
 		return h.stockHandler.GetStockInfo(conn, message.Data)
+	case ws.MessageType_Stock_GetAllStocks:
+		return h.stockHandler.GetAllStocks(conn, message.Data)
 
 	// User Routes
 	case ws.MessageType_User_UserInfo:
@@ -107,6 +111,16 @@ func (h *WebSocketHandler) routeTransmission(conn *websocket.Conn, message ws.We
 		return h.leagueHandler.GetLeagueDetails(conn, message.Data)
 	case ws.MessageType_League_GetLeaderboard:
 		return h.leagueHandler.GetLeaderboard(conn, message.Data)
+	case ws.MessageType_League_QueueUp:
+		return h.leagueHandler.QueueUp(conn, message.Data)
+	case ws.MessageType_League_Portfolios:
+		return h.leagueHandler.GetPlayerPortfoliosInLeague(conn, message.Data)
+	case ws.MessageType_League_GetAllLeagues:
+		return h.leagueHandler.GetAllLeagues(conn, message.Data)
+	case ws.MessageType_League_SubscribeToLeague:
+		return h.leagueHandler.SubscribeToLeague(conn, message.Data)
+	case ws.MessageType_League_UnsubscribeToLeague:
+		return h.leagueHandler.UnsubscribeToLeague(conn, message.Data)
 
 	// Error or Unknown Message Type
 	default:
@@ -127,36 +141,55 @@ var upgrader = websocket.Upgrader{
 
 // HandleWebSocket - Handles incoming WebSocket connections
 func (h *WebSocketHandler) HandleWebSocket(c *gin.Context) {
-	// Upgrade HTTP request to WebSocket
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	// Upgrade HTTP request to WebSocket.
+	rawConn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println("Failed to upgrade connection:", err)
 		return
 	}
-	defer conn.Close() // Close connection when done
+
+	// Create our custom Connection with an empty subscriptions map.
+	conn := &ws.Connection{
+		Ws:            rawConn,
+		Subscriptions: make(map[uint]bool),
+	}
+
+	// Close handler
+	conn.Ws.SetCloseHandler(func(code int, text string) error {
+		log.Println("WebSocket connection closing:", code, text)
+
+		// For each league the user was subscribed to, handle disconnection
+		for leagueID := range conn.Subscriptions {
+			// Notify the league service about the disconnection
+			// You'll need to implement this method in your LeagueService
+			h.leagueHandler.HandleDisconnect(leagueID, conn)
+		}
+		return nil
+	})
+
+	ws.Manager.Register(conn)
+	defer ws.Manager.Unregister(conn)
 
 	log.Println("New WebSocket Connection Established!")
 
 	for {
-		// Read message from client
-		_, transmissionRaw, err := conn.ReadMessage()
+		// Read message from client.
+		_, transmissionRaw, err := conn.Ws.ReadMessage()
 		if err != nil {
 			log.Println("Read error:", err)
 			break
 		}
 
-		// Decode the JSON message
 		var message ws.WebsocketMessage
-		err = json.Unmarshal(transmissionRaw, &message)
-		if err != nil {
+		if err = json.Unmarshal(transmissionRaw, &message); err != nil {
+			// Pass the raw connection to SendError if that function expects *websocket.Conn.
 			ws.SendError(conn, ws.MessageType_Error, "Invalid JSON format")
 			continue
 		}
 
-		// Route the message
-		err = h.routeTransmission(conn, message) // Pass dependencies via handler
-		if err != nil {
-			log.Println("Error with transmission: \"" + message.Type + "\" " + err.Error())
+		// Pass our custom Connection to routeTransmission.
+		if err = h.routeTransmission(conn, message); err != nil {
+			log.Println("Error with transmission:", message.Type, err.Error())
 		}
 	}
 }

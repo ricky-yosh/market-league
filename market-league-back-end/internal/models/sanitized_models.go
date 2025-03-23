@@ -16,14 +16,16 @@ type SanitizedPortfolio struct {
 	LeagueID  uint             `json:"league_id"`
 	League    SanitizedLeague  `json:"league"`
 	Stocks    []SanitizedStock `json:"stocks"`
+	Points    int              `json:"points"`
 	CreatedAt time.Time        `json:"created_at"`
 }
 
 type SanitizedLeague struct {
-	ID         uint      `json:"id"`
-	LeagueName string    `json:"league_name"`
-	StartDate  time.Time `json:"start_date"`
-	EndDate    time.Time `json:"end_date"`
+	ID          uint        `json:"id"`
+	LeagueName  string      `json:"league_name"`
+	StartDate   time.Time   `json:"start_date"`
+	EndDate     time.Time   `json:"end_date"`
+	LeagueState LeagueState `json:"league_state"`
 }
 
 type SanitizedStock struct {

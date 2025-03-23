@@ -3,9 +3,6 @@
         <h1>
             {{ selectedLeague?.league_name ? selectedLeague?.league_name : 'Select a League' }}
         </h1>
-        <button (click)="redirectToDraft()" class="draft-stocks-button">
-            Draft Stocks
-        </button>
     </div>
     <div class="flex-container top">
         <div class="flex-item scrollable-section" style="flex: 1;">
@@ -18,14 +15,28 @@
             </ng-template>
         </div>
         
-        <div class="flex-item scrollable-section" style="flex: 1;">
+        <div class="flex-item scrollable-section leaderboard-section" style="flex: 1;">
             <h2>Leaderboard</h2>
-            <ul *ngIf="leagueMembers && leagueMembers.length > 0; else noLeaderboard">
-                <li *ngFor="let member of leagueMembers">{{ member }}</li>
-            </ul>
-            <ng-template #noLeaderboard>
-                <p>No Leaderboard Found</p>
-            </ng-template>
+            <div class="loading-indicator" *ngIf="!leaderboardLoaded">
+                <div class="spinner"></div>
+                <p>Loading leaderboard...</p>
+            </div>
+            <div class="no-data-message" *ngIf="leaderboardLoaded && leaderboardWithRank.length === 0">
+                <p>No leaderboard data available</p>
+            </div>
+            <table class="leaderboard-mini" *ngIf="leaderboardLoaded && leaderboardWithRank.length > 0">
+                <tbody>
+                    <tr *ngFor="let member of leaderboardWithRank" [class.current-user]="member.username === currentUser">
+                        <td class="rank-column">
+                            <div class="rank-badge" [class.gold]="member.rank === 1" [class.silver]="member.rank === 2" [class.bronze]="member.rank === 3">
+                                {{ member.rank }}
+                            </div>
+                        </td>
+                        <td class="user-column">{{ member.username }}</td>
+                        <td class="value-column">{{ member.total_value | number:'1.2-2' }}</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -41,7 +52,6 @@
             <ng-template #noPortfolio>
                 <p>No Stocks Found</p>
             </ng-template>
-
         </div>
 
         <div class="flex-item scrollable-section" style="flex: 3;">
@@ -78,6 +88,5 @@
                 <p>No Trades Found</p>
             </ng-template>
         </div>
-
     </div>
 </section>

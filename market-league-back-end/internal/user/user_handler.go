@@ -4,16 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gorilla/websocket"
 	ws "github.com/market-league/api/websocket"
 )
 
 // UserHandler Interface
 type UserHandlerInterface interface {
-	GetUserByID(conn *websocket.Conn, rawData json.RawMessage) error
-	GetUserLeagues(conn *websocket.Conn, rawData json.RawMessage) error
-	GetUserTrades(conn *websocket.Conn, rawData json.RawMessage) error
-	GetUserPortfolios(conn *websocket.Conn, rawData json.RawMessage) error
+	GetUserByID(conn *ws.Connection, rawData json.RawMessage) error
+	GetUserLeagues(conn *ws.Connection, rawData json.RawMessage) error
+	GetUserTrades(conn *ws.Connection, rawData json.RawMessage) error
+	GetUserPortfolios(conn *ws.Connection, rawData json.RawMessage) error
 }
 
 // Compile-time check
@@ -32,7 +31,7 @@ func NewUserHandler(service *UserService) *UserHandler {
 // * Implementation of Interface
 
 // GetUserByID fetches user information based on filter criteria.
-func (h *UserHandler) GetUserByID(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *UserHandler) GetUserByID(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
 		UserID uint `json:"user_id" binding:"required"` // User ID to fetch information for
@@ -63,7 +62,7 @@ func (h *UserHandler) GetUserByID(conn *websocket.Conn, rawData json.RawMessage)
 		Type: ws.MessageType_User_UserInfo,
 		Data: json.RawMessage(userInfoJSON), // Use marshaled JSON bytes
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 
@@ -71,7 +70,7 @@ func (h *UserHandler) GetUserByID(conn *websocket.Conn, rawData json.RawMessage)
 }
 
 // GetUserLeagues handles requests to retrieve leagues that a user is a member of.
-func (h *UserHandler) GetUserLeagues(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *UserHandler) GetUserLeagues(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
 		UserID uint `json:"user_id" binding:"required"`
@@ -102,7 +101,7 @@ func (h *UserHandler) GetUserLeagues(conn *websocket.Conn, rawData json.RawMessa
 		Type: ws.MessageType_User_UserLeagues,
 		Data: json.RawMessage(leaguesJSON), // Use marshaled JSON bytes
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 
@@ -110,7 +109,7 @@ func (h *UserHandler) GetUserLeagues(conn *websocket.Conn, rawData json.RawMessa
 }
 
 // GetUserTrades handles requests to retrieve trades that a user is involved in within a specific league.
-func (h *UserHandler) GetUserTrades(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *UserHandler) GetUserTrades(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
 		UserID   uint `json:"user_id" binding:"required"`
@@ -142,7 +141,7 @@ func (h *UserHandler) GetUserTrades(conn *websocket.Conn, rawData json.RawMessag
 		Type: ws.MessageType_User_UserTrades,
 		Data: json.RawMessage(portfolioJSON), // Use marshaled JSON bytes
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 
@@ -150,7 +149,7 @@ func (h *UserHandler) GetUserTrades(conn *websocket.Conn, rawData json.RawMessag
 }
 
 // GetUserPortfolios handles requests to retrieve portfolios that a user is associated with.
-func (h *UserHandler) GetUserPortfolios(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *UserHandler) GetUserPortfolios(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
 		UserID uint `json:"user_id" binding:"required"`
@@ -181,7 +180,7 @@ func (h *UserHandler) GetUserPortfolios(conn *websocket.Conn, rawData json.RawMe
 		Type: ws.MessageType_User_UserPortfolios,
 		Data: json.RawMessage(portfolioJSON), // Use marshaled JSON bytes
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 

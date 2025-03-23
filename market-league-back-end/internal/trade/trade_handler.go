@@ -4,15 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gorilla/websocket"
 	ws "github.com/market-league/api/websocket"
 )
 
 // UserHandler Interface
 type TradeHandlerInterface interface {
-	CreateTrade(conn *websocket.Conn, rawData json.RawMessage) error
-	ConfirmTrade(conn *websocket.Conn, rawData json.RawMessage) error
-	GetTrades(conn *websocket.Conn, rawData json.RawMessage) error
+	CreateTrade(conn *ws.Connection, rawData json.RawMessage) error
+	ConfirmTrade(conn *ws.Connection, rawData json.RawMessage) error
+	GetTrades(conn *ws.Connection, rawData json.RawMessage) error
 }
 
 // Compile-time check
@@ -33,7 +32,7 @@ func NewTradeHandler(tradeService *TradeService) *TradeHandler {
 // * Implementation of Interface
 
 // CreateTradeHandler handles the creation of a new trade
-func (h *TradeHandler) CreateTrade(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *TradeHandler) CreateTrade(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
 		LeagueID   uint   `json:"league_id"`
@@ -68,7 +67,7 @@ func (h *TradeHandler) CreateTrade(conn *websocket.Conn, rawData json.RawMessage
 		Type: ws.MessageType_Trade_CreateTrade,
 		Data: json.RawMessage(portfolioJSON), // Use marshaled JSON bytes
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 
@@ -76,7 +75,7 @@ func (h *TradeHandler) CreateTrade(conn *websocket.Conn, rawData json.RawMessage
 }
 
 // GetTrades handles the retrieval of all trades for a given League with the option of specifying a user
-func (h *TradeHandler) GetTrades(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *TradeHandler) GetTrades(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
 		UserID         *uint `json:"user_id"`         // Optional User ID
@@ -110,7 +109,7 @@ func (h *TradeHandler) GetTrades(conn *websocket.Conn, rawData json.RawMessage) 
 		Type: ws.MessageType_Trade_GetTrades,
 		Data: json.RawMessage(portfolioJSON), // Use marshaled JSON bytes
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 
@@ -119,7 +118,7 @@ func (h *TradeHandler) GetTrades(conn *websocket.Conn, rawData json.RawMessage) 
 }
 
 // ConfirmTrade handles the confirmation of a trade
-func (h *TradeHandler) ConfirmTrade(conn *websocket.Conn, rawData json.RawMessage) error {
+func (h *TradeHandler) ConfirmTrade(conn *ws.Connection, rawData json.RawMessage) error {
 	// Step 1: Parse the WebSocket message
 	var request struct {
 		TradeID uint `json:"trade_id" binding:"required"`
@@ -143,7 +142,7 @@ func (h *TradeHandler) ConfirmTrade(conn *websocket.Conn, rawData json.RawMessag
 		Type: ws.MessageType_Trade_ConfirmTrade,
 		Data: json.RawMessage(`{"message": "Trade confirmed successfully"}`), // Simple JSON message
 	}
-	if err := conn.WriteJSON(response); err != nil {
+	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
 
