@@ -45,19 +45,18 @@ const (
 	MessageType_LeaguePortfolio_GetLeaguePortfolioInfo = "MessageType_LeaguePortfolio_GetLeaguePortfolioInfo"
 
 	// League Routes
-	MessageType_League_CreateLeague    = "MessageType_League_CreateLeague"
-	MessageType_League_RemoveLeague    = "MessageType_League_RemoveLeague"
-	MessageType_League_AddUserToLeague = "MessageType_League_AddUserToLeague"
-	MessageType_League_GetDetails      = "MessageType_League_GetDetails"
-	MessageType_League_GetLeaderboard  = "MessageType_League_GetLeaderboard"
-	MessageType_League_QueueUp         = "MessageType_League_QueueUp"
-	MessageType_League_Portfolios      = "MessageType_League_Portfolios"
-	MessageType_League_DraftUpdate     = "MessageType_League_DraftUpdate"
-	MessageType_League_DraftPick       = "MessageType_League_DraftPick"
-	MessageType_League_GetAllLeagues   = "MessageType_League_GetAllLeagues"
-
-	// Websocket Subscription
-	MessageType_SubscribeLeagues = "subscribe_leagues"
+	MessageType_League_CreateLeague        = "MessageType_League_CreateLeague"
+	MessageType_League_RemoveLeague        = "MessageType_League_RemoveLeague"
+	MessageType_League_AddUserToLeague     = "MessageType_League_AddUserToLeague"
+	MessageType_League_GetDetails          = "MessageType_League_GetDetails"
+	MessageType_League_GetLeaderboard      = "MessageType_League_GetLeaderboard"
+	MessageType_League_QueueUp             = "MessageType_League_QueueUp"
+	MessageType_League_Portfolios          = "MessageType_League_Portfolios"
+	MessageType_League_DraftUpdate         = "MessageType_League_DraftUpdate"
+	MessageType_League_DraftPick           = "MessageType_League_DraftPick"
+	MessageType_League_GetAllLeagues       = "MessageType_League_GetAllLeagues"
+	MessageType_League_SubscribeToLeague   = "MessageType_League_SubscribeToLeague"
+	MessageType_League_UnsubscribeToLeague = "MessageType_League_UnsubscribeToLeague"
 
 	// Error Message
 	MessageType_Error = "MessageType_Error"

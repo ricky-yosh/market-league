@@ -112,7 +112,7 @@ export class LeagueLeaderboardComponent {
             });
         }
 
-        // If not equal them have thei r own ranking
+        // If not equal them have their own ranking
         else 
         {
           this.membersWithRank.push({

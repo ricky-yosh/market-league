@@ -3,11 +3,13 @@ package league
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	ws "github.com/market-league/api/websocket"
 	league_portfolio "github.com/market-league/internal/league_portfolio"
+	"github.com/market-league/internal/models"
 	"github.com/market-league/internal/portfolio"
 )
 
@@ -21,6 +23,9 @@ type LeagueHandlerInterface interface {
 	QueueUp(conn *ws.Connection, rawData json.RawMessage) error
 	GetPlayerPortfoliosInLeague(conn *ws.Connection, rawData json.RawMessage) error
 	GetAllLeagues(conn *ws.Connection, rawData json.RawMessage) error
+	SubscribeToLeague(conn *ws.Connection, rawData json.RawMessage) error
+	UnsubscribeToLeague(conn *ws.Connection, rawData json.RawMessage) error
+	HandleDisconnect(leagueID uint, conn *ws.Connection) error
 }
 
 // Compile-time check
@@ -387,6 +392,142 @@ func (h *LeagueHandler) QueueUp(conn *ws.Connection, rawData json.RawMessage) er
 	if err := conn.Ws.WriteJSON(response); err != nil {
 		return fmt.Errorf("failed to send response: %v", err)
 	}
+
+	return nil
+}
+
+// SendCurrentDraftState sends the current draft state to a newly connected client
+func (s *LeagueService) SendCurrentDraftState(leagueID uint, conn *ws.Connection) error {
+	// Get the current player on clock
+	// This would need to be tracked in your LeagueService
+	// For now, we'll just broadcast the league details
+
+	// Broadcast league details to this specific connection
+	league, err := s.repo.GetLeagueDetails(leagueID)
+	if err != nil {
+		return fmt.Errorf("failed to get league details: %w", err)
+	}
+
+	// Prepare the data
+	data := gin.H{
+		"id":             league.ID,
+		"league_name":    league.LeagueName,
+		"start_date":     league.StartDate,
+		"end_date":       league.EndDate,
+		"league_state":   league.LeagueState,
+		"max_players":    league.MaxPlayers,
+		"league_players": league.LeaguePlayers,
+	}
+
+	// Marshal the data into JSON
+	dataJSON, err := json.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("serialization error: %w", err)
+	}
+
+	// Create the WebSocket message
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_League_GetDetails,
+		Data: json.RawMessage(dataJSON),
+	}
+
+	// Send to this specific connection
+	if err := conn.Ws.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
+}
+
+func (h *LeagueHandler) SubscribeToLeague(conn *ws.Connection, rawData json.RawMessage) error {
+	var request struct {
+		LeagueID uint `json:"league_id" binding:"required"`
+	}
+
+	if err := json.Unmarshal(rawData, &request); err != nil {
+		ws.SendError(conn, ws.MessageType_League_SubscribeToLeague, "Invalid input: "+err.Error())
+		return fmt.Errorf("invalid input: %v", err)
+	}
+
+	// Add this connection to the league's subscriptions
+	conn.Subscriptions[request.LeagueID] = true
+
+	h.service.BroadcastLeagueDetails(request.LeagueID)
+
+	// Get current league state to inform the client
+	league, _, err := h.service.GetLeagueDetails(request.LeagueID)
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_League_SubscribeToLeague, "Failed to get league details: "+err.Error())
+		return fmt.Errorf("failed to get league details: %v", err)
+	}
+
+	// If the league is in draft mode, send the current draft state
+	if league.LeagueState == models.InDraft {
+		// Send the current player on clock information
+		if err := h.service.SendCurrentDraftState(request.LeagueID, conn); err != nil {
+			log.Printf("Error sending draft state: %v", err)
+		}
+	}
+
+	// Send success response
+	responseData := gin.H{"message": "Subscribed to league successfully"}
+	dataJSON, err := json.Marshal(responseData)
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_League_SubscribeToLeague, "Failed to serialize response")
+		return fmt.Errorf("serialization error: %v", err)
+	}
+
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_League_SubscribeToLeague,
+		Data: json.RawMessage(dataJSON),
+	}
+
+	if err := conn.Ws.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
+}
+
+func (h *LeagueHandler) UnsubscribeToLeague(conn *ws.Connection, rawData json.RawMessage) error {
+	var request struct {
+		LeagueID uint `json:"league_id" binding:"required"`
+	}
+
+	if err := json.Unmarshal(rawData, &request); err != nil {
+		ws.SendError(conn, ws.MessageType_League_UnsubscribeToLeague, "Invalid input: "+err.Error())
+		return fmt.Errorf("invalid input: %v", err)
+	}
+
+	// Remove this connection from the league's subscriptions
+	delete(conn.Subscriptions, request.LeagueID)
+
+	// Send success response
+	responseData := gin.H{"message": "Unsubscribed from league successfully"}
+	dataJSON, err := json.Marshal(responseData)
+	if err != nil {
+		ws.SendError(conn, ws.MessageType_League_UnsubscribeToLeague, "Failed to serialize response")
+		return fmt.Errorf("serialization error: %v", err)
+	}
+
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_League_UnsubscribeToLeague,
+		Data: json.RawMessage(dataJSON),
+	}
+
+	if err := conn.Ws.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
+}
+
+func (h *LeagueHandler) HandleDisconnect(leagueID uint, conn *ws.Connection) error {
+	// Log the disconnection
+	log.Printf("Player disconnected from league %d", leagueID)
+
+	// Remove this connection's subscription
+	delete(conn.Subscriptions, leagueID)
 
 	return nil
 }

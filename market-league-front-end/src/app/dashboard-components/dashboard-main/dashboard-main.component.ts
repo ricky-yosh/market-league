@@ -6,7 +6,7 @@ import { LeagueService } from '../services/league.service';
 import { User } from '../../models/user.model';
 import { League } from '../../models/league.model';
 import { Stock } from '../../models/stock.model';
-import { Subscription, Subject } from 'rxjs';
+import { Subscription} from 'rxjs';
 import { devLog } from '../../../environments/development/devlog';
 import { PortfolioService } from '../services/portfolio.service';
 import { TradeService } from '../services/trade.service';
@@ -34,7 +34,7 @@ export class DashboardMainComponent {
   showDropdown: boolean = false;
   activeIndex: number = -1;
 
-  private subscription!: Subscription;
+  private subscriptions: Subscription[] = [];
 
   constructor(
     private router: Router,
@@ -49,12 +49,17 @@ export class DashboardMainComponent {
     
     // * Subscribe to the observables to listen for changes
     
-    this.subscription = this.leagueService.userLeagues$.subscribe((leagues) => {
+    // Subscribe to leagues
+    const leaguesSub = this.leagueService.userLeagues$.subscribe((leagues) => {
       this.leagues = leagues;
     });
-    this.subscription = this.stockService.allStock$.subscribe((stocks) => {
+    this.subscriptions.push(leaguesSub);
+    
+    // Subscribe to stocks
+    const stocksSub = this.stockService.allStock$.subscribe((stocks) => {
       this.stocks = stocks;
     });
+    this.subscriptions.push(stocksSub);
 
     // * Get Starting Values for Dashboard
     
@@ -68,7 +73,7 @@ export class DashboardMainComponent {
 
   ngOnDestroy(): void {
     // Unsubscribe to avoid memory leaks
-    this.subscription.unsubscribe();
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   // * Template Methods

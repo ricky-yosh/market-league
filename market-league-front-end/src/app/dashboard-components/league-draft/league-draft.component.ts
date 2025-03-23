@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Stock } from '../../models/stock.model';
 import { Portfolio } from '../../models/portfolio.model';
-import { Router } from '@angular/router';
+import { NavigationExtras, Router } from '@angular/router';
 import { StockService } from '../services/stock.service';
 import { PortfolioService } from '../services/portfolio.service';
 import { DraftService } from '../services/draft.service';
@@ -15,6 +15,7 @@ import { DraftUpdateResponse } from '../../models/websocket-responses/draft/draf
 import { DraftPickResponse } from '../../models/websocket-responses/draft/draft-pick-response.model';
 import { VerifyUserService } from '../services/verify-user.service';
 import { User } from '../../models/user.model';
+import { League } from '../../models/league.model';
 
 interface DraftPick {
   player_id: number;
@@ -34,6 +35,7 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
   leagueStocks: Stock[] = [];
   userPortfolio: Portfolio | null = null;
   leaguePortfolios: Portfolio[] = [];
+  selectedLeague: League | null = null;
   
   // Draft state
   currentPlayerID: number = 0;
@@ -60,10 +62,28 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
     private portfolioService: PortfolioService,
     private stockService: StockService,
     private leagueService: LeagueService,
-    private verifyUserService: VerifyUserService
+    private verifyUserService: VerifyUserService,
+    private websocketService: WebSocketService,
   ) {}
 
   ngOnInit(): void {
+    // Subscribe to WebSocket connection status
+    const connectionSub = this.websocketService.connectionStatus.subscribe(isConnected => {
+      if (isConnected) {
+        // When connection is established/re-established, reload leagues and subscribe
+        this.leagueService.getUserLeagues();
+        this.leagueService.subscribeToLeague();
+      }
+    });
+    this.subscriptions.push(connectionSub);
+
+    // Initial connection
+    this.websocketService.connect();
+    
+    // Initial data load
+    this.leagueService.getUserLeagues();
+    this.leagueService.subscribeToLeague();
+
     // Get current user ID
     const currentUser = this.verifyUserService.getCurrentUserValue();
     if (currentUser) {
@@ -73,6 +93,7 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
     // Subscribe to selected league changes
     this.subscriptions.push(
       this.leagueService.selectedLeague$.subscribe((league) => {
+        this.selectedLeague = league;
         if (!league) return;
         
         switch(league.league_state) {
@@ -183,6 +204,7 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
     
     // Unsubscribe from all subscriptions
     this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.leagueService.unsubscribeFromLeague();
   }
   
   // Start countdown timer
@@ -218,7 +240,11 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
   // View stock details
   stockDetails(stock: Stock): void {
     this.stockService.setStock(stock);
-    this.router.navigate(['dashboard/stock-details']);
+    // Add navigation extras to pass state during navigation
+    const navigationExtras: NavigationExtras = {
+      queryParams: { 'fromStockSelection': 'true' }
+    };
+    this.router.navigate(['dashboard/stock-details', stock.ticker_symbol], navigationExtras);
   }
   
   // Get player name by ID

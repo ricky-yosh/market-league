@@ -2,7 +2,7 @@
     <div class="centering-container flex-column">
         <div class="leaderboard-header">
             <h1>
-                {{ selectedLeague?.league_name + (selectedLeague?.league_name ? ": Leaderboard" : "") || "No league selected" }}
+                {{ selectedLeague?.league_name + (selectedLeague?.league_name ? " Leaderboard" : "") || "No league selected" }}
               </h1>             
         </div>
         <div class="leaderboard-content">
@@ -18,7 +18,7 @@
                   <tr>
                     <th class="rank-column">Rank</th>
                     <th class="user-column">Username</th>
-                    <th class="value-column">Score Portfolio</th>
+                    <th class="value-column">Portfolio Score</th>
                     <th class="highlight-column" *ngIf="user">Status</th>
                   </tr>
                 </thead>

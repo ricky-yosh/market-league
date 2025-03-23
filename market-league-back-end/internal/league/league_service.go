@@ -373,13 +373,24 @@ func (s *LeagueService) startDraftLoop(leagueID uint) {
 	currentPlayerIndex := 0
 
 	for !s.isDraftComplete(league) {
+
 		currentPlayer := players[currentPlayerIndex]
-		log.Printf("Draft turn for player %d in league %d\n", currentPlayer, leagueID)
+		log.Printf("Draft turn for player %d in league %d", currentPlayer, leagueID)
 
 		timer := time.NewTimer(draftTurnDuration)
 
+		// Add logging before waiting for selection
+		log.Printf("Waiting for player %d selection in league %d", currentPlayer, leagueID)
+
 		// Wait for player's selection on the channel or timer expiration.
 		stockID, selectionReceived := s.waitForPlayerSelection(currentPlayer, leagueID, timer, selectionChannel)
+
+		// Add logging after selection is received or timer expires
+		if selectionReceived {
+			log.Printf("Player %d selection received: stockID=%d", currentPlayer, stockID)
+		} else {
+			log.Printf("Timer expired for player %d, no selection received", currentPlayer)
+		}
 
 		if selectionReceived {
 			err := s.leaguePortfolioService.DraftStock(leagueID, currentPlayer, stockID)
@@ -446,22 +457,24 @@ func (s *LeagueService) startDraftLoop(leagueID uint) {
 }
 
 func (s *LeagueService) waitForPlayerSelection(playerID, leagueID uint, timer *time.Timer, selectionChannel chan uint) (uint, bool) {
-	// This function waits for one of two things:
-	// 1. The player makes a selection through the channel
-	// 2. The timer expires (draft time limit reached)
-
 	// Notify all clients that this player is now on the clock
 	s.notifyPlayerOnClock(playerID, leagueID)
 
-	// Wait for either a selection or timer expiration
+	log.Printf("waitForPlayerSelection: Waiting for selection from player %d in league %d", playerID, leagueID)
+
+	// Simply use select directly in the main function, no need for a goroutine
 	select {
 	case stockID := <-selectionChannel:
 		// Player made a selection within the time limit
-		log.Printf("Player %d made selection (stock ID: %d) in league %d", playerID, stockID, leagueID)
+		log.Printf("waitForPlayerSelection: Player %d made selection (stock ID: %d) in league %d",
+			playerID, stockID, leagueID)
+		timer.Stop() // Stop the timer
 		return stockID, true
 
 	case <-timer.C:
 		// Timer expired, player did not make a selection in time
+		log.Printf("waitForPlayerSelection: Timer expired for player %d in league %d",
+			playerID, leagueID)
 		return 0, false
 	}
 }
@@ -680,4 +693,16 @@ func (s *LeagueService) getOrderedDraftPlayers(league *models.League) []uint {
 		players = append(players, lp.ID)
 	}
 	return players
+}
+
+func (s *LeagueService) HandlePlayerDisconnect(leagueID uint, conn *ws.Connection) {
+	// Remove this connection from all league subscriptions
+	for subLeagueID := range conn.Subscriptions {
+		if subLeagueID == leagueID {
+			delete(conn.Subscriptions, subLeagueID)
+		}
+	}
+
+	// Note: We don't need to stop the draft loop here
+	// The draft loop should continue and auto-select if needed
 }

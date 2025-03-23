@@ -7,7 +7,7 @@
         <div class="container">
             <div class="flex-row">
                 <h2>{{ selectedStock?.company_name ? selectedStock?.company_name : 'Select a Stock' }}</h2>
-                <button (click)="returnToDraft()" class="return-to-draft-button">Go to Draft</button>
+                <button *ngIf="isRoutedToStockDetails" (click)="returnToDraft()" class="return-to-draft-button">Go to Draft</button>
             </div>
             <div class="stock-details-chart-container">
                 <app-stock-chart [stockData]="stockDetails" class="stock-chart"></app-stock-chart>

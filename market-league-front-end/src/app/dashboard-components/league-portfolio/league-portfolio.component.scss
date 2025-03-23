@@ -23,16 +23,6 @@ h1 {
     font-size: 1.8em;
 }
 
-.container {
-    background-color: $market-league-white;
-    padding: 1em 0.4em 1em 1em;
-    border-radius: 10px;
-    margin: 0em 2em;
-
-    width: 100%;
-    max-width: 40em;
-}
-
 .centering-container {
     display: flex;
     align-items: center;
@@ -41,10 +31,31 @@ h1 {
 
 .h1-container {
     width: 100%;
-    max-width: 40em;
+    max-width: 84em; // Increased to accommodate two columns
 }
 
-.dynamic-flex
+// New flex container for the two-column layout
+.portfolio-content {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 2em;
+    width: 100%;
+    max-width: 84em; // Increased to accommodate two columns
+}
+
+.container {
+    background-color: $market-league-white;
+    padding: 1em 0.4em 1em 1em;
+    border-radius: 10px;
+    margin: 0;
+    
+    // Each container takes up roughly half the width with some room for gap
+    flex: 1;
+    min-width: 300px; // Minimum width before stacking
+    max-width: 40em;
+}
 
 // * Points *
 .points-header {
@@ -118,4 +129,37 @@ h1 {
 .percentage-change.negative {
     color: $market-league-red;
     font-weight: bold;
+}
+.portfolio-growth {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    
+    app-portfolio-points-history-chart {
+        flex: 1;
+        min-height: 300px; // Ensure minimum height for chart
+        width: 100%;
+        display: block;
+    }
+}
+
+// Media query for responsive layout
+@media (max-width: 53em) {
+    .portfolio-content {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .container {
+        width: 100%;
+        margin-bottom: 2em;
+    }
+    
+    .portfolio-growth {
+        min-height: 350px; // Slightly larger minimum height on mobile
+    }
+    
+    .h1-container {
+        max-width: 40em;
+    }
 }
