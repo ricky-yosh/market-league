@@ -41,6 +41,8 @@ export const WebSocketMessageTypes = {
 	MessageType_League_DraftUpdate: "MessageType_League_DraftUpdate",
 	MessageType_League_DraftPick: "MessageType_League_DraftPick",
 	MessageType_League_GetAllLeagues: "MessageType_League_GetAllLeagues",
+	MessageType_League_SubscribeToLeague: "MessageType_League_SubscribeToLeague",
+	MessageType_League_UnsubscribeToLeague: "MessageType_League_UnsubscribeToLeague",
 
 	// Error Message
 	MessageType_Error: "MessageType_Error"

@@ -3,6 +3,7 @@ package leagueportfolio
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 
 	ws "github.com/market-league/api/websocket"
 )
@@ -42,17 +43,28 @@ func (h *LeaguePortfolioHandler) DraftStock(conn *ws.Connection, rawData json.Ra
 		return fmt.Errorf("invalid input: %v", err)
 	}
 
-	// Check if there's an active draft channel for this league.
-	// Assume LeaguePortfolioService has a reference to LeagueService, or you have a shared mechanism.
-	if draftChan := h.leaguePortfolioService.GetDraftSelectionChannel(request.LeagueID); draftChan != nil {
-		// Send the selection into the channel.
-		draftChan <- request.StockID
+	// Add logging to see the request
+	log.Printf("DraftStock request: LeagueID=%d, UserID=%d, StockID=%d",
+		request.LeagueID, request.UserID, request.StockID)
 
-		return nil
+	// Check if there's an active draft channel for this league.
+	draftChan := h.leaguePortfolioService.GetDraftSelectionChannel(request.LeagueID)
+
+	// Add logging to see if the channel is nil
+	if draftChan == nil {
+		log.Printf("No active draft channel found for league %d", request.LeagueID)
+		return fmt.Errorf("no active draft for league %d", request.LeagueID)
 	}
 
-	// If no active draft channel exists, you could process it normally or return an error.
-	return fmt.Errorf("no active draft for league %d", request.LeagueID)
+	log.Printf("Found active draft channel for league %d, sending stock ID %d",
+		request.LeagueID, request.StockID)
+
+	// Send the selection into the channel.
+	draftChan <- request.StockID
+	log.Printf("Successfully sent stock ID %d to draft channel for league %d",
+		request.StockID, request.LeagueID)
+
+	return nil
 }
 
 // GetLeaguePortfolioInfo handles retrieving the League's LeaguePortfolio

@@ -270,7 +270,7 @@ export class LeagueService {
 
   // Get the user's leagues using their user ID
   getUserLeagues(): void {
-    const currentUser = this.verifyUserService.getCurrentUserValue()
+    const currentUser = this.verifyUserService.getCurrentUserValue();
     if (!currentUser) {
       return
     }
@@ -345,6 +345,41 @@ export class LeagueService {
     }
 
     return null;
+  }
+
+  // * Websocket Functions *
+
+  subscribeToLeague(): void {
+    const selectedLeague = this.getSelectedLeagueValue();
+    if (!selectedLeague) {
+      return
+    }
+
+    const data = {
+      league_id: selectedLeague.id,
+    };
+    const websocketMessage = {
+      type: WebSocketMessageTypes.MessageType_League_SubscribeToLeague,
+      data: data
+    };
+    
+    this.webSocketService.sendMessage(websocketMessage);
+  }
+
+  unsubscribeFromLeague(): void {
+    const selectedLeague = this.getSelectedLeagueValue();
+    if (!selectedLeague) {
+      return
+    }
+
+    const data = {
+      league_id: selectedLeague.id,
+    };
+    const websocketMessage = {
+      type: WebSocketMessageTypes.MessageType_League_UnsubscribeToLeague,
+      data: data
+    };
+    this.webSocketService.sendMessage(websocketMessage);
   }
 
 }

@@ -71,10 +71,8 @@ export class LeaguePortfolioComponent {
   }
   
   private triggerChartResize() {
-    // Create and dispatch a resize event
-    const event = window.document.createEvent('UIEvents');
-    event.initUIEvent('resize', true, false, window, 0);
-    window.dispatchEvent(event);
+    // Create and dispatch a resize event using the modern approach
+    window.dispatchEvent(new Event('resize'));
   }
 
 }

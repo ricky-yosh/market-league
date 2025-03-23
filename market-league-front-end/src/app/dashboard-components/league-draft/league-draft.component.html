@@ -1,7 +1,9 @@
 <section class="league-draft">
     <div class="centering-container">
         <div class="h1-container">
-            <h1>Draft Stocks</h1>
+            <h1>
+                Draft Stocks for {{ selectedLeague?.league_name || 'League' }}
+            </h1>
         </div>
 
         <!-- Draft Status Bar -->
@@ -36,8 +38,8 @@
                 <h2>League Portfolios</h2>
                 <div class="portfolios-container">
                     <div *ngFor="let portfolio of leaguePortfolios" 
-                         class="portfolio-card"
-                         [ngClass]="{'current-player': portfolio.user_id === currentPlayerID}">
+                        class="portfolio-card"
+                        [ngClass]="{'current-player': portfolio.user_id === currentPlayerID}">
                         <div class="portfolio-header">
                             <h3>{{ getPlayerName(portfolio.user_id) }}</h3>
                             <span class="on-clock" *ngIf="portfolio.user_id === currentPlayerID">On Clock</span>

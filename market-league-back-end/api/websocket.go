@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -118,21 +117,10 @@ func (h *WebSocketHandler) routeTransmission(conn *ws.Connection, message ws.Web
 		return h.leagueHandler.GetPlayerPortfoliosInLeague(conn, message.Data)
 	case ws.MessageType_League_GetAllLeagues:
 		return h.leagueHandler.GetAllLeagues(conn, message.Data)
-
-	case ws.MessageType_SubscribeLeagues:
-		var req struct {
-			LeagueIDs []uint `json:"league_ids"`
-		}
-		if err := json.Unmarshal(message.Data, &req); err != nil {
-			ws.SendError(conn, ws.MessageType_Error, "Invalid subscription format")
-			return fmt.Errorf("invalid subscription format: %v", err)
-		}
-		// Update the connection's subscriptions.
-		for _, leagueID := range req.LeagueIDs {
-			conn.Subscriptions[leagueID] = true
-		}
-		// Optionally, send back an acknowledgment.
-		return nil
+	case ws.MessageType_League_SubscribeToLeague:
+		return h.leagueHandler.SubscribeToLeague(conn, message.Data)
+	case ws.MessageType_League_UnsubscribeToLeague:
+		return h.leagueHandler.UnsubscribeToLeague(conn, message.Data)
 
 	// Error or Unknown Message Type
 	default:
@@ -165,6 +153,20 @@ func (h *WebSocketHandler) HandleWebSocket(c *gin.Context) {
 		Ws:            rawConn,
 		Subscriptions: make(map[uint]bool),
 	}
+
+	// Close handler
+	conn.Ws.SetCloseHandler(func(code int, text string) error {
+		log.Println("WebSocket connection closing:", code, text)
+
+		// For each league the user was subscribed to, handle disconnection
+		for leagueID := range conn.Subscriptions {
+			// Notify the league service about the disconnection
+			// You'll need to implement this method in your LeagueService
+			h.leagueHandler.HandleDisconnect(leagueID, conn)
+		}
+		return nil
+	})
+
 	ws.Manager.Register(conn)
 	defer ws.Manager.Unregister(conn)
 

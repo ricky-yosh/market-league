@@ -2,6 +2,7 @@ package leagueportfolio
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/market-league/internal/draft"
@@ -71,6 +72,7 @@ func (s *LeaguePortfolioService) CreateLeaguePortfolio(leagueID uint) (*models.L
 }
 
 func (s *LeaguePortfolioService) DraftStock(leagueID, userID, stockID uint) error {
+	log.Printf("Processing draft selection: League=%d, User=%d, Stock=%d", leagueID, userID, stockID)
 
 	leaguePortfolioID, err := s.repo.GetLeaguePortfolioIDByLeagueID(leagueID)
 	if err != nil {
@@ -148,6 +150,7 @@ func (s *LeaguePortfolioService) DraftStock(leagueID, userID, stockID uint) erro
 		return fmt.Errorf("failed to update user portfolio: %v", err)
 	}
 
+	log.Printf("Draft selection successful: League=%d, User=%d, Stock=%d", leagueID, userID, stockID)
 	return nil
 }
 
