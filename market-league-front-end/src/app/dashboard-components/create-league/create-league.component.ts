@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { VerifyUserService } from '../services/verify-user.service';
 import { LeagueService } from '../services/league.service';
 import { devLog } from '../../../environments/development/devlog';
@@ -15,12 +15,13 @@ import { CommonModule } from '@angular/common';
   templateUrl: './create-league.component.html',
   styleUrl: './create-league.component.scss'
 })
-export class CreateLeagueComponent {
+export class CreateLeagueComponent implements OnInit {
   leagueName: string = '';
-  endDate: Date | null = null;
+  endDate: string = ''; // Change to string to match the input format
   allLeagues: League[] = [];
   userLeagues: League[] = [];
   availableLeagues: League[] = [];
+  minEndDate: string = '';
 
   private subscription: Subscription = new Subscription();
 
@@ -30,6 +31,9 @@ export class CreateLeagueComponent {
   ) {}
 
   ngOnInit(): void {
+    // Set minimum end date to one week from today
+    this.setMinEndDate();
+    
     // Subscribe to all leagues updates
     this.subscription.add(
       combineLatest([
@@ -50,6 +54,19 @@ export class CreateLeagueComponent {
     this.leagueService.getUserLeagues();
   }
 
+  // Set the minimum end date to one week from today
+  private setMinEndDate(): void {
+    const today = new Date();
+    const nextWeek = new Date(today);
+    nextWeek.setDate(today.getDate() + 7);
+    
+    // Format the date as YYYY-MM-DD for the input element
+    this.minEndDate = nextWeek.toISOString().split('T')[0];
+    
+    // Set the default end date to the minimum (one week from today)
+    this.endDate = this.minEndDate;
+  }
+
   ngOnDestroy(): void {
     // Unsubscribe to avoid memory leaks
     this.subscription.unsubscribe();
@@ -61,9 +78,17 @@ export class CreateLeagueComponent {
       endDate: this.endDate,
     });
 
-    guard(this.endDate != null, "End Date is null!");
+    // Validate the date is provided and valid
+    guard(this.endDate != null && this.endDate !== '', "End Date is required!");
     const endDateObj = new Date(this.endDate);
     guard(!isNaN(endDateObj.getTime()), "End Date is Invalid!");
+
+    // Validate the end date is at least a week from today
+    const today = new Date();
+    const minDate = new Date(today);
+    minDate.setDate(today.getDate() + 7);
+    
+    guard(endDateObj >= minDate, "End Date must be at least a week from today!");
 
     const formattedEndDate = endDateObj.toISOString();
 
@@ -77,7 +102,15 @@ export class CreateLeagueComponent {
     });
   }
 
-  // Join a league when the user clicks the join button
+  // Add a method to validate the date on change
+  onDateChange(): void {
+    // If date is before minimum date, reset it to the minimum date
+    if (this.endDate < this.minEndDate) {
+      this.endDate = this.minEndDate;
+    }
+  }
+
+  // Rest of your code remains the same
   joinLeague(leagueId: number): void {
     this.leagueService.addUserToLeague(leagueId);
   }
@@ -97,6 +130,4 @@ export class CreateLeagueComponent {
     // Return leagues not in the user's leagues
     return allLeagues.filter(league => !userLeagueIds.has(league.id));
   }
-  
-  
 }
