@@ -6,6 +6,7 @@ import (
 	"time"
 
 	// "github.com/market-league/internal/models"
+	"github.com/market-league/internal/models"
 	ownership_history "github.com/market-league/internal/ownership_history"
 	"github.com/market-league/internal/portfolio"
 	"github.com/market-league/internal/services"
@@ -59,6 +60,9 @@ func (s *Scheduler) StartDailyTask() {
 			// Wait until the next scheduled time
 			time.Sleep(time.Until(nextRun))
 
+			// Update league statuses
+			s.updateLeagueStatuses(location)
+
 			// Fetch companies from the database
 			companies, err := s.stockRepo.GetAllStocks()
 			if err != nil {
@@ -98,4 +102,47 @@ func (s *Scheduler) StartDailyTask() {
 			log.Printf("Task completed. Waiting for the next interval.")
 		}
 	}()
+}
+
+func (s *Scheduler) updateLeagueStatuses(location *time.Location) {
+	// Get the current date (without time component)
+	now := time.Now().In(location)
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
+
+	// Query to find leagues whose end date is today
+	var leagues []struct {
+		ID          int
+		LeagueName  string
+		EndDate     time.Time
+		LeagueState models.LeagueState
+	}
+
+	result := s.db.Table("leagues").
+		Select("id, league_name, end_date, league_state").
+		Where("DATE(end_date) <= DATE(?)", today).
+		Find(&leagues)
+
+	if result.Error != nil {
+		log.Printf("Error finding leagues to update: %v", result.Error)
+		return
+	}
+
+	// Update leagues that end today
+	for _, league := range leagues {
+		if league.LeagueState != models.Completed {
+			log.Printf("Updating league '%s' (ID: %d) status to 'completed' as its end date is today",
+				league.LeagueName, league.ID)
+
+			// Update the league status
+			updateResult := s.db.Table("leagues").
+				Where("id = ?", league.ID).
+				Update("league_state", models.Completed)
+
+			if updateResult.Error != nil {
+				log.Printf("Error updating league status: %v", updateResult.Error)
+			} else {
+				log.Printf("Successfully updated league '%s' status to 'completed'", league.LeagueName)
+			}
+		}
+	}
 }
