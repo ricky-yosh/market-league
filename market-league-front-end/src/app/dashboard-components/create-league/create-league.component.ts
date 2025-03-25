@@ -87,8 +87,6 @@ export class CreateLeagueComponent implements OnInit {
     const today = new Date();
     const minDate = new Date(today);
     minDate.setDate(today.getDate() + 7);
-    
-    guard(endDateObj >= minDate, "End Date must be at least a week from today!");
 
     const formattedEndDate = endDateObj.toISOString();
 

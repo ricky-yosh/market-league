@@ -1,0 +1,408 @@
+@import "../../../styles/variables";
+
+h1 {
+    padding-left: 0.5em;
+    padding-top: 0.2em;
+    padding-bottom: 0.5em;
+    font-size: 1.8em;
+}
+
+h2 {
+    font-size: 1.3em;
+    margin-bottom: 0.8em;
+}
+
+.league-completed {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    border-radius: 10px;
+    background-color: lighten($market-league-dark-blue, 33%);
+    margin: 0px;
+    padding: 0.5em 0.5em 1.5em 0.5em;
+
+    // scrolling ability
+    overflow-y: auto;
+    scrollbar-color: transparent transparent;
+    scrollbar-width: none;
+    max-height: 91vh;
+}
+
+.main-title-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5em;
+}
+
+// Podium section
+.podium-container {
+    margin-bottom: 2em;
+}
+
+.podium {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    height: 300px;
+    position: relative;
+}
+
+.podium-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    width: 160px;
+    
+    &.first-place {
+        z-index: 3;
+        
+// Podium blocks
+        .podium-block {
+            height: 130px;
+            background-color: $market-league-gold;
+        }
+        
+        .player-avatar {
+            margin-bottom: 140px;
+        }
+    }
+    
+    &.second-place {
+        z-index: 2;
+        
+        .podium-block {
+            height: 100px;
+            background-color: #C0C0C0;
+        }
+        
+        .player-avatar {
+            margin-bottom: 110px;
+        }
+    }
+    
+    &.third-place {
+        z-index: 1;
+        
+        .podium-block {
+            height: 70px;
+            background-color: #CD7F32;
+        }
+        
+        .player-avatar {
+            margin-bottom: 80px;
+        }
+    }
+}
+
+.podium-block {
+    width: 100%;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: absolute;
+    bottom: 0;
+}
+
+.player-avatar {
+    position: relative;
+    text-align: center;
+    margin-bottom: 10px;
+    
+    &.winner {
+        .player-name {
+            font-weight: bold;
+            color: $market-league-gold;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+    }
+}
+
+.avatar-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: $market-league-dark-blue;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: $market-league-dark-blue;
+    font-size: 2em;
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.medal {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: bold;
+    bottom: -5px;
+    right: -5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    
+    &.gold {
+        background-color: $market-league-gold;
+    }
+    
+    &.silver {
+        background-color: $market-league-dark-blue;
+    }
+    
+    &.bronze {
+        background-color: $market-league-purple;
+    }
+}
+
+.crown {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2em;
+    animation: float 2s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-5px); }
+}
+
+.player-name {
+    margin-top: 10px;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.player-value {
+    color: $market-league-green;
+    font-weight: bold;
+}
+
+// Final Leaderboard
+.final-leaderboard-container {
+    background-color: $market-league-white;
+    border-radius: 10px;
+    padding: 1.5em;
+}
+
+.final-leaderboard {
+    width: 100%;
+    border-collapse: collapse;
+    
+    thead {
+        border-bottom: 2px solid darken($market-league-white, 15%);
+        
+        th {
+            text-align: left;
+            padding: 0.8em 0.5em;
+            color: $market-league-dark-blue;
+        }
+    }
+    
+    tbody tr {
+        border-bottom: 1px solid darken($market-league-white, 10%);
+        transition: background-color 0.2s;
+        
+        &:hover {
+            background-color: lighten($market-league-dark-blue, 25%);
+        }
+        
+        &:last-child {
+            border-bottom: none;
+        }
+        
+        &.current-user {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        
+        &.winner-row {
+            background-color: rgba(46, 204, 113, 0.1);
+        }
+    }
+
+    td {
+        padding: 1em 0.5em;
+    }
+
+    .rank-column {
+        width: 60px;
+        text-align: center;
+    }
+
+    .rank-badge {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        width: 2.8em;
+        height: 2.8em;
+        border-radius: 50%;
+        background-color: #ddd;
+        color: #fff;
+        font-weight: bold;
+        
+        &.gold {
+            background-color: $market-league-gold;
+            box-shadow: 0 2px 4px rgba(243, 183, 0, 0.4);
+        }
+        
+        &.silver {
+            background-color: #C0C0C0;
+            box-shadow: 0 2px 4px rgba(192, 192, 192, 0.4);
+        }
+        
+        &.bronze {
+            background-color: #CD7F32;
+            box-shadow: 0 2px 4px rgba(205, 127, 50, 0.4);
+        }
+    }
+
+    .user-column {
+        text-align: left;
+        padding-left: 1em;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+    }
+    
+    .winner-crown {
+        margin-left: 0.5em;
+        font-size: 1.2em;
+    }
+
+    .value-column {
+        text-align: right;
+        font-weight: 600;
+        font-size: 1.1em;
+        padding-right: 1em;
+    }
+}
+
+// Loading indicator
+.loading-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 0;
+
+    .spinner {
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        border-top-color: #3498db;
+        animation: spin 1s ease-in-out infinite;
+        margin-bottom: 10px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    p {
+        color: #666;
+        font-size: 0.9em;
+    }
+}
+
+.no-data-message {
+    text-align: center;
+    padding: 20px 0;
+    color: #666;
+    font-style: italic;
+}
+
+// Confetti effect
+.confetti-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #f2d74e;
+    animation: fall 5s ease-in infinite;
+    top: -10%;
+    
+    @for $i from 1 through 20 {
+        &:nth-child(#{$i}) {
+            left: random(100) * 1%;
+            width: random(10) + 5 + px;
+            height: random(10) + 5 + px;
+            animation-delay: random(5) * 0.2s;
+            animation-duration: random(5) + 3 + s;
+            background-color: nth(
+                ($market-league-gold, $market-league-dark-blue, $market-league-purple, $market-league-green, $market-league-red),
+                (random(5) % 5) + 1
+            );
+            border-radius: if(random(2) == 1, 50%, 0);
+            transform: rotate(random(360) + deg);
+        }
+    }
+}
+
+@keyframes fall {
+    0% {
+        top: -10%;
+        transform: translateX(0) rotate(0deg);
+        opacity: 1;
+    }
+    
+    85% {
+        opacity: 1;
+    }
+    
+    100% {
+        top: 100%;
+        transform: translateX(100px) rotate(180deg);
+        opacity: 0;
+    }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+    .podium {
+        flex-direction: column;
+        align-items: center;
+        height: auto;
+        padding-top: 150px;
+    }
+    
+    .podium-item {
+        margin-bottom: 30px;
+        
+        &.first-place,
+        &.second-place,
+        &.third-place {
+            .podium-block {
+                position: relative;
+                height: 50px;
+            }
+            
+            .player-avatar {
+                margin-bottom: 10px;
+            }
+        }
+    }
+    
+    .final-leaderboard {
+        .rank-badge {
+            width: 2.2em;
+            height: 2.2em;
+        }
+    }
+}

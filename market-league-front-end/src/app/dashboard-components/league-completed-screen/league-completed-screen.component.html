@@ -1,0 +1,83 @@
+<section class="league-completed">
+    <div class="main-title-bar">
+        <h1>League Completed: {{ selectedLeague?.league_name }}</h1>
+    </div>
+
+    <!-- Top 3 Podium -->
+    <div class="podium-container" *ngIf="leaderboardLoaded && completeLeaderboard.length >= 3">
+        <div class="podium">
+            <!-- 2nd Place (Left) -->
+            <div class="podium-item second-place">
+                <div class="player-avatar">
+                    <div class="player-name">{{ completeLeaderboard[1].username }}</div>
+                </div>
+                <div class="player-value">${{ completeLeaderboard[1].total_value | number:'1.2-2' }}</div>
+                <div class="podium-block"></div>
+            </div>
+            
+            <!-- 1st Place (Center) -->
+            <div class="podium-item first-place">
+                <div class="player-avatar winner">
+                    <div class="crown">👑</div>
+                    <div class="player-name winner-name">{{ completeLeaderboard[0].username }}</div>
+                </div>
+                <div class="player-value">${{ completeLeaderboard[0].total_value | number:'1.2-2' }}</div>
+                <div class="podium-block"></div>
+            </div>
+            
+            <!-- 3rd Place (Right) -->
+            <div class="podium-item third-place">
+                <div class="player-avatar">
+                    <div class="player-name">{{ completeLeaderboard[2].username }}</div>
+                </div>
+                <div class="player-value">${{ completeLeaderboard[2].total_value | number:'1.2-2' }}</div>
+                <div class="podium-block"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Final Leaderboard -->
+    <div class="final-leaderboard-container">
+        <h2>Final Standings</h2>
+        <div class="loading-indicator" *ngIf="!leaderboardLoaded">
+            <div class="spinner"></div>
+            <p>Loading leaderboard...</p>
+        </div>
+        <div class="no-data-message" *ngIf="leaderboardLoaded && completeLeaderboard.length === 0">
+            <p>No leaderboard data available</p>
+        </div>
+        <table class="final-leaderboard" *ngIf="leaderboardLoaded && completeLeaderboard.length > 0">
+            <thead>
+                <tr>
+                    <th class="rank-column">Rank</th>
+                    <th class="user-column">Player</th>
+                    <th class="value-column">Portfolio Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let member of completeLeaderboard" 
+                    [class.current-user]="member.username === currentUser"
+                    [class.winner-row]="member.rank === 1">
+                    <td class="rank-column">
+                        <div class="rank-badge" 
+                            [class.gold]="member.rank === 1" 
+                            [class.silver]="member.rank === 2" 
+                            [class.bronze]="member.rank === 3">
+                            {{ member.rank }}
+                        </div>
+                    </td>
+                    <td class="user-column">
+                        {{ member.username }}
+                        <span class="winner-crown" *ngIf="member.rank === 1">👑</span>
+                    </td>
+                    <td class="value-column">${{ member.total_value | number:'1.2-2' }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Confetti overlay -->
+    <div class="confetti-container" *ngIf="showConfetti">
+        <div class="confetti" *ngFor="let i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]"></div>
+    </div>
+</section>
