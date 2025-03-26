@@ -202,6 +202,10 @@ h2 {
             text-align: left;
             padding: 0.8em 0.5em;
             color: $market-league-dark-blue;
+
+        }
+        .value-column {
+            text-align: center;
         }
     }
     
@@ -276,7 +280,7 @@ h2 {
     }
 
     .value-column {
-        text-align: right;
+        text-align: center;
         font-weight: 600;
         font-size: 1.1em;
         padding-right: 1em;

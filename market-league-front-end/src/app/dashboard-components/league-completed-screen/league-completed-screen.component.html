@@ -30,7 +30,7 @@
                 <div class="player-avatar">
                     <div class="player-name">{{ completeLeaderboard[2].username }}</div>
                 </div>
-                <div class="player-value">${{ completeLeaderboard[2].total_value | number:'1.2-2' }}</div>
+                <div class="player-value">{{ completeLeaderboard[2].total_value | number:'1.2-2' }}</div>
                 <div class="podium-block"></div>
             </div>
         </div>
@@ -70,7 +70,7 @@
                         {{ member.username }}
                         <span class="winner-crown" *ngIf="member.rank === 1">👑</span>
                     </td>
-                    <td class="value-column">${{ member.total_value | number:'1.2-2' }}</td>
+                    <td class="value-column">{{ member.total_value}}</td>
                 </tr>
             </tbody>
         </table>

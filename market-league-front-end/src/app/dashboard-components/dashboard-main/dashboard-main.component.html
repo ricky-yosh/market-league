@@ -49,45 +49,66 @@
             </div>
             
             <div class="middle-icons hide-on-small-screen">
-                <button (click)="redirectToDashboard()" title="League Dashboard" class="topbar-icon">
-                    <img src="/images/four-squares-icon.svg" alt="Image" width="22px">
-                </button>
-                <button (click)="redirectToPortfolio()" title="Portfolio" class="topbar-icon">
-                    <img src="/images/briefcase-icon.svg" alt="Image" width="25px">
-                </button>
-                <button (click)="redirectToTrades()" title="Trades" class="topbar-icon">
-                    <img src="/images/handshake-icon.svg" alt="Image" width="37px">
-                </button>
-                <button (click)="redirectToLeaderboard()" title="Leaderboard" class="topbar-icon">
-                    <img src="/images/leaderboard-icon.svg" alt="Image" width="35px">
-                </button>
-                <!-- <button (click)="redirectToSettings()" title="Settings" class="topbar-icon">
-                    <img src="/images/settings-icon.svg" alt="Image" width="30px">
-                </button> -->
+                <ng-container *ngIf="selectedLeague && selectedLeague.league_state === LeagueState.PostDraft; else disabledButtons">
+                    <!-- Enabled buttons when condition is met -->
+                    <button (click)="redirectToDashboard()" title="League Dashboard" class="topbar-icon">
+                        <img src="/images/four-squares-icon.svg" alt="Image" width="22px">
+                    </button>
+                    <button (click)="redirectToPortfolio()" title="Portfolio" class="topbar-icon">
+                        <img src="/images/briefcase-icon.svg" alt="Image" width="25px">
+                    </button>
+                    <button (click)="redirectToTrades()" title="Trades" class="topbar-icon">
+                        <img src="/images/handshake-icon.svg" alt="Image" width="37px">
+                    </button>
+                    <button (click)="redirectToLeaderboard()" title="Leaderboard" class="topbar-icon">
+                        <img src="/images/leaderboard-icon.svg" alt="Image" width="35px">
+                    </button>
+                </ng-container>
+                
+                <ng-template #disabledButtons>
+                    <!-- Empty placeholder with same width as the buttons container -->
+                    <div class="placeholder-buttons">
+                        <!-- Empty placeholders with same dimensions as real buttons -->
+                        <div class="topbar-icon placeholder"></div>
+                        <div class="topbar-icon placeholder"></div>
+                        <div class="topbar-icon placeholder"></div>
+                        <div class="topbar-icon placeholder"></div>
+                    </div>
+                </ng-template>
             </div>
             
-            <div class="menu-btn hide-on-big-screen" (click)="toggleMenu()" [ngClass]="{'close': showMenu}">
-                <div class="btn-line"></div>
-                <div class="btn-line"></div>
-                <div class="btn-line"></div>
-            </div>
-            <ul class="dropdown-menu-items" [ngClass]="{'show': showMenu}">
-                <li class="nav-item" (click)="redirectToDashboard()" title="League Dashboard">
-                    <p>Dashboard</p>
-                </li>
-                <li class="nav-item" (click)="redirectToPortfolio()" title="Portfolio">
-                    <p>Portfolio</p>
-                </li>
-                <li class="nav-item" (click)="redirectToTrades()" title="Trades">
-                    <p>Trades</p>
-                </li>
-                <li class="nav-item" (click)="redirectToLeaderboard()" title="Leaderboard">
-                    <p>Leaderboard</p>
-                </li>
-                <!-- <li class="nav-item" (click)="redirectToSettings()" title="Settings">
-                    <p>Settings</p>
-                </li> -->
-            </ul>
+            <ng-container *ngIf="selectedLeague && selectedLeague.league_state === LeagueState.PostDraft; else disabledButtons">
+                <div class="menu-btn hide-on-big-screen" (click)="toggleMenu()" [ngClass]="{'close': showMenu}">
+                    <div class="btn-line"></div>
+                    <div class="btn-line"></div>
+                    <div class="btn-line"></div>
+                </div>
+                <ul class="dropdown-menu-items" [ngClass]="{'show': showMenu}">
+                    <li class="nav-item" (click)="redirectToDashboard()" title="League Dashboard">
+                        <p>Dashboard</p>
+                    </li>
+                    <li class="nav-item" (click)="redirectToPortfolio()" title="Portfolio">
+                        <p>Portfolio</p>
+                    </li>
+                    <li class="nav-item" (click)="redirectToTrades()" title="Trades">
+                        <p>Trades</p>
+                    </li>
+                    <li class="nav-item" (click)="redirectToLeaderboard()" title="Leaderboard">
+                        <p>Leaderboard</p>
+                    </li>
+                    <!-- <li class="nav-item" (click)="redirectToSettings()" title="Settings">
+                        <p>Settings</p>
+                    </li> -->
+                </ul>
+            </ng-container>
+
+            <ng-template #disabledButtons>
+                <div class="menu-btn hide-on-big-screen">
+                    <div class="btn-line"></div>
+                    <div class="btn-line"></div>
+                    <div class="btn-line"></div>
+                </div>
+            </ng-template>
 
         </div>
         

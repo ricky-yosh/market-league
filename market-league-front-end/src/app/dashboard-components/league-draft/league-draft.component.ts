@@ -10,7 +10,6 @@ import { Subscription } from 'rxjs';
 import { LeagueState } from '../../models/league-state.model';
 import { LeagueService } from '../services/league.service';
 import { WebSocketService } from '../services/websocket.service';
-import { WebSocketMessageTypes } from '../services/websocket-message-types';
 import { DraftUpdateResponse } from '../../models/websocket-responses/draft/draft-update-response.model';
 import { DraftPickResponse } from '../../models/websocket-responses/draft/draft-pick-response.model';
 import { VerifyUserService } from '../services/verify-user.service';
@@ -103,6 +102,11 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
           case LeagueState.PostDraft:
             this.redirectToDashboard();
             break;
+          case LeagueState.Completed:
+            this.redirectToCompletedLeague();
+            break;
+          default:
+            // stay on in draft
         }
         
         // Load league players
@@ -296,5 +300,9 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
 
   redirectToDashboard(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  redirectToCompletedLeague() {
+    this.router.navigate(['/dashboard/league-completed'])
   }
 }
