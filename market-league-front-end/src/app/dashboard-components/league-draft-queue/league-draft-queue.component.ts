@@ -39,6 +39,10 @@ export class LeagueDraftQueueComponent {
           this.redirectToDashboard()
           break;
         }
+        case LeagueState.Completed: {
+          this.redirectToCompletedLeague()
+          break;
+        }
         default: {
           // Stay on draft
         }
@@ -88,5 +92,8 @@ export class LeagueDraftQueueComponent {
   redirectToDashboard() {
     this.router.navigate(['/dashboard']);
   }
-
+  
+  redirectToCompletedLeague() {
+    this.router.navigate(['/dashboard/league-completed'])
+  }
 }

@@ -3,41 +3,33 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { LeagueService } from '../services/league.service';
 import { League } from '../../models/league.model';
-import { Stock } from '../../models/stock.model';
 import { Subscription } from 'rxjs';
-import { Trade } from '../../models/trade.model';
-import { PortfolioService } from '../services/portfolio.service';
-import { TradeService } from '../services/trade.service';
 import { VerifyUserService } from '../services/verify-user.service';
 import { User } from '../../models/user.model';
 import { LeaderboardUser } from '../../models/websocket-responses/league/leaderboard-user';
 
 @Component({
-  selector: 'app-league-home',
+  selector: 'app-league-completed-screen',
   standalone: true,
   imports: [NgFor, CommonModule],
-  templateUrl: './league-home.component.html',
-  styleUrl: './league-home.component.scss'
+  templateUrl: './league-completed-screen.component.html',
+  styleUrl: './league-completed-screen.component.scss'
 })
-export class LeagueHomeComponent implements OnInit, OnDestroy {
+export class LeagueCompletedScreenComponent implements OnInit, OnDestroy {
   
   selectedLeague: League | null = null;
-  userPortfolio: Stock[] | null = null;
-  leagueTrades: Trade[] | null = null;
-  leagueMembers: string[] | null = null;
   
   // Leaderboard data
   leaderboard: LeaderboardUser[] = [];
-  leaderboardWithRank: {username: string, total_value: number, rank: number}[] = [];
+  completeLeaderboard: {username: string, total_value: number, rank: number, isWinner: boolean}[] = [];
   currentUser: string = '';
+  showConfetti: boolean = false;
   leaderboardLoaded = false;
 
   private subscriptions: Subscription = new Subscription();
 
   constructor(
     private leagueService: LeagueService,
-    private portfolioService: PortfolioService,
-    private tradeService: TradeService,
     private userService: VerifyUserService
   ) {}
 
@@ -56,28 +48,6 @@ export class LeagueHomeComponent implements OnInit, OnDestroy {
       })
     );
     
-    // User Portfolio
-    this.subscriptions.add(
-      this.portfolioService.userPortfolio$.subscribe((portfolio) => {
-        this.userPortfolio = portfolio ? portfolio.stocks : null;
-      })
-    );
-    
-    // League Trades
-    this.subscriptions.add(
-      this.tradeService.leagueTrades$.subscribe((trades) => {
-        this.leagueTrades = trades;
-      })
-    );
-    
-    // League Members
-    this.subscriptions.add(
-      this.leagueService.leagueMembers$.subscribe((members) => {
-        const memberNames = members.map(user => user.username);
-        this.leagueMembers = memberNames;
-      })
-    );
-    
     // Leaderboard data
     this.subscriptions.add(
       this.leagueService.leaderboard$.subscribe((leaderboardData) => {
@@ -88,11 +58,6 @@ export class LeagueHomeComponent implements OnInit, OnDestroy {
         this.processLeaderboard();
       })
     );
-
-    // Load initial data
-    this.loadLeagueMembers();
-    this.loadUserPortfolio();
-    this.loadTrades();
   }
   
   ngOnDestroy(): void {
@@ -113,8 +78,8 @@ export class LeagueHomeComponent implements OnInit, OnDestroy {
       return valueB - valueA;
     });
 
-    // Add rankings
-    this.leaderboardWithRank = [];
+    // Add rankings and identify winner
+    this.completeLeaderboard = [];
     let currentRank = 1;
     let previousValue: number | null = null;
     
@@ -124,32 +89,23 @@ export class LeagueHomeComponent implements OnInit, OnDestroy {
         currentRank = index + 1;
       }
       
-      this.leaderboardWithRank.push({
+      const isWinner = currentRank === 1;
+      
+      // Add to complete leaderboard
+      this.completeLeaderboard.push({
         username: member.username,
         total_value: member.total_value,
-        rank: currentRank
+        rank: currentRank,
+        isWinner: isWinner
       });
+      
+      // If this is the current user and they won, show confetti
+      if (member.username === this.currentUser && isWinner) {
+        this.showConfetti = true;
+      }
       
       previousValue = member.total_value;
     });
-    
-    // Limit to top 5 for the abbreviated view
-    this.leaderboardWithRank = this.leaderboardWithRank.slice(0, 5);
-  }
-
-  // Method to load members of a selected league
-  private loadLeagueMembers(): void {
-    this.leagueService.getLeagueMembers();
-  }
-
-  // Load the user's portfolio for a specific league
-  private loadUserPortfolio(): void {
-    this.portfolioService.getCurrentUserPortfolio();
-  }
-
-  // Load the user's trades for a specific league
-  private loadTrades(): void {
-    this.tradeService.getTrades();
   }
   
   // Load the current user

@@ -22,6 +22,7 @@ import { LeagueState } from '../../models/league-state.model';
   styleUrl: './dashboard-main.component.scss'
 })
 export class DashboardMainComponent {
+  LeagueState = LeagueState;
   leagues: League[] = [];
   stocks: Stock[] = [];
   selectedLeague: League | null = null;
@@ -61,6 +62,12 @@ export class DashboardMainComponent {
     });
     this.subscriptions.push(stocksSub);
 
+    // Subscribe to selected league
+    const selectedLeagueSub = this.leagueService.selectedLeague$.subscribe((league) => {
+      this.selectedLeague = league;
+    });
+    this.subscriptions.push(selectedLeagueSub);
+
     // * Get Starting Values for Dashboard
     
     // Loads the user
@@ -93,6 +100,10 @@ export class DashboardMainComponent {
 
       case LeagueState.PostDraft:
         this.redirectToDashboard();
+        break;
+      
+      case LeagueState.Completed:
+        this.redirectToCompletedLeague();
         break;
 
       default:
@@ -170,6 +181,10 @@ export class DashboardMainComponent {
 
   redirectToSettings() {
     this.router.navigate(['dashboard/settings']);
+  }
+
+  redirectToCompletedLeague() {
+    this.router.navigate(['/dashboard/league-completed'])
   }
 
   onSearch(): void {    
