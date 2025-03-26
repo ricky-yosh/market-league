@@ -140,6 +140,20 @@ func (r *LeagueRepository) RemoveLeaguePortfolioStocksByLeagueID(tx *gorm.DB, le
 	return tx.Exec(query, leagueID).Error
 }
 
+// RemoveTradeStocks1ByLeagueID removes trade stocks from trade_stocks1 table associated with trades in a league
+func (r *LeagueRepository) RemoveTradeStocks1ByLeagueID(tx *gorm.DB, leagueID uint) error {
+	return tx.Exec(`
+        DELETE FROM trade_stocks1
+        WHERE trade_id IN (SELECT id FROM trades WHERE league_id = ?)`, leagueID).Error
+}
+
+// RemoveTradeStocks2ByLeagueID removes trade stocks from trade_stocks2 table associated with trades in a league
+func (r *LeagueRepository) RemoveTradeStocks2ByLeagueID(tx *gorm.DB, leagueID uint) error {
+	return tx.Exec(`
+        DELETE FROM trade_stocks2
+        WHERE trade_id IN (SELECT id FROM trades WHERE league_id = ?)`, leagueID).Error
+}
+
 // RemoveUserLeaguesByLeagueID removes user-league associations for a league
 func (r *LeagueRepository) RemoveUserLeaguesByLeagueID(tx *gorm.DB, leagueID uint) error {
 	return tx.Exec("DELETE FROM user_leagues WHERE league_id = ?", leagueID).Error
