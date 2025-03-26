@@ -93,6 +93,6 @@ Thanks to Liam Molina for creating the logo for MarketLeague!
 - [Slack](https://slack.com/)
 
 ## MarketLeague Version
-v5.0
+v5.1
 
 ![Repeating logo checkered pattern](./readme-images/logo_repeat.jpg)
