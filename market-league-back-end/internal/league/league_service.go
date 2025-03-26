@@ -206,6 +206,18 @@ func (s *LeagueService) RemoveLeague(leagueID uint) error {
 		return err
 	}
 
+	// Delete from trade_stocks1 before trade_stocks2 (if there are dependencies between them)
+	if err := s.repo.RemoveTradeStocks1ByLeagueID(tx, leagueID); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Delete from trade_stocks2 before removing trades
+	if err := s.repo.RemoveTradeStocks2ByLeagueID(tx, leagueID); err != nil {
+		tx.Rollback()
+		return err
+	}
+
 	if err := s.repo.RemoveTradesByLeagueID(tx, leagueID); err != nil {
 		tx.Rollback()
 		return err
