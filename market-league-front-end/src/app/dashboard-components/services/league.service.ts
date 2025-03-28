@@ -189,6 +189,7 @@ export class LeagueService {
   handleSuccessfulGetUserLeaguesResponse(response: League[]): void {
     const leagues = response;
     this.userLeaguesSubject.next(leagues);
+    this.refreshSelectedLeagueFromList(leagues);
   }
 
   handleSuccessfulGetAllLeaguesResponse(response: League[]): void {
@@ -380,6 +381,26 @@ export class LeagueService {
       data: data
     };
     this.webSocketService.sendMessage(websocketMessage);
+  }
+
+  // ** Helper Functions **
+  refreshSelectedLeagueFromList(leagues: League[]): void {
+    const currentLeague = this.getSelectedLeagueValue();
+    if (!currentLeague) return;
+    
+    // Find the updated version of the current league in the list
+    const updatedLeague = leagues.find(league => league.id === currentLeague.id);
+    
+    if (updatedLeague) {
+      // Combine properties to ensure we don't lose any data that might only exist in the current version
+      const mergedLeague = {
+        ...currentLeague,
+        ...updatedLeague
+      };
+      
+      // Update the BehaviorSubject and localStorage
+      this.setSelectedLeague(mergedLeague);
+    }
   }
 
 }

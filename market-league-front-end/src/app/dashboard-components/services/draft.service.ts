@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { LeaguePortfolio } from '../../models/league-portfolio.model';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 import { devLog } from '../../../environments/development/devlog';
 import { WebSocketService } from './websocket.service';
 import { WebSocketMessageTypes } from './websocket-message-types';

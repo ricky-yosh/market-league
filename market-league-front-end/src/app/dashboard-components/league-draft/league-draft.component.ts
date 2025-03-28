@@ -69,9 +69,23 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
     // Subscribe to WebSocket connection status
     const connectionSub = this.websocketService.connectionStatus.subscribe(isConnected => {
       if (isConnected) {
-        // When connection is established/re-established, reload leagues and subscribe
+        // When connection is established/re-established
         this.leagueService.getUserLeagues();
-        this.leagueService.subscribeToLeague();
+        
+        // Get the stored league from localStorage first
+        const storedLeague = this.leagueService.getStoredLeague();
+        if (storedLeague) {
+          // Explicitly set the selected league first
+          this.leagueService.setSelectedLeague(storedLeague);
+          
+          // Then subscribe to it
+          this.leagueService.subscribeToLeague();
+          
+          // Also reload draft-specific state
+          this.getLeaguePortfolio();
+          this.getUserPortfolio();
+          this.getAllPortfolios();
+        }
       }
     });
     this.subscriptions.push(connectionSub);
