@@ -107,11 +107,11 @@ export class StockService {
   // * Helper Functions
 
   setStock(stock: Stock): void {
-    localStorage.setItem(this.SELECTED_STOCK, JSON.stringify(stock));
+    sessionStorage.setItem(this.SELECTED_STOCK, JSON.stringify(stock));
   }
 
   getStock(): Stock {
-    const stockData = localStorage.getItem(this.SELECTED_STOCK);
+    const stockData = sessionStorage.getItem(this.SELECTED_STOCK);
     return stockData ? JSON.parse(stockData) : null;
   }
 
