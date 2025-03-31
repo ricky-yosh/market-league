@@ -354,6 +354,7 @@ func (s *LeagueService) BroadcastLeagueDetails(leagueID uint) error {
 const draftTurnDuration = 30 * time.Second
 
 // startDraftLoop handles the turn-based drafting process.
+// Modify the startDraftLoop function in league_service.go to add a ticker
 func (s *LeagueService) startDraftLoop(leagueID uint) {
 	// Create a channel for receiving the draft selection.
 	selectionChannel := make(chan uint)
@@ -384,47 +385,68 @@ func (s *LeagueService) startDraftLoop(leagueID uint) {
 
 	currentPlayerIndex := 0
 
+	// Create a ticker to broadcast the current state regularly
+	stateBroadcastTicker := time.NewTicker(1 * time.Second)
+	defer stateBroadcastTicker.Stop()
+
 	for !s.isDraftComplete(league) {
 
 		currentPlayer := players[currentPlayerIndex]
 		log.Printf("Draft turn for player %d in league %d", currentPlayer, leagueID)
 
+		// Notify all clients that this player is now on the clock
+		s.notifyPlayerOnClock(currentPlayer, leagueID)
+
 		timer := time.NewTimer(draftTurnDuration)
+		defer timer.Stop()
 
 		// Add logging before waiting for selection
 		log.Printf("Waiting for player %d selection in league %d", currentPlayer, leagueID)
 
-		// Wait for player's selection on the channel or timer expiration.
-		stockID, selectionReceived := s.waitForPlayerSelection(currentPlayer, leagueID, timer, selectionChannel)
+		// Create a loop to handle both the timer and periodic broadcasts
+		selectionReceived := false
+		var stockID uint
 
-		// Add logging after selection is received or timer expires
-		if selectionReceived {
-			log.Printf("Player %d selection received: stockID=%d", currentPlayer, stockID)
-		} else {
-			log.Printf("Timer expired for player %d, no selection received", currentPlayer)
+		for !selectionReceived {
+			select {
+			case receivedStockID := <-selectionChannel:
+				// Player made a selection within the time limit
+				log.Printf("Player %d made selection (stock ID: %d) in league %d",
+					currentPlayer, receivedStockID, leagueID)
+				timer.Stop() // Stop the timer
+				stockID = receivedStockID
+				selectionReceived = true
+
+			case <-timer.C:
+				// Timer expired, player did not make a selection in time
+				log.Printf("Timer expired for player %d in league %d",
+					currentPlayer, leagueID)
+
+				// Auto-select a stock
+				autoStockID, err := s.autoSelectStock(leagueID)
+				if err != nil {
+					log.Printf("Auto-select error for player %d: %v", currentPlayer, err)
+				} else {
+					stockID = autoStockID
+				}
+				selectionReceived = true
+
+			case <-stateBroadcastTicker.C:
+				// Broadcast current draft state
+				s.notifyPlayerOnClock(currentPlayer, leagueID)
+			}
 		}
 
-		if selectionReceived {
+		// Process the stock selection
+		if stockID > 0 {
 			err := s.leaguePortfolioService.DraftStock(leagueID, currentPlayer, stockID)
 			if err != nil {
 				log.Printf("Error processing selection for player %d: %v", currentPlayer, err)
 			} else {
 				s.broadcastDraftPick(leagueID, currentPlayer, stockID)
 			}
-		} else {
-			autoStockID, err := s.autoSelectStock(leagueID)
-			if err != nil {
-				log.Printf("Auto-select error for player %d: %v", currentPlayer, err)
-			} else {
-				err := s.leaguePortfolioService.DraftStock(leagueID, currentPlayer, autoStockID)
-				if err != nil {
-					log.Printf("Error processing auto-selection for player %d: %v", currentPlayer, err)
-				} else {
-					s.broadcastDraftPick(leagueID, currentPlayer, autoStockID)
-				}
-			}
 		}
-		timer.Stop()
+
 		currentPlayerIndex = (currentPlayerIndex + 1) % len(players)
 		if updatedLeague, err := s.repo.GetLeague(leagueID); err == nil {
 			league = updatedLeague
@@ -717,4 +739,94 @@ func (s *LeagueService) HandlePlayerDisconnect(leagueID uint, conn *ws.Connectio
 
 	// Note: We don't need to stop the draft loop here
 	// The draft loop should continue and auto-select if needed
+}
+
+// SendCurrentDraftState sends the current draft state to a newly connected client
+func (s *LeagueService) SendCurrentDraftState(leagueID uint, conn *ws.Connection) error {
+	// Get the current player on clock
+	league, err := s.repo.GetLeagueDetails(leagueID)
+	if err != nil {
+		return fmt.Errorf("failed to get league details: %w", err)
+	}
+
+	// Find the current active player if draft is in progress
+	if league.LeagueState == models.InDraft {
+		// Get all player portfolios to determine draft order and current player
+		portfolios, err := s.GetPlayerPortfoliosInLeague(leagueID)
+		if err != nil {
+			log.Printf("Error getting portfolios for league %d: %v", leagueID, err)
+		}
+
+		// Determine current player by checking the number of stocks each player has
+		players := s.getOrderedDraftPlayers(league)
+		if len(players) > 0 {
+			// Find the player with the fewest stocks - that's whose turn it is
+			currentPlayerID := players[0]
+			minStocks := 5 // Max stocks per player
+
+			for _, portfolio := range portfolios {
+				for _, player := range players {
+					if portfolio.UserID == player {
+						if len(portfolio.Stocks) < minStocks {
+							minStocks = len(portfolio.Stocks)
+							currentPlayerID = player
+						}
+						break
+					}
+				}
+			}
+
+			// Send draft update message
+			data, err := json.Marshal(map[string]interface{}{
+				"leagueID":      leagueID,
+				"playerID":      currentPlayerID,
+				"remainingTime": int(draftTurnDuration.Seconds()),
+			})
+
+			if err != nil {
+				return fmt.Errorf("error marshalling player on clock notification: %w", err)
+			}
+
+			// Create websocket message
+			draftUpdateResponse := ws.WebsocketMessage{
+				Type: ws.MessageType_League_DraftUpdate,
+				Data: json.RawMessage(data),
+			}
+
+			// Send to this specific connection
+			if err := conn.Ws.WriteJSON(draftUpdateResponse); err != nil {
+				return fmt.Errorf("failed to send draft update response: %w", err)
+			}
+		}
+	}
+
+	// Prepare the league details data
+	data := gin.H{
+		"id":             league.ID,
+		"league_name":    league.LeagueName,
+		"start_date":     league.StartDate,
+		"end_date":       league.EndDate,
+		"league_state":   league.LeagueState,
+		"max_players":    league.MaxPlayers,
+		"league_players": league.LeaguePlayers,
+	}
+
+	// Marshal the data into JSON
+	dataJSON, err := json.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("serialization error: %w", err)
+	}
+
+	// Create the WebSocket message
+	response := ws.WebsocketMessage{
+		Type: ws.MessageType_League_GetDetails,
+		Data: json.RawMessage(dataJSON),
+	}
+
+	// Send to this specific connection
+	if err := conn.Ws.WriteJSON(response); err != nil {
+		return fmt.Errorf("failed to send response: %v", err)
+	}
+
+	return nil
 }

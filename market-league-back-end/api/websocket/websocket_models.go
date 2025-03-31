@@ -86,4 +86,13 @@ func SendError(conn *Connection, messageType string, errorMsg string) {
 	if err := conn.Ws.WriteJSON(errorResponse); err != nil {
 		log.Println("Failed to send error message:", err)
 	}
+
+	// Add lock around the write
+	conn.writeMutex.Lock()
+	err = conn.Ws.WriteJSON(errorResponse)
+	conn.writeMutex.Unlock()
+
+	if err != nil {
+		log.Println("Failed to send error message:", err)
+	}
 }

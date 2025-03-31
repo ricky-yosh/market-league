@@ -33,6 +33,9 @@ export class DraftService {
   private draftPickSubject = new Subject<DraftPickResponse>();
   draftPick$ = this.draftPickSubject.asObservable();
 
+  // Track the last received draft update to handle re-connections
+  private lastDraftUpdate: DraftUpdateResponse | null = null;
+
   // * Constructor
   
   // Routes Websocket Messages
@@ -42,36 +45,50 @@ export class DraftService {
     private verifyUserService: VerifyUserService,
     private webSocketService: WebSocketService,
   ) {
+    // Monitor connection status for reconnection handling
+    this.webSocketService.connectionStatus.subscribe((isConnected) => {
+      if (isConnected && this.lastDraftUpdate) {
+        // If we have a stored draft update, rebroadcast it on reconnection
+        setTimeout(() => {
+          devLog("Rebroadcasting last draft update after reconnection");
+          // Add null check to prevent TypeScript error
+          if (this.lastDraftUpdate) {
+            this.currentDraftPlayerSubject.next(this.lastDraftUpdate);
+          }
+        }, 1000); // Small delay to ensure other services are ready
+      }
+    });
+
     this.webSocketService.getMessages().subscribe((message) => {
       switch (message.type) {
 
         case WebSocketMessageTypes.MessageType_LeaguePortfolio_GetLeaguePortfolioInfo:
-          devLog("Received GetLeaguePortfolioInfo Response: " + message.data);
+          devLog("Received GetLeaguePortfolioInfo Response: " + JSON.stringify(message.data));
           this.handleGetLeaguePortfolioInfoResponse(message.data);
           break;
 
         case WebSocketMessageTypes.MessageType_LeaguePortfolio_DraftStock:
-          devLog("Received DraftStock Response: " + message.data);
+          devLog("Received DraftStock Response: " + JSON.stringify(message.data));
           this.handleDraftStockResponse(message.data);
           break;  
 
         case WebSocketMessageTypes.MessageType_League_QueueUp:
-          devLog("Received QueueUp Response: " + message.data);
+          devLog("Received QueueUp Response: " + JSON.stringify(message.data));
           this.handleQueueUpResponse(message.data);
           break;
 
         case WebSocketMessageTypes.MessageType_League_Portfolios:
-          devLog("Received PlayerPortfolios Response: " + message.data);
+          devLog("Received PlayerPortfolios Response: " + JSON.stringify(message.data));
           this.handleGetLeaguePortfoliosResponse(message.data);
           break;
 
         case WebSocketMessageTypes.MessageType_League_DraftUpdate:
-          devLog("Received DraftUpdate Response: " + message.data);
+          devLog("Received DraftUpdate Response: " + JSON.stringify(message.data));
           this.handleDraftUpdateResponse(message.data);
           break;
 
         case WebSocketMessageTypes.MessageType_League_DraftPick:
-          devLog("Received DraftPick Response: " + message.data);
+          devLog("Received DraftPick Response: " + JSON.stringify(message.data));
           this.handleDraftPickResponse(message.data);
           break;
 
@@ -146,6 +163,7 @@ export class DraftService {
   // * Helper Functions to Websocket Responses
 
   handleSuccessfulGetLeaguePortfolioInfoResponse(leaguePortfolio: LeaguePortfolio): void {
+    devLog(`Got league portfolio with ${leaguePortfolio.stocks?.length || 0} stocks`);
     this.leaguePortfolioSubject.next(leaguePortfolio);
   }
 
@@ -159,15 +177,24 @@ export class DraftService {
   }
 
   handleSuccessfulGetLeaguePortfoliosResponse(playerPortfolios: Portfolio[]): void {
+    devLog(`Received ${playerPortfolios.length} player portfolios`);
     this.playerPortfoliosForLeagueSubject.next(playerPortfolios);
   }
 
   handleSuccessfulDraftUpdateResponseResponse(currentDraftPlayer: DraftUpdateResponse): void {
+    devLog(`Current draft player updated: ${currentDraftPlayer.playerID}`);
+    // Store the last draft update for reconnection handling
+    this.lastDraftUpdate = currentDraftPlayer;
     this.currentDraftPlayerSubject.next(currentDraftPlayer);
   }
 
   handleSuccessfulDraftPickResponseResponse(draftPick: DraftPickResponse): void {
+    devLog(`Draft pick processed: Player ${draftPick.player_id} picked stock ${draftPick.stock_id}`);
     this.draftPickSubject.next(draftPick);
+    
+    // After a successful pick, refresh the portfolios
+    this.getLeaguePortfolioInfo();
+    this.getAllPortfolios();
   }
 
   // * Websocket Call Functions
@@ -184,6 +211,7 @@ export class DraftService {
       data: data
     };
     this.webSocketService.sendMessage(websocketMessage);
+    devLog(`Sent request for league portfolio info for league ${selectedLeague.id}`);
   }
 
   draftStock(stockId: number): void {
@@ -192,6 +220,8 @@ export class DraftService {
     const currentUser = this.verifyUserService.getCurrentUserValue();
     guard(currentUser != null, "Current User is null!");
 
+    devLog(`Sending draft stock request: Stock ID ${stockId}, User ID ${currentUser.id}, League ID ${selectedLeague.id}`);
+    
     const data = {
       league_id: selectedLeague.id,
       user_id: currentUser.id,
@@ -219,6 +249,7 @@ export class DraftService {
       data: data
     };
     this.webSocketService.sendMessage(websocketMessage);
+    devLog(`Sent queue up request for player ${currentUser.id} in league ${selectedLeague.id}`);
   }
 
   getAllPortfolios(): void {
@@ -238,6 +269,6 @@ export class DraftService {
     };
 
     this.webSocketService.sendMessage(websocketMessage);
+    devLog(`Sent request for all portfolios in league ${selectedLeague.id}`);
   }
-
 }

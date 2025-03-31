@@ -54,6 +54,9 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
   
   // Timer interval
   private timerInterval: any;
+  
+  // Reconnection flag
+  private isReconnecting: boolean = false;
 
   constructor(
     private router: Router,
@@ -70,7 +73,8 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
     const connectionSub = this.websocketService.connectionStatus.subscribe(isConnected => {
       if (isConnected) {
         // When connection is established/re-established
-        this.leagueService.getUserLeagues();
+        this.isReconnecting = true;
+        console.log('WebSocket connected, initializing draft data...');
         
         // Get the stored league from localStorage first
         const storedLeague = this.leagueService.getStoredLeague();
@@ -85,7 +89,18 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
           this.getLeaguePortfolio();
           this.getUserPortfolio();
           this.getAllPortfolios();
+          
+          // Get detailed league info including current draft status
+          this.leagueService.getLeagueDetails();
+          
+          // Set isReconnecting to false after a short delay
+          setTimeout(() => {
+            this.isReconnecting = false;
+            console.log('Draft data initialization completed');
+          }, 2000);
         }
+      } else {
+        console.log('WebSocket disconnected');
       }
     });
     this.subscriptions.push(connectionSub);
@@ -140,9 +155,12 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
         this.leagueStocks = leaguePortfolio.stocks;
         
         // Create map for quick lookup
+        this.stocksMap.clear();
         this.leagueStocks.forEach(stock => {
           this.stocksMap.set(stock.id, stock);
         });
+        
+        console.log(`Received league portfolio with ${this.leagueStocks.length} stocks`);
       })
     );
     
@@ -154,16 +172,8 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
         if (this.userPortfolio && !this.userPortfolio.stocks) {
           this.userPortfolio.stocks = [];
         }
-      })
-    );
-
-    this.subscriptions.push(
-      this.portfolioService.userPortfolio$.subscribe((portfolio) => {
-        this.userPortfolio = portfolio;
-        // Make sure stocks array exists, even if empty
-        if (this.userPortfolio && !this.userPortfolio.stocks) {
-          this.userPortfolio.stocks = [];
-        }
+        
+        console.log(`Received user portfolio with ${this.userPortfolio?.stocks?.length || 0} stocks`);
       })
     );
     
@@ -172,6 +182,7 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
       this.draftService.playerPortfoliosForLeague$.subscribe((portfolios) => {
         if (!portfolios) return;
         this.leaguePortfolios = portfolios;
+        console.log(`Received ${this.leaguePortfolios.length} player portfolios`);
       })
     );
     
@@ -179,6 +190,8 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.draftService.currentDraftPlayer$.subscribe((draftUpdate: DraftUpdateResponse) => {
         if (!draftUpdate) return;
+        
+        console.log(`Draft update received: Current player ID = ${draftUpdate.playerID}`);
         
         // Update current player
         this.currentPlayerID = draftUpdate.playerID;
@@ -193,6 +206,8 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.draftService.draftPick$.subscribe((draftPick: DraftPickResponse) => {
         if (!draftPick) return;
+        
+        console.log(`Draft pick received: Player ${draftPick.player_id} picked stock ${draftPick.stock_id}`);
         
         // Add to draft picks history
         this.draftPicks.push({
@@ -252,6 +267,7 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
     if (!this.isUsersTurn()) {
       return; // Not your turn
     }
+    console.log(`Drafting stock: ${stock.ticker_symbol} (ID: ${stock.id})`);
     this.draftService.draftStock(stock.id);
   }
 
@@ -279,6 +295,10 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
   
   // Get display text for current player turn
   getCurrentPlayerText(): string {
+    if (this.currentPlayerID === 0) {
+      return 'Waiting for draft to start...';
+    }
+    
     if (this.isUsersTurn()) {
       return 'Your turn! Pick a stock.';
     } else {
@@ -296,27 +316,48 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
 
   // Helper Methods
   private getLeaguePortfolio(): void {
+    console.log('Fetching league portfolio');
     this.draftService.getLeaguePortfolioInfo();
   }
 
   private getUserPortfolio(): void {
+    console.log('Fetching user portfolio');
     this.portfolioService.getCurrentUserPortfolio();
   }
   
   private getAllPortfolios(): void {
+    console.log('Fetching all league portfolios');
     this.draftService.getAllPortfolios();
   }
 
   // Routes
   redirectToDraftQueue(): void {
+    // Don't redirect during reconnection
+    if (this.isReconnecting) {
+      console.log('Reconnection in progress, not redirecting to draft queue');
+      return;
+    }
+    console.log('Redirecting to draft queue');
     this.router.navigate(['/dashboard/draft-queue']);
   }
 
   redirectToDashboard(): void {
+    // Don't redirect during reconnection
+    if (this.isReconnecting) {
+      console.log('Reconnection in progress, not redirecting to dashboard');
+      return;
+    }
+    console.log('Redirecting to dashboard');
     this.router.navigate(['/dashboard']);
   }
 
-  redirectToCompletedLeague() {
-    this.router.navigate(['/dashboard/league-completed'])
+  redirectToCompletedLeague(): void {
+    // Don't redirect during reconnection
+    if (this.isReconnecting) {
+      console.log('Reconnection in progress, not redirecting to completed league');
+      return;
+    }
+    console.log('Redirecting to completed league');
+    this.router.navigate(['/dashboard/league-completed']);
   }
 }
