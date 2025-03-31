@@ -12,6 +12,7 @@ import { VerifyUserService } from './verify-user.service';
 import { Portfolio } from '../../models/portfolio.model';
 import { DraftUpdateResponse } from '../../models/websocket-responses/draft/draft-update-response.model';
 import { DraftPickResponse } from '../../models/websocket-responses/draft/draft-pick-response.model';
+import { DraftPick } from '../../models/websocket-responses/draft/draft-pick.model';
 
 @Injectable({
   providedIn: 'root'
@@ -270,5 +271,16 @@ export class DraftService {
 
     this.webSocketService.sendMessage(websocketMessage);
     devLog(`Sent request for all portfolios in league ${selectedLeague.id}`);
+  }
+
+  // ** Storage **
+  // In draft.service.ts
+  saveDraftState(draftPicks: DraftPick[]): void {
+    localStorage.setItem('draftPicks', JSON.stringify(draftPicks));
+  }
+
+  loadDraftState(): DraftPick[] {
+    const storedPicks = localStorage.getItem('draftPicks');
+    return storedPicks ? JSON.parse(storedPicks) : [];
   }
 }

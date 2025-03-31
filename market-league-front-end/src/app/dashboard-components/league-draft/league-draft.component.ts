@@ -15,12 +15,7 @@ import { DraftPickResponse } from '../../models/websocket-responses/draft/draft-
 import { VerifyUserService } from '../services/verify-user.service';
 import { User } from '../../models/user.model';
 import { League } from '../../models/league.model';
-
-interface DraftPick {
-  player_id: number;
-  stock_id: number;
-  timestamp: Date;
-}
+import { DraftPick } from '../../models/websocket-responses/draft/draft-pick.model';
 
 @Component({
   selector: 'app-league-draft',
@@ -75,12 +70,28 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
         // When connection is established/re-established
         this.isReconnecting = true;
         console.log('WebSocket connected, initializing draft data...');
-        
+
         // Get the stored league from localStorage first
         const storedLeague = this.leagueService.getStoredLeague();
         if (storedLeague) {
           // Explicitly set the selected league first
           this.leagueService.setSelectedLeague(storedLeague);
+
+          const cachedStocksStr = localStorage.getItem('stocksMapCache');
+          if (cachedStocksStr) {
+            try {
+              const cachedStocks = JSON.parse(cachedStocksStr);
+              cachedStocks.forEach((stock: Stock) => {
+                this.stocksMap.set(stock.id, stock);
+              });
+              console.log(`Loaded ${this.stocksMap.size} cached stocks from localStorage`);
+            } catch (e) {
+              console.error('Error loading cached stocks:', e);
+            }
+          }
+
+          // Load draft picks from localStorage
+          this.draftPicks = this.draftService.loadDraftState();
           
           // Then subscribe to it
           this.leagueService.subscribeToLeague();
@@ -101,6 +112,8 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
         }
       } else {
         console.log('WebSocket disconnected');
+        // Save current state before disconnection
+        this.saveDraftStateToLocalStorage();
       }
     });
     this.subscriptions.push(connectionSub);
@@ -161,7 +174,10 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
             this.stocksMap.set(stock.id, stock);
           }
         });
-        
+
+        // Save updated stocksMap to localStorage
+        this.saveStocksMapToLocalStorage();
+
         console.log(`Received league portfolio with ${this.leagueStocks.length} stocks`);
       })
     );
@@ -218,6 +234,9 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
           timestamp: new Date()
         });
         
+        // Save draft picks to localStorage
+        this.saveDraftStateToLocalStorage();
+
         // Refresh portfolios after a pick
         this.getUserPortfolio();
         this.getAllPortfolios();
@@ -271,6 +290,14 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
     }
     console.log(`Drafting stock: ${stock.ticker_symbol} (ID: ${stock.id})`);
     this.draftService.draftStock(stock.id);
+
+    // Save to localStorage after draft
+    this.saveDraftStateToLocalStorage();
+  }
+
+  // Add this method to save the current state
+  private saveDraftStateToLocalStorage(): void {
+    this.draftService.saveDraftState(this.draftPicks);
   }
 
   // View stock details
@@ -289,10 +316,47 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
     return player ? player.username : `Player ${playerID}`;
   }
   
-  // Get stock ticker by ID
+  // Update the getStockTicker method to be more resilient
   getStockTicker(stockID: number): string {
+    // First check in stocksMap
     const stock = this.stocksMap.get(stockID);
-    return stock ? stock.ticker_symbol : `Stock ${stockID}`;
+    if (stock) {
+      return stock.ticker_symbol;
+    }
+    
+    // If not found, check in leagueStocks array
+    const leagueStock = this.leagueStocks.find(s => s.id === stockID);
+    if (leagueStock) {
+      // Add to map for future lookups and return
+      this.stocksMap.set(stockID, leagueStock);
+      return leagueStock.ticker_symbol;
+    }
+    
+    // If we still don't have it, check if we have cached stock data
+    const cachedStocksStr = localStorage.getItem('stocksMapCache');
+    if (cachedStocksStr) {
+      try {
+        const cachedStocks = JSON.parse(cachedStocksStr);
+        const cachedStock = cachedStocks.find((s: Stock) => s.id === stockID);
+        if (cachedStock) {
+          // Add to map for future lookups and return
+          this.stocksMap.set(stockID, cachedStock);
+          return cachedStock.ticker_symbol;
+        }
+      } catch (e) {
+        console.error('Error parsing cached stocks:', e);
+      }
+    }
+    
+    // If all else fails, just return the ID with a label
+    return `Stock ${stockID}`;
+  }
+
+  // Add a method to save stocksMap to localStorage
+  private saveStocksMapToLocalStorage(): void {
+    // Convert map to array for storage
+    const stocksArray = Array.from(this.stocksMap.values());
+    localStorage.setItem('stocksMapCache', JSON.stringify(stocksArray));
   }
   
   // Get display text for current player turn
