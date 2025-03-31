@@ -154,10 +154,12 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
         
         this.leagueStocks = leaguePortfolio.stocks;
         
-        // Create map for quick lookup
-        this.stocksMap.clear();
-        this.leagueStocks.forEach(stock => {
-          this.stocksMap.set(stock.id, stock);
+        // Update stocksMap with any new stocks, but keep existing ones
+        // This ensures we don't lose stock data when they're drafted
+        leaguePortfolio.stocks.forEach(stock => {
+          if (!this.stocksMap.has(stock.id)) {
+            this.stocksMap.set(stock.id, stock);
+          }
         });
         
         console.log(`Received league portfolio with ${this.leagueStocks.length} stocks`);
