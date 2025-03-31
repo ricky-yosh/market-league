@@ -37,6 +37,7 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
   remainingTime: number = 0;
   maxDraftTime: number = 30; // 30 seconds per turn
   draftPicks: DraftPick[] = [];
+  private currentLeagueId: number = 0;
   
   // User data
   players: Map<number, User> = new Map();
@@ -77,7 +78,10 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
           // Explicitly set the selected league first
           this.leagueService.setSelectedLeague(storedLeague);
 
-          const cachedStocksStr = localStorage.getItem('stocksMapCache');
+          const cacheKey = this.getStocksMapCacheKey();
+          const cachedStocksStr = localStorage.getItem(cacheKey);
+          console.log(`Looking for cached stocks with key: ${cacheKey}`);
+
           if (cachedStocksStr) {
             try {
               const cachedStocks = JSON.parse(cachedStocksStr);
@@ -89,9 +93,6 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
               console.error('Error loading cached stocks:', e);
             }
           }
-
-          // Load draft picks from localStorage
-          this.draftPicks = this.draftService.loadDraftState();
           
           // Then subscribe to it
           this.leagueService.subscribeToLeague();
@@ -112,8 +113,6 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
         }
       } else {
         console.log('WebSocket disconnected');
-        // Save current state before disconnection
-        this.saveDraftStateToLocalStorage();
       }
     });
     this.subscriptions.push(connectionSub);
@@ -136,7 +135,12 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
       this.leagueService.selectedLeague$.subscribe((league) => {
         this.selectedLeague = league;
         if (!league) return;
-        
+        // Store the current league ID
+        this.currentLeagueId = league.id;
+
+        // Load draft picks for this specific league
+        this.loadDraftPicksForCurrentLeague();
+
         switch(league.league_state) {
           case LeagueState.PreDraft:
             this.redirectToDraftQueue();
@@ -236,16 +240,12 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
         
         console.log(`Draft pick received: Player ${draftPick.player_id} picked stock ${draftPick.stock_id}`);
         
-        // Add to draft picks history
-        this.draftPicks.push({
-          player_id: draftPick.player_id,
-          stock_id: draftPick.stock_id,
-          timestamp: new Date()
-        });
+        // Refresh the draft picks from the service
+        // (the service already stored the pick in memory and localStorage)
+        if (this.currentLeagueId) {
+          this.draftPicks = this.draftService.loadDraftState(this.currentLeagueId);
+        }
         
-        // Save draft picks to localStorage
-        this.saveDraftStateToLocalStorage();
-
         // Refresh portfolios after a pick
         this.getUserPortfolio();
         this.getAllPortfolios();
@@ -287,6 +287,53 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
       }
     }, 1000);
   }
+
+  // Add a new method to load draft picks for the current league
+  private loadDraftPicksForCurrentLeague(): void {
+    if (!this.currentLeagueId) {
+      console.warn('Cannot load draft picks: No league selected');
+      return;
+    }
+    
+    // Load draft picks for this league
+    this.draftPicks = this.draftService.loadDraftState(this.currentLeagueId);
+    console.log(`Loaded ${this.draftPicks.length} draft picks for league ${this.currentLeagueId}`);
+    
+    // Check for stale draft history
+    if (this.shouldResetDraftHistory()) {
+      console.log('Detected stale draft history, resetting...');
+      this.draftPicks = [];
+      this.draftService.clearDraftState(this.currentLeagueId);
+    }
+  }
+
+  // Update the shouldResetDraftHistory method
+  private shouldResetDraftHistory(): boolean {
+    // Get last draft pick timestamp if available
+    if (!this.draftPicks.length || !this.currentLeagueId) {
+      return false; // No history to reset or no league selected
+    }
+
+    const lastPick = this.draftPicks[this.draftPicks.length - 1];
+    if (!lastPick.timestamp) {
+      return true; // No timestamp, should reset to be safe
+    }
+    
+    // Convert string date to Date object if needed
+    const lastPickTime = typeof lastPick.timestamp === 'string' 
+      ? new Date(lastPick.timestamp) 
+      : lastPick.timestamp;
+    
+    // Check if the last pick is older than 24 hours
+    const oneDayInMs = 24 * 60 * 60 * 1000;
+    const isStale = (new Date().getTime() - lastPickTime.getTime()) > oneDayInMs;
+    
+    if (isStale) {
+      console.log(`Draft history for league ${this.currentLeagueId} is stale. Last pick was at ${lastPickTime}`);
+    }
+    
+    return isStale;
+  }
   
   // Check if it's the current user's turn
   isUsersTurn(): boolean {
@@ -300,14 +347,6 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
     }
     console.log(`Drafting stock: ${stock.ticker_symbol} (ID: ${stock.id})`);
     this.draftService.draftStock(stock.id);
-
-    // Save to localStorage after draft
-    this.saveDraftStateToLocalStorage();
-  }
-
-  // Add this method to save the current state
-  private saveDraftStateToLocalStorage(): void {
-    this.draftService.saveDraftState(this.draftPicks);
   }
 
   // View stock details
@@ -326,7 +365,7 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
     return player ? player.username : `Player ${playerID}`;
   }
   
-  // Update the getStockTicker method to be more resilient
+  // Update the getStockTicker method as well
   getStockTicker(stockID: number): string {
     // First check in stocksMap
     const stock = this.stocksMap.get(stockID);
@@ -343,7 +382,8 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
     }
     
     // If we still don't have it, check if we have cached stock data
-    const cachedStocksStr = localStorage.getItem('stocksMapCache');
+    const cacheKey = this.getStocksMapCacheKey();
+    const cachedStocksStr = localStorage.getItem(cacheKey);
     if (cachedStocksStr) {
       try {
         const cachedStocks = JSON.parse(cachedStocksStr);
@@ -354,7 +394,7 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
           return cachedStock.ticker_symbol;
         }
       } catch (e) {
-        console.error('Error parsing cached stocks:', e);
+        console.error(`Error parsing cached stocks for league ${this.currentLeagueId}:`, e);
       }
     }
     
@@ -364,9 +404,16 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
 
   // Add a method to save stocksMap to localStorage
   private saveStocksMapToLocalStorage(): void {
+    if (!this.currentLeagueId) {
+      console.warn('Cannot save stocks map: No league selected');
+      return;
+    }
+    
     // Convert map to array for storage
     const stocksArray = Array.from(this.stocksMap.values());
-    localStorage.setItem('stocksMapCache', JSON.stringify(stocksArray));
+    const cacheKey = this.getStocksMapCacheKey();
+    localStorage.setItem(cacheKey, JSON.stringify(stocksArray));
+    console.log(`Saved ${stocksArray.length} stocks to cache for league ${this.currentLeagueId}`);
   }
   
   // Get display text for current player turn
@@ -406,6 +453,14 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
     this.draftService.getAllPortfolios();
   }
 
+  // Update stocksMap cache methods to use league ID
+  private getStocksMapCacheKey(): string {
+    if (!this.currentLeagueId) {
+      return 'stocksMapCache';
+    }
+    return `stocksMapCache_${this.currentLeagueId}`;
+  }
+
   // Routes
   redirectToDraftQueue(): void {
     // Don't redirect during reconnection
@@ -435,5 +490,17 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
     }
     console.log('Redirecting to completed league');
     this.router.navigate(['/dashboard/league-completed']);
+  }
+
+  // Add a method to clear the stocks cache for a specific league
+  clearStocksCache(): void {
+    if (!this.currentLeagueId) {
+      return;
+    }
+    
+    const cacheKey = this.getStocksMapCacheKey();
+    localStorage.removeItem(cacheKey);
+    this.stocksMap.clear();
+    console.log(`Cleared stocks cache for league ${this.currentLeagueId}`);
   }
 }

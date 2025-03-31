@@ -191,9 +191,25 @@ export class DraftService {
 
   handleSuccessfulDraftPickResponseResponse(draftPick: DraftPickResponse): void {
     devLog(`Draft pick processed: Player ${draftPick.player_id} picked stock ${draftPick.stock_id}`);
+    
+    // Get current league ID
+    const selectedLeague = this.leagueService.getSelectedLeagueValue();
+    if (!selectedLeague) {
+      devLog("Cannot process draft pick: No league selected");
+      return;
+    }
+    
+    // Add pick to draft history
+    this.addDraftPick(selectedLeague.id, {
+      player_id: draftPick.player_id,
+      stock_id: draftPick.stock_id,
+      timestamp: new Date()
+    });
+    
+    // Broadcast the draft pick
     this.draftPickSubject.next(draftPick);
     
-    // After a successful pick, refresh the portfolios
+    // Refresh data
     this.getLeaguePortfolioInfo();
     this.getAllPortfolios();
   }
@@ -274,13 +290,113 @@ export class DraftService {
   }
 
   // ** Storage **
-  // In draft.service.ts
-  saveDraftState(draftPicks: DraftPick[]): void {
-    localStorage.setItem('draftPicks', JSON.stringify(draftPicks));
+  // Add a class property to track draft picks by league
+  private draftPicksByLeague: Map<number, DraftPick[]> = new Map();
+
+  // Modified saveDraftState to work with multiple leagues
+  saveDraftState(leagueId: number, draftPicks: DraftPick[]): void {
+    if (!leagueId) {
+      devLog("Cannot save draft state: Invalid league ID");
+      return;
+    }
+    
+    // Update in-memory cache
+    this.draftPicksByLeague.set(leagueId, [...draftPicks]);
+    
+    // Update localStorage
+    const storageKey = `draftPicks_${leagueId}`;
+    localStorage.setItem(storageKey, JSON.stringify(draftPicks));
+    devLog(`Saved ${draftPicks.length} draft picks for league ${leagueId}`);
   }
 
-  loadDraftState(): DraftPick[] {
-    const storedPicks = localStorage.getItem('draftPicks');
-    return storedPicks ? JSON.parse(storedPicks) : [];
+  // Modified loadDraftState to work with multiple leagues
+  loadDraftState(leagueId: number): DraftPick[] {
+    if (!leagueId) {
+      devLog("Cannot load draft state: Invalid league ID");
+      return [];
+    }
+    
+    // Check in-memory cache first
+    if (this.draftPicksByLeague.has(leagueId)) {
+      return [...this.draftPicksByLeague.get(leagueId)!]; // Return a copy
+    }
+    
+    // Fall back to localStorage
+    const storageKey = `draftPicks_${leagueId}`;
+    const storedPicks = localStorage.getItem(storageKey);
+    
+    if (!storedPicks) {
+      return [];
+    }
+    
+    try {
+      const picks: DraftPick[] = JSON.parse(storedPicks);
+      // Update the in-memory cache
+      this.draftPicksByLeague.set(leagueId, [...picks]);
+      devLog(`Loaded ${picks.length} draft picks for league ${leagueId}`);
+      return picks;
+    } catch (e) {
+      devLog(`Error parsing draft picks for league ${leagueId}: ${e}`);
+      return [];
+    }
+  }
+
+  // Add a method to add a single draft pick
+  addDraftPick(leagueId: number, pick: DraftPick): void {
+    if (!leagueId) {
+      devLog("Cannot add draft pick: Invalid league ID");
+      return;
+    }
+    
+    // Get current picks
+    const currentPicks = this.loadDraftState(leagueId);
+    
+    // Add new pick
+    currentPicks.push({
+      ...pick,
+      timestamp: new Date() // Ensure timestamp is set
+    });
+    
+    // Save updated picks
+    this.saveDraftState(leagueId, currentPicks);
+  }
+
+  // Modified clearDraftState to work with multiple leagues
+  clearDraftState(leagueId: number): void {
+    if (!leagueId) {
+      devLog("Cannot clear draft state: Invalid league ID");
+      return;
+    }
+    
+    // Clear from in-memory cache
+    this.draftPicksByLeague.delete(leagueId);
+    
+    // Clear from localStorage
+    const storageKey = `draftPicks_${leagueId}`;
+    localStorage.removeItem(storageKey);
+    
+    devLog(`Cleared draft picks for league ${leagueId}`);
+  }
+
+  // Add method to reset all draft states (useful for testing/debugging)
+  resetAllDraftStates(): void {
+    // Clear in-memory cache
+    this.draftPicksByLeague.clear();
+    
+    // Clear all draft-related items from localStorage
+    const keysToRemove: string[] = [];
+    
+    // Find all draft-related keys
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('draftPicks_')) {
+        keysToRemove.push(key);
+      }
+    }
+    
+    // Remove the keys
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    
+    devLog(`Cleared all draft states (${keysToRemove.length} leagues)`);
   }
 }
