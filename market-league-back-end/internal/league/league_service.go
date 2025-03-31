@@ -19,11 +19,19 @@ import (
 // LeagueService handles the business logic for managing leagues.
 type LeagueService struct {
 	repo                   *LeagueRepository
-	userRepo               *user.UserRepository           // Reference to UserRepository
-	portfolioRepo          *portfolio.PortfolioRepository // Reference to PortfolioRepository
+	userRepo               *user.UserRepository
+	portfolioRepo          *portfolio.PortfolioRepository
 	leaguePortfolioService *leagueportfolio.LeaguePortfolioService
-	activeDraftChannels    map[uint]chan uint // activeDraftChannels maps leagueID to a channel that receives a drafted stockID.
-	mu                     sync.Mutex         // Protect concurrent access to activeDraftChannels.
+	activeDraftChannels    map[uint]chan uint   // activeDraftChannels maps leagueID to a channel that receives a drafted stockID.
+	activePlayerTimers     map[uint]playerTimer // Maps leagueID to current player's timer
+	mu                     sync.Mutex           // Protect concurrent access to maps.
+}
+
+// Player timer structure to track turn timing
+type playerTimer struct {
+	playerID  uint
+	startTime time.Time
+	endTime   time.Time
 }
 
 // NewLeagueService creates a new instance of LeagueService.
@@ -39,6 +47,7 @@ func NewLeagueService(
 		portfolioRepo:          portfolioRepo,
 		leaguePortfolioService: leaguePortfolioService,
 		activeDraftChannels:    make(map[uint]chan uint),
+		activePlayerTimers:     make(map[uint]playerTimer),
 	}
 }
 
@@ -368,6 +377,7 @@ func (s *LeagueService) startDraftLoop(leagueID uint) {
 	defer func() {
 		s.mu.Lock()
 		delete(s.activeDraftChannels, leagueID)
+		delete(s.activePlayerTimers, leagueID) // Also clean up the timer
 		s.mu.Unlock()
 	}()
 
@@ -390,9 +400,21 @@ func (s *LeagueService) startDraftLoop(leagueID uint) {
 	defer stateBroadcastTicker.Stop()
 
 	for !s.isDraftComplete(league) {
-
 		currentPlayer := players[currentPlayerIndex]
 		log.Printf("Draft turn for player %d in league %d", currentPlayer, leagueID)
+
+		// Set up the timer for this player's turn
+		timerStart := time.Now()
+		timerEnd := timerStart.Add(draftTurnDuration)
+
+		// Store the timer information
+		s.mu.Lock()
+		s.activePlayerTimers[leagueID] = playerTimer{
+			playerID:  currentPlayer,
+			startTime: timerStart,
+			endTime:   timerEnd,
+		}
+		s.mu.Unlock()
 
 		// Notify all clients that this player is now on the clock
 		s.notifyPlayerOnClock(currentPlayer, leagueID)
@@ -432,7 +454,7 @@ func (s *LeagueService) startDraftLoop(leagueID uint) {
 				selectionReceived = true
 
 			case <-stateBroadcastTicker.C:
-				// Broadcast current draft state
+				// Broadcast current draft state with updated timer
 				s.notifyPlayerOnClock(currentPlayer, leagueID)
 			}
 		}
@@ -514,11 +536,30 @@ func (s *LeagueService) waitForPlayerSelection(playerID, leagueID uint, timer *t
 }
 
 func (s *LeagueService) notifyPlayerOnClock(playerID, leagueID uint) {
-	// Create notification message
+	// Calculate the remaining time
+	var remainingSeconds int
+
+	s.mu.Lock()
+	timer, exists := s.activePlayerTimers[leagueID]
+	s.mu.Unlock()
+
+	if exists && timer.playerID == playerID {
+		// Calculate remaining time based on the stored timer
+		remainingTime := time.Until(timer.endTime)
+		remainingSeconds = int(remainingTime.Seconds())
+		if remainingSeconds < 0 {
+			remainingSeconds = 0
+		}
+	} else {
+		// Fallback to the full duration if no timer is found
+		remainingSeconds = int(draftTurnDuration.Seconds())
+	}
+
+	// Create notification message with accurate remaining time
 	data, err := json.Marshal(map[string]interface{}{
 		"leagueID":      leagueID,
 		"playerID":      playerID,
-		"remainingTime": int(draftTurnDuration.Seconds()),
+		"remainingTime": remainingSeconds, // Use the calculated remaining time
 	})
 
 	if err != nil {
@@ -776,11 +817,30 @@ func (s *LeagueService) SendCurrentDraftState(leagueID uint, conn *ws.Connection
 				}
 			}
 
-			// Send draft update message
+			// Calculate the remaining time
+			var remainingSeconds int
+
+			s.mu.Lock()
+			timer, exists := s.activePlayerTimers[leagueID]
+			s.mu.Unlock()
+
+			if exists && timer.playerID == currentPlayerID {
+				// Calculate remaining time based on the stored timer
+				remainingTime := time.Until(timer.endTime)
+				remainingSeconds = int(remainingTime.Seconds())
+				if remainingSeconds < 0 {
+					remainingSeconds = 0
+				}
+			} else {
+				// Fallback to the full duration if no timer is found
+				remainingSeconds = int(draftTurnDuration.Seconds())
+			}
+
+			// Send draft update message with accurate remaining time
 			data, err := json.Marshal(map[string]interface{}{
 				"leagueID":      leagueID,
 				"playerID":      currentPlayerID,
-				"remainingTime": int(draftTurnDuration.Seconds()),
+				"remainingTime": remainingSeconds,
 			})
 
 			if err != nil {

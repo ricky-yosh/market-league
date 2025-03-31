@@ -183,7 +183,7 @@ export class DraftService {
   }
 
   handleSuccessfulDraftUpdateResponseResponse(currentDraftPlayer: DraftUpdateResponse): void {
-    devLog(`Current draft player updated: ${currentDraftPlayer.playerID}`);
+    devLog(`Current draft player updated: ${currentDraftPlayer.playerID}, Remaining time: ${currentDraftPlayer.remainingTime}s`);
     // Store the last draft update for reconnection handling
     this.lastDraftUpdate = currentDraftPlayer;
     this.currentDraftPlayerSubject.next(currentDraftPlayer);

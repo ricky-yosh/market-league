@@ -209,14 +209,23 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
       this.draftService.currentDraftPlayer$.subscribe((draftUpdate: DraftUpdateResponse) => {
         if (!draftUpdate) return;
         
-        console.log(`Draft update received: Current player ID = ${draftUpdate.playerID}`);
+        console.log(`Draft update received: Current player ID = ${draftUpdate.playerID}, Remaining time = ${draftUpdate.remainingTime}s`);
         
         // Update current player
         this.currentPlayerID = draftUpdate.playerID;
         
-        // Reset and start timer
-        this.remainingTime = this.maxDraftTime;
-        this.startTimer();
+        // Use the remaining time from the server instead of resetting to max
+        if (draftUpdate.remainingTime !== undefined) {
+          this.remainingTime = draftUpdate.remainingTime;
+        } else {
+          // Fallback to max time if for some reason the server doesn't send it
+          this.remainingTime = this.maxDraftTime;
+        }
+        
+        // Only start a new timer if one isn't already running
+        if (!this.timerInterval) {
+          this.startTimer();
+        }
       })
     );
     
@@ -274,6 +283,7 @@ export class LeagueDraftComponent implements OnInit, OnDestroy {
       } else {
         // Time's up logic - could notify the user or auto-skip
         clearInterval(this.timerInterval);
+        this.timerInterval = null; // Reset the timer variable
       }
     }, 1000);
   }
