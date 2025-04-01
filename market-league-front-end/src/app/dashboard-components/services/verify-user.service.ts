@@ -69,8 +69,9 @@ export class VerifyUserService {
   // Clear user and storage (e.g., logout)
   clearUser(): void {
     this.currentUserSubject.next(null); // Clear BehaviorSubject
-    sessionStorage.removeItem('currentUser'); // Clear storage
-    sessionStorage.removeItem('token'); // Optionally clear token
+    // sessionStorage.removeItem('currentUser'); // Clear storage
+    // sessionStorage.removeItem('token'); // Optionally clear token
+    sessionStorage.clear()// Clear storage
   }
 
 }

@@ -298,6 +298,7 @@ export class LeagueService {
   setSelectedLeague(league: League | null): void {
     devLog("Selected League: ", league);
     this.selectedLeagueSource.next(league); // Set the selected league as the full League object
+    // console.log(league in this.userLeagues$)
     if (league) {
       // Store the entire league object as a JSON string in sessionStorage
       sessionStorage.setItem('selectedLeague', JSON.stringify(league)); 
