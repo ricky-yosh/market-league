@@ -51,7 +51,7 @@ export class LoginComponent {
     devLog('Login successful', response);
     // Session Token Handling
     sessionStorage.setItem('token', response.token);
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['/dashboard/create-league']);
   }
 
   handleError(error: any) {
