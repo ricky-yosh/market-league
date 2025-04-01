@@ -22,7 +22,7 @@ export class LoginService {
     return this.http.post<LoginResponse>(this.loginURL, credentials).pipe(
       tap(response => {
         // Store token
-        localStorage.setItem('token', response.token);
+        sessionStorage.setItem('token', response.token);
       }),
       switchMap(response => {
         // Load user data right after login
