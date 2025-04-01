@@ -396,49 +396,6 @@ func (h *LeagueHandler) QueueUp(conn *ws.Connection, rawData json.RawMessage) er
 	return nil
 }
 
-// SendCurrentDraftState sends the current draft state to a newly connected client
-func (s *LeagueService) SendCurrentDraftState(leagueID uint, conn *ws.Connection) error {
-	// Get the current player on clock
-	// This would need to be tracked in your LeagueService
-	// For now, we'll just broadcast the league details
-
-	// Broadcast league details to this specific connection
-	league, err := s.repo.GetLeagueDetails(leagueID)
-	if err != nil {
-		return fmt.Errorf("failed to get league details: %w", err)
-	}
-
-	// Prepare the data
-	data := gin.H{
-		"id":             league.ID,
-		"league_name":    league.LeagueName,
-		"start_date":     league.StartDate,
-		"end_date":       league.EndDate,
-		"league_state":   league.LeagueState,
-		"max_players":    league.MaxPlayers,
-		"league_players": league.LeaguePlayers,
-	}
-
-	// Marshal the data into JSON
-	dataJSON, err := json.Marshal(data)
-	if err != nil {
-		return fmt.Errorf("serialization error: %w", err)
-	}
-
-	// Create the WebSocket message
-	response := ws.WebsocketMessage{
-		Type: ws.MessageType_League_GetDetails,
-		Data: json.RawMessage(dataJSON),
-	}
-
-	// Send to this specific connection
-	if err := conn.Ws.WriteJSON(response); err != nil {
-		return fmt.Errorf("failed to send response: %v", err)
-	}
-
-	return nil
-}
-
 func (h *LeagueHandler) SubscribeToLeague(conn *ws.Connection, rawData json.RawMessage) error {
 	var request struct {
 		LeagueID uint `json:"league_id" binding:"required"`
