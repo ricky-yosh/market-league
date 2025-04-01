@@ -298,11 +298,12 @@ export class LeagueService {
   setSelectedLeague(league: League | null): void {
     devLog("Selected League: ", league);
     this.selectedLeagueSource.next(league); // Set the selected league as the full League object
+    // console.log(league in this.userLeagues$)
     if (league) {
-      // Store the entire league object as a JSON string in localStorage
-      localStorage.setItem('selectedLeague', JSON.stringify(league)); 
+      // Store the entire league object as a JSON string in sessionStorage
+      sessionStorage.setItem('selectedLeague', JSON.stringify(league)); 
     } else {
-      localStorage.removeItem('selectedLeague');
+      sessionStorage.removeItem('selectedLeague');
     }
   }
 
@@ -329,9 +330,9 @@ export class LeagueService {
     return this.selectedLeagueSource.value;
   }
 
-  // Retrieve the stored league from localStorage (if it exists)
+  // Retrieve the stored league from sessionStorage (if it exists)
   getStoredLeague(): League | null {
-    const storedLeague = localStorage.getItem('selectedLeague');
+    const storedLeague = sessionStorage.getItem('selectedLeague');
     
     // Check if storedLeague is a valid JSON
     if (storedLeague) {
@@ -339,7 +340,7 @@ export class LeagueService {
         return JSON.parse(storedLeague) as League;
       } catch (e) {
         console.error("Error parsing stored league JSON:", e);
-        localStorage.removeItem('selectedLeague'); // Clean up invalid entry
+        sessionStorage.removeItem('selectedLeague'); // Clean up invalid entry
         return null;
       }
     }
