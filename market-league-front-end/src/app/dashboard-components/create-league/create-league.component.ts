@@ -126,6 +126,6 @@ export class CreateLeagueComponent implements OnInit {
     const userLeagueIds = new Set(userLeagues.map(league => league.id));
     
     // Return leagues not in the user's leagues
-    return allLeagues.filter(league => !userLeagueIds.has(league.id));
+    return allLeagues.filter(league => (!userLeagueIds.has(league.id)) && (league.league_state == 'pre_draft'));
   }
 }

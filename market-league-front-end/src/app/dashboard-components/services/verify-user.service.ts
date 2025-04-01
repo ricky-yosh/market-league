@@ -12,7 +12,7 @@ export class VerifyUserService {
   private baseUrl = environment.api_url;
   private verifyUserURL = `${this.baseUrl}/api/auth/user-from-token`;
 
-  // Initialize BehaviorSubject with a value from localStorage, if available
+  // Initialize BehaviorSubject with a value from sessionStorage, if available
   private currentUserSubject = new BehaviorSubject<User | null>(this.getStoredUser());
   public currentUser$ = this.currentUserSubject.asObservable(); // Expose observable
 
@@ -25,7 +25,7 @@ export class VerifyUserService {
 
   // Fetch user and persist data
   getUserFromToken(): Observable<User> {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (!token) {
       this.router.navigate(['/logged-out']);
       throw new Error('No token found');
@@ -48,7 +48,7 @@ export class VerifyUserService {
   }
 
   getStoredUser(): User | null {
-    return JSON.parse(localStorage.getItem('currentUser') || 'null') // Load from storage
+    return JSON.parse(sessionStorage.getItem('currentUser') || 'null') // Load from storage
   }
 
   // Get current user value
@@ -61,7 +61,7 @@ export class VerifyUserService {
   // Set user and persist it
   setCurrentUser(user: User | null): void {
     this.currentUserSubject.next(user); // Update BehaviorSubject
-    localStorage.setItem('currentUser', JSON.stringify(user)); // Persist to storage
+    sessionStorage.setItem('currentUser', JSON.stringify(user)); // Persist to storage
   }
 
   // * Clear User
@@ -69,8 +69,9 @@ export class VerifyUserService {
   // Clear user and storage (e.g., logout)
   clearUser(): void {
     this.currentUserSubject.next(null); // Clear BehaviorSubject
-    localStorage.removeItem('currentUser'); // Clear storage
-    localStorage.removeItem('token'); // Optionally clear token
+    // sessionStorage.removeItem('currentUser'); // Clear storage
+    // sessionStorage.removeItem('token'); // Optionally clear token
+    sessionStorage.clear()// Clear storage
   }
 
 }

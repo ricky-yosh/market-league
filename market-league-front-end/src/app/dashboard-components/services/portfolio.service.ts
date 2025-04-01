@@ -161,18 +161,18 @@ export class PortfolioService {
     devLog("Selected Portfolio: ", portfolio);
     this.userPortfolioSubject.next(portfolio); // Set the selected league as the full League object
     if (portfolio) {
-      // Store the entire league object as a JSON string in localStorage
-      localStorage.setItem('selectedPortfolio', JSON.stringify(portfolio)); 
+      // Store the entire league object as a JSON string in sessionStorage
+      sessionStorage.setItem('selectedPortfolio', JSON.stringify(portfolio)); 
     } else {
-      localStorage.removeItem('selectedPortfolio');
+      sessionStorage.removeItem('selectedPortfolio');
     }
   }
 
   // * Getter Functions
 
-  // Retrieve the stored league from localStorage (if it exists)
+  // Retrieve the stored league from sessionStorage (if it exists)
   getStoredPortfolio(): Portfolio | null {
-    const storedPortfolio = localStorage.getItem('selectedPortfolio');
+    const storedPortfolio = sessionStorage.getItem('selectedPortfolio');
     
     // Check if storedLeague is a valid JSON
     if (storedPortfolio) {
@@ -180,7 +180,7 @@ export class PortfolioService {
         return JSON.parse(storedPortfolio) as Portfolio;
       } catch (e) {
         console.error("Error parsing stored league JSON:", e);
-        localStorage.removeItem('selectedPortfolio'); // Clean up invalid entry
+        sessionStorage.removeItem('selectedPortfolio'); // Clean up invalid entry
         return null;
       }
     }

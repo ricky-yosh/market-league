@@ -49,10 +49,9 @@ export class LoginComponent {
   handleUpdateResponse(response: LoginResponse) {
     // Success
     devLog('Login successful', response);
-    // Session Token Handling is already done in the service
-    
-    // Navigate to dashboard after user data is loaded
-    this.router.navigate(['/dashboard/create-league']);
+    // Session Token Handling
+    sessionStorage.setItem('token', response.token);
+    this.router.navigate(['/dashboard']);
   }
 
   handleError(error: any) {
