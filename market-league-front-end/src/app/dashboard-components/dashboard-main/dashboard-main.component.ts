@@ -141,6 +141,7 @@ export class DashboardMainComponent {
   // * Routing
 
   redirectToHome() {
+    this.userService.clearUser()
     this.router.navigate(['/home']);
   }
 
