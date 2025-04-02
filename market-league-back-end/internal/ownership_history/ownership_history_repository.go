@@ -41,13 +41,10 @@ func (r *ownershipHistoryRepository) FindActiveByStockIDAndPortfolioID(stockID u
 	var history models.OwnershipHistory
 	err := r.db.
 		Preload("Stock").
-		Where("stock_id = ? AND portfolio_id = ?", stockID, portfolioID).
+		Where("stock_id = ? AND portfolio_id = ? AND end_date IS NULL", stockID, portfolioID).
 		First(&history).Error
 	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve ownership history with stockID and portfolioID: %v", err)
-	}
-	if history.EndDate != nil {
-		return nil, fmt.Errorf("EndDate is not nil, which means that this history section is not mutable")
+		return nil, fmt.Errorf("unable to retrieve active ownership history with stockID and portfolioID: %v", err)
 	}
 	return &history, nil
 }
