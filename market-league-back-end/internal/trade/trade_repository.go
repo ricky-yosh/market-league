@@ -144,3 +144,27 @@ func (r *TradeRepository) SwapStocks(trade *models.Trade) error {
 
 	return tx.Commit().Error
 }
+
+func (r *TradeRepository) refuseTrade(trade *models.Trade) error {
+	// Begin a transaction
+	tx := r.db.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Update the trade status to "refused"
+	trade.Status = "refused"
+	if err := tx.Save(trade).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit().Error
+}
+

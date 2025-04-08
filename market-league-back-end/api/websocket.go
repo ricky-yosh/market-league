@@ -91,6 +91,8 @@ func (h *WebSocketHandler) routeTransmission(conn *ws.Connection, message ws.Web
 		return h.tradeHandler.CreateTrade(conn, message.Data)
 	case ws.MessageType_Trade_ConfirmTrade:
 		return h.tradeHandler.ConfirmTrade(conn, message.Data)
+	case ws.MessageType_Trade_RefuseTrade:
+		return h.tradeHandler.RefuseTrade(conn, message.Data)
 	case ws.MessageType_Trade_GetTrades:
 		return h.tradeHandler.GetTrades(conn, message.Data)
 

@@ -58,32 +58,49 @@
             <h2>Trades</h2>
             <ul *ngIf="leagueTrades && leagueTrades.length > 0; else noTrades">
                 <li *ngFor="let trade of leagueTrades" class="trade-item">
-                    <div>
-                        <p>{{ trade.user1.username }}</p>
-                        <div 
-                            [ngClass]="{'trade-confirmed': trade.user1_confirmed, 'trade-not-confirmed': !trade.user1_confirmed}"
-                            class="confirmation-status">
-                        </div>
-                        <p *ngFor="let stock of trade.stocks1">
-                            {{ stock.ticker_symbol }}
-                        </p>
+                  <div>
+                    <p>{{ trade.user1.username }}</p>
+                    <div 
+                    [ngClass]="{'trade-confirmed': trade.user1_confirmed, 
+                    'trade-not-confirmed': !trade.user1_confirmed, 
+                'trade-refused': trade.user1_confirmed && trade.status=='refused'}"
+                    class="confirmation-status">
+                </div>
+                    <p *ngFor="let stock of trade.stocks1">
+                      {{ stock.ticker_symbol }}
+                    </p>
+                  </div>
+                  
+                  <!-- Use ng-container with then/else instead of *ngIf/else on the div -->
+                  <ng-container *ngIf="trade.status === 'refused'; then refusedBlock; else confirmedBlock"></ng-container>
+                  
+                  <ng-template #confirmedBlock>
+                    <div class="display: flex; justify-content: center;">
+                      <p>Traded on</p>
+                      <p>{{ trade.created_at | date: 'MMMM d, yyyy, h:mm a' }}</p>
                     </div>
-                    <div>
-                        <p style="display: flex; justify-content: center;">Trades for</p>
-                        <p>{{ trade.created_at | date: 'MMMM d, yyyy, h:mm a' }}</p>
+                  </ng-template>
+                  
+                  <ng-template #refusedBlock>
+                    <div class="display: flex; justify-content: center;">
+                      <p>Trade refused</p>
+                      <p>{{ trade.created_at | date: 'MMMM d, yyyy, h:mm a' }}</p>
                     </div>
-                    <div>
-                        <p>{{ trade.user2.username }}</p>
-                        <div 
-                            [ngClass]="{'trade-confirmed': trade.user2_confirmed, 'trade-not-confirmed': !trade.user2_confirmed}"
-                            class="confirmation-status">
-                        </div>
-                        <p *ngFor="let stock of trade.stocks2">
-                            {{ stock.ticker_symbol }}
-                        </p>
-                    </div>
+                  </ng-template>
+                  
+                  <div>
+                    <p>{{ trade.user2.username }}</p>
+                    <div 
+                    [ngClass]="{'trade-confirmed': trade.user2_confirmed, 
+                    'trade-not-confirmed': !trade.user2_confirmed, 
+                    'trade-refused': trade.user2_confirmed && trade.status=='refused'}"
+                    class="confirmation-status"></div>
+                    <p *ngFor="let stock of trade.stocks2">
+                      {{ stock.ticker_symbol }}
+                    </p>
+                  </div>
                 </li>
-            </ul>
+              </ul>
             <ng-template #noTrades>
                 <p>No Trades Found</p>
             </ng-template>

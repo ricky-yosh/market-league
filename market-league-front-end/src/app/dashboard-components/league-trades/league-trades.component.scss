@@ -177,6 +177,13 @@ label {
     flex-direction: column;
 }
 
+.btn-row{
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
 .btn {
     background: darken($market-league-gold, 1%);
     border-color: $market-league-gold;
@@ -198,6 +205,19 @@ label {
     .trade-status {
         color: $market-league-green;
         font-weight: bold;
+    }
+    .trade-confirmed {
+        background-color: $market-league-green;
+    }
+}
+
+.refused-trades {
+    .trade-status {
+        color: $market-league-red;
+        font-weight: bold;
+    }
+    .trade-confirmed {
+        background-color: $market-league-red;
     }
 }
 

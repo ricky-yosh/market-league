@@ -79,12 +79,20 @@
                             <div class="center-column">
                                 <p>Trades for</p>
                                 <p>{{ trade.created_at | date: 'MMMM d, yyyy, h:mm a' }}</p>
+                                <div class="btn-row">
                                 <button 
                                     *ngIf="!trade.user1_confirmed || !trade.user2_confirmed"
                                     (click)="confirmTrade(trade.id)" 
                                     class="btn">
                                     Confirm Trade
                                 </button>
+                                <button 
+                                    *ngIf="!trade.user1_confirmed || !trade.user2_confirmed"
+                                    (click)="refuseTrade(trade.id)" 
+                                    class="btn">
+                                    Refuse Trade
+                                </button>
+                            </div>
                             </div>
                             <div>
                                 <p>{{ trade.user2.username }}</p>
@@ -106,32 +114,54 @@
                 <!-- Completed Trades (Bottom) -->
                 <div class="container margin-top">
                     <h2>Completed Trades</h2>
-                    <ul *ngIf="completedTrades && completedTrades.length > 0; else noCompletedTrades" class="trades-list completed-trades">
-                        <li *ngFor="let trade of completedTrades" class="trade-item">
+                    <ul *ngIf="completedTrades && completedTrades.length > 0; else noCompletedTrades" class="trades-list">
+                      <li *ngFor="let trade of completedTrades" class="trade-item"
+                          [ngClass]="trade.status === 'confirmed' ? 'completed-trades' : 'refused-trades'">
+                        <div>
+                          <p>{{ trade.user1.username }}</p>
+                          <div class="trade-confirmed confirmation-status"></div>
+                          <p *ngFor="let stock of trade.stocks1">
+                            {{ stock.ticker_symbol }}
+                          </p>
+                        </div>
+                        
+                        <!-- Use ng-container with then/else instead of *ngIf/else on the div -->
+                        <ng-container *ngIf="trade.status === 'confirmed'; then confirmedBlock; else refusedBlock"></ng-container>
+                        
+                        <ng-template #confirmedBlock>
+                          <div class="center-column">
+                            <p>Traded on</p>
+                            <p>{{ trade.updated_at | date: 'MMMM d, yyyy, h:mm a' }}</p>
                             <div>
-                                <p>{{ trade.user1.username }}</p>
-                                <div class="trade-confirmed confirmation-status"></div>
-                                <p *ngFor="let stock of trade.stocks1">
-                                    {{ stock.ticker_symbol }}
-                                </p>
+                              <span class="trade-status">Completed</span>
                             </div>
-                            <div class="center-column">
-                                <p>Traded on</p>
-                                <p>{{ trade.updated_at | date: 'MMMM d, yyyy, h:mm a' }}</p>
-                                <span class="trade-status">Completed</span>
-                            </div>
+                          </div>
+                        </ng-template>
+                        
+                        <ng-template #refusedBlock>
+                          <div class="center-column">
+                            <p>Trade refused</p>
+                            <p>{{ trade.updated_at | date: 'MMMM d, yyyy, h:mm a' }}</p>
                             <div>
-                                <p>{{ trade.user2.username }}</p>
-                                <div class="trade-confirmed confirmation-status"></div>
-                                <p *ngFor="let stock of trade.stocks2">
-                                    {{ stock.ticker_symbol }}
-                                </p>
+                              <span class="trade-status">Refused</span>
                             </div>
-                        </li>
+                          </div>
+                        </ng-template>
+                        
+                        <div>
+                          <p>{{ trade.user2.username }}</p>
+                          <div class="trade-confirmed confirmation-status"></div>
+                          <p *ngFor="let stock of trade.stocks2">
+                            {{ stock.ticker_symbol }}
+                          </p>
+                        </div>
+                      </li>
                     </ul>
+                    
                     <ng-template #noCompletedTrades>
-                        <p>No Completed Trades</p>
+                      <p>No Completed Trades</p>
                     </ng-template>
+
                 </div>
             </div>
         </div>

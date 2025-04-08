@@ -38,6 +38,7 @@ const (
 	// Trade Routes
 	MessageType_Trade_CreateTrade  = "MessageType_Trade_CreateTrade"
 	MessageType_Trade_ConfirmTrade = "MessageType_Trade_ConfirmTrade"
+	MessageType_Trade_RefuseTrade = "MessageType_Trade_RefuseTrade"
 	MessageType_Trade_GetTrades    = "MessageType_Trade_GetTrades"
 
 	// League Portfolio Routes

@@ -121,9 +121,13 @@ export class LeagueTradesComponent implements OnInit, OnDestroy {
     if (user2_id &&
         stocks1_ids.length > 0 &&
         stocks2_ids.length > 0) {
-      
-      this.tradeService.createTrade(user2_id, stocks1_ids, stocks2_ids);
-      this.resetForm();
+      if (stocks1_ids.length == stocks2_ids.length)
+      {
+        this.tradeService.createTrade(user2_id, stocks1_ids, stocks2_ids);
+        this.resetForm();
+      } else {
+        alert('You have to pick the same amount of stocks.');
+      }
     } else {
       alert('Please complete the form before submitting.');
     }
@@ -152,9 +156,15 @@ export class LeagueTradesComponent implements OnInit, OnDestroy {
 
   confirmTrade(tradeId: number): void {
     guard(tradeId != null, "tradeId is null");
-
+    // ***** CHECK THAN BOTH USER STILL OWN STOCKS, Actually not here if we could do it automatically not when he ask for itrefuseTrade
     this.tradeService.confirmTradeForUser(tradeId);
     alert('Trade successfully confirmed!');
+  }
+  refuseTrade(tradeId: number): void {
+    guard(tradeId != null, "tradeId is null");
+    // CHECK THAN BOTH USER STILL OWN STOCKS
+    this.tradeService.refuseTradeForUser(tradeId);
+    alert('Trade successfully refused!');
   }
   
   // * Helper Functions

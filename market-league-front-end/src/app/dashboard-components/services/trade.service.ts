@@ -41,6 +41,10 @@ export class TradeService {
             devLog("Received ConfirmTradeForUser Response: " + message.data);
             this.handleConfirmTradeForUserResponse(message.data);
             break;
+          case WebSocketMessageTypes.MessageType_Trade_RefuseTrade:
+            devLog("Received RefuseTradeForUser Response: " + message.data);
+            this.handleRefuseTradeForUserResponse(message.data);
+            break;
           default:
             // devLog("Trade Service unable to route Websocket Message properly! " + message.data);
       }
@@ -78,6 +82,15 @@ export class TradeService {
     }
     this.handleSuccessfulConfirmTradeForUserResponse(responseData);
   }
+  handleRefuseTradeForUserResponse(responseData: any): void {
+    // Check for error message
+    const didErrorOccur = this.webSocketService.didErrorOccur(responseData);
+    if (didErrorOccur) {
+      devLog("Error occurred: " + responseData.message)
+      return
+    }
+    this.handleSuccessfulConfirmTradeForUserResponse(responseData);
+  }
 
   // * Helper Functions to Websocket Responses
 
@@ -97,7 +110,7 @@ export class TradeService {
   }
 
   // * Websocket Call Functions
-
+// ***** BESOIN DE CHANGER?
   // Fetch user trades based on userId and leagueId
   getTrades(receiving_trade: boolean = false, sending_trade: boolean = false): void {
     const currentUser = this.verifyUserService.getCurrentUserValue();
@@ -146,6 +159,19 @@ export class TradeService {
     };
     const websocketMessage = {
       type: WebSocketMessageTypes.MessageType_Trade_ConfirmTrade,
+      data: data
+    };
+    this.webSocketService.sendMessage(websocketMessage);
+  }
+  refuseTradeForUser(tradeId: number): void {
+    const currentUser = this.verifyUserService.getCurrentUserValue();
+    guard(currentUser != null, "Current user is null!");
+    const data = {
+      trade_id: tradeId,
+      user_id: currentUser.id
+    };
+    const websocketMessage = {
+      type: WebSocketMessageTypes.MessageType_Trade_RefuseTrade,
       data: data
     };
     this.webSocketService.sendMessage(websocketMessage);
