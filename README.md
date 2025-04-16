@@ -1,6 +1,13 @@
-![MarketLeague Image Wide](./readme-images/logo_wide.jpg)
+![MarketLeague Image Wide](./readme-files/logo_wide.jpg)
 # MarketLeague
 St. Edward's University Senior Project repository for MarketLeague, a fantasy-football style approach to learning about the stock market. Users will be able to create a portfolio of stocks that act like trading cards, and users will be able to join leagues where they can trade stocks with other players.
+
+<video width="auto" height="400" controls>
+  <source src="./readme-files/MarketLeague%20Gameplay.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+> Gameplay of MarketLeague
 
 ## Running MarketLeague Locally
 Requirements:
@@ -63,11 +70,6 @@ Change `user`, `password`, and `database` to appropriate values.
 Projected plan for features and presentations.
 ![MarketLeague Roadmap](./readme-images/marketleague-roadmap.png)
 
-## Credits & Thanks
-Thanks to Liam Molina for creating the logo for MarketLeague!
-- [Instagram](https://www.instagram.com/designedbyliamm/)
-- [LinkedIn](https://www.linkedin.com/in/liam-molina-ab3211290/)
-
 ## Creators:
 #### Timothée Pommier
 - [LinkedIn](https://www.linkedin.com/in/timoth%C3%A9e-pommier-81749a251/)
@@ -75,6 +77,11 @@ Thanks to Liam Molina for creating the logo for MarketLeague!
 #### Ricky Yoshioka
 - [LinkedIn](https://www.linkedin.com/in/r1chard-yoshioka/)
 - [GitHub](https://github.com/ricky-yosh)
+
+## Credits & Thanks
+Thanks to Liam Molina for creating the logo for MarketLeague!
+- [Instagram](https://www.instagram.com/designedbyliamm/)
+- [LinkedIn](https://www.linkedin.com/in/liam-molina-ab3211290/)
 
 ## Resources
 - [unDraw Illustrations](https://undraw.co/illustrations)
@@ -95,4 +102,4 @@ Thanks to Liam Molina for creating the logo for MarketLeague!
 ## MarketLeague Version
 v6.1
 
-![Repeating logo checkered pattern](./readme-images/logo_repeat.jpg)
+![Repeating logo checkered pattern](./readme-files/logo_repeat.jpg)
