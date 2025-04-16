@@ -2,10 +2,7 @@
 # MarketLeague
 St. Edward's University Senior Project repository for MarketLeague, a fantasy-football style approach to learning about the stock market. Users will be able to create a portfolio of stocks that act like trading cards, and users will be able to join leagues where they can trade stocks with other players.
 
-<video width="auto" height="400" controls>
-  <source src="./readme-files/MarketLeague%20Gameplay.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+https://github.com/user-attachments/assets/8b3c96a2-1728-4deb-ad53-4122a9649452
 
 > Gameplay of MarketLeague
 
